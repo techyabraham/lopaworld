@@ -1,0 +1,22 @@
+{
+  "name": "lopaworld",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "dotenv -e .env -- concurrently -k -n storefront,medusa -c blue,magenta \"pnpm --filter @lopaworld/storefront dev\" \"pnpm --filter @lopaworld/medusa dev\"",
+    "dev:storefront": "dotenv -e .env -- pnpm --filter @lopaworld/storefront dev",
+    "dev:medusa": "dotenv -e .env -- pnpm --filter @lopaworld/medusa dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "pnpm -r --if-present lint",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "dotenv-cli": "^11.0.0",
+    "typescript": "^5.9.3"
+  }
+}

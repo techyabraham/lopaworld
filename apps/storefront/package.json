@@ -1,0 +1,29 @@
+{
+  "name": "@lopaworld/storefront",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0 --port 3000",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0 --port 3000",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "^3.84.0",
+    "@payloadcms/next": "^3.84.0",
+    "@payloadcms/richtext-lexical": "^3.84.0",
+    "next": "^16.2.6",
+    "payload": "^3.84.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "^16.2.6",
+    "typescript": "^5.9.3"
+  }
+}

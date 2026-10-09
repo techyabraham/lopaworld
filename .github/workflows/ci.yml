@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      REDIS_URL: redis://localhost:6379
+      STORE_CORS: http://localhost:3000
+      ADMIN_CORS: http://localhost:9000
+      AUTH_CORS: http://localhost:3000,http://localhost:9000
+      JWT_SECRET: ci-only-not-a-deployment-secret
+      COOKIE_SECRET: ci-only-not-a-deployment-secret
+      PAYLOAD_SECRET: ci-only-not-a-deployment-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build

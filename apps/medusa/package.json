@@ -1,0 +1,21 @@
+{
+  "name": "@lopaworld/medusa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "medusa develop",
+    "build": "medusa build",
+    "start": "medusa start",
+    "typecheck": "tsc --noEmit",
+    "seed": "medusa exec ./src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@medusajs/medusa": "^2.19.0",
+    "@medusajs/framework": "^2.19.0",
+    "@medusajs/cli": "^2.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3"
+  }
+}
