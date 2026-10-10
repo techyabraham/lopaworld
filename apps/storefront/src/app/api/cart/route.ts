@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { medusaFetch } from '../../../lib/store';
 import type { StoreCart } from '../../../lib/cart-types';
 import { cartCookie, cartFields } from '../../../lib/cart';
+import { isSameOriginRequest } from '../../../lib/request-security';
 
 export async function GET() {
   const cookieJar = await cookies();
@@ -17,7 +18,8 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const cookieJar = await cookies();
   cookieJar.delete(cartCookie);
   return NextResponse.json({ cart: null }, { headers: { 'Cache-Control': 'no-store' } });

@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createOrReadCart, cartCookie, cartFields } from '../../../../lib/cart';
 import { medusaFetch, retrieveStoreProduct, variantIsAvailable } from '../../../../lib/store';
+import { isSameOriginRequest } from '../../../../lib/request-security';
 import type { StoreCart } from '../../../../lib/cart-types';
 
 type CartResponse = { cart: StoreCart };
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const body = await request.json().catch(() => null) as { handle?: unknown; variantId?: unknown; quantity?: unknown; notes?: unknown } | null;
   if (!body || typeof body.handle !== 'string' || typeof body.variantId !== 'string' || !Number.isInteger(body.quantity) || Number(body.quantity) < 1 || Number(body.quantity) > 20) {
     return NextResponse.json({ error: 'Choose a valid product option and quantity.' }, { status: 400 });
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const body = await request.json().catch(() => null) as { itemId?: unknown; quantity?: unknown } | null;
   if (!body || typeof body.itemId !== 'string' || !Number.isInteger(body.quantity) || Number(body.quantity) < 1 || Number(body.quantity) > 20) {
     return NextResponse.json({ error: 'Choose a valid quantity.' }, { status: 400 });
@@ -75,6 +78,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const itemId = new URL(request.url).searchParams.get('itemId');
   const cookieJar = await cookies();
   const cartId = cookieJar.get(cartCookie)?.value;

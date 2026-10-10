@@ -3,10 +3,12 @@ import { NextResponse } from 'next/server';
 import { cartCookie, cartFields } from '../../../../lib/cart';
 import type { StoreCart } from '../../../../lib/cart-types';
 import { medusaFetch } from '../../../../lib/store';
+import { isSameOriginRequest } from '../../../../lib/request-security';
 
 type ShippingOption = { id: string; price_type?: string };
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const body = await request.json().catch(() => null) as { shippingOptionId?: unknown } | null;
   const cartId = (await cookies()).get(cartCookie)?.value;
   if (!cartId) return NextResponse.json({ error: 'Your bag is empty.' }, { status: 404 });

@@ -3,11 +3,13 @@ import { NextResponse } from 'next/server';
 import { cartCookie } from '../../../../lib/cart';
 import type { StoreCart } from '../../../../lib/cart-types';
 import { medusaFetch } from '../../../../lib/store';
+import { isSameOriginRequest } from '../../../../lib/request-security';
 
 type ShippingOption = { id: string; name: string; price_type?: string };
 type PaymentCollection = { id: string; payment_sessions?: Array<{ provider_id: string; data?: { authorization_url?: string } }> };
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const body = await request.json().catch(() => null) as { shippingOptionId?: unknown } | null;
   if (typeof body?.shippingOptionId !== 'string' || !body.shippingOptionId) {
     return NextResponse.json({ error: 'Choose an available delivery option.' }, { status: 400 });

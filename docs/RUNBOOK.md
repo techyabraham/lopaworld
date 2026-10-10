@@ -54,6 +54,12 @@ Do not advertise delivery fees, delivery windows, returns or refunds until the o
 
 Local volumes can be removed with `docker compose down -v` (this permanently deletes local database, Redis and MinIO data). Production RTO/RPO, daily database backup and restore steps, and object versioning are `TODO_CONFIRM:` until hosting is selected. Do not treat local volumes as backups.
 
+## Phase 7 QA and security
+
+Use `docs/PHASE-7-QA-CHECKLIST.md` for launch verification. The storefront sets baseline CSP and browser security headers, and cart/checkout state-changing routes reject requests that do not match the storefront origin. The CSP retains inline script/style allowances for the current Next.js and Payload setup; review it against actual production integrations before launch.
+
+Public order lookup has no shared rate limiter yet. Add one backed by the production Redis/service before exposing it to meaningful traffic. Run accessibility, Lighthouse, browser E2E, load, dependency-scan and backup/restore checks in staging; source review and local type/lint checks do not replace those deployment checks.
+
 ## Operations
 
 Sentry, uptime checks, structured logging, alerting and deployment procedures are not configured yet. Add provider-specific commands and recovery steps when infrastructure is selected.

@@ -75,6 +75,15 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 - `TODO_CONFIRM:` Google Merchant Center and Meta Catalog account setup; product condition, GTIN/MPN where applicable, feed validation and approved shipping/tax settings. Feed routes currently emit only fields available from Medusa and are not validated or submitted to either platform.
 - `TODO_CONFIRM:` Previous site URL export and approved 301 mappings. `apps/storefront/redirects.json` is wired into Next.js but intentionally empty pending the old URL inventory.
 
+### Phase 7 hardening and launch QA
+
+- `TODO_CONFIRM:` Production CSP origins, nonce/reporting strategy, and security-header review against the final analytics, media and payment integrations. The current baseline uses inline script/style allowances for compatibility and is not a strict nonce CSP.
+- `TODO_CONFIRM:` Shared rate limiting for public order lookup and other unauthenticated endpoints; select and configure the production Redis/service provider and abuse thresholds.
+- `TODO_CONFIRM:` Staging host and representative data for mobile/desktop end-to-end, accessibility, performance and load testing. Local Playwright packages exist, but current package restore attempts fail because npm registry access is refused; the local Docker engine is unavailable.
+- `TODO_CONFIRM:` Production-like database backup/restore drill, object-media recovery/versioning, and measured RPO/RTO after a provider is selected.
+- `TODO_CONFIRM:` Dependency/secret scanning, error monitoring, uptime alerts and incident escalation in the chosen CI/hosting environment.
+- `TODO_CONFIRM:` Complete the evidence-based manual checklist in `docs/PHASE-7-QA-CHECKLIST.md`; accessibility, Lighthouse thresholds, load targets and recovery are not signed off by source review alone.
+
 ## Public research is not business approval
 
 The proposal's descriptions and service statements were gathered from public storefront/social listings and third-party sources. The live public catalogue currently surfaces categories under Trybe, Men, Prime, Fashion and Next, but a public listing is only a migration clue; the owner still needs to approve the new catalogue and label assignments. The proposal itself notes that public delivery/returns snippets, social-profile copy and marketplace terms do not establish the direct-store rules. Reconfirm any public-facing claims with Lopaworld before launch.

@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { cartCookie } from '../../../../lib/cart';
 import { medusaFetch } from '../../../../lib/store';
+import { isSameOriginRequest } from '../../../../lib/request-security';
 
 const orderCookie = 'lw_order_id';
 type CompletedOrder = { id: string };
@@ -33,7 +34,8 @@ async function completeResponse(orderId: string) {
   return NextResponse.json({ complete: true, orderId }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const cookieJar = await cookies();
   const savedOrderId = cookieJar.get(orderCookie)?.value;
   if (savedOrderId) return NextResponse.json({ complete: true, orderId: savedOrderId }, { headers: { 'Cache-Control': 'no-store' } });
