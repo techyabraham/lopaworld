@@ -67,6 +67,14 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 - `TODO_CONFIRM:` Newsletter and back-in-stock consent wording, suppression/unsubscribe handling, provider/API credentials, retention/deletion rules and delivery-once behavior. No customer data is collected and no notification is sent yet.
 - `TODO_CONFIRM:` Official WhatsApp number and support hours/escalation workflow. No WhatsApp CTA is published while the two proposal candidates conflict.
 
+### Phase 6 SEO, analytics and feeds
+
+- `TODO_CONFIRM:` Production canonical origin (`NEXT_PUBLIC_SITE_URL`); canonical metadata and sitemap intentionally omit production URLs until this is set.
+- `TODO_CONFIRM:` GA4 measurement ID, Meta Pixel ID and server-side Conversions API credentials, plus approved retention and event-data policy. The current consent choice gates GA only; Meta CAPI and advertising pixels are not active.
+- `TODO_CONFIRM:` NDPA-reviewed consent/privacy wording, cookie or device-storage policy, privacy notice URL, retention and withdrawal/deletion process. The current banner is a technical opt-in control, not a legal compliance sign-off.
+- `TODO_CONFIRM:` Google Merchant Center and Meta Catalog account setup; product condition, GTIN/MPN where applicable, feed validation and approved shipping/tax settings. Feed routes currently emit only fields available from Medusa and are not validated or submitted to either platform.
+- `TODO_CONFIRM:` Previous site URL export and approved 301 mappings. `apps/storefront/redirects.json` is wired into Next.js but intentionally empty pending the old URL inventory.
+
 ## Public research is not business approval
 
 The proposal's descriptions and service statements were gathered from public storefront/social listings and third-party sources. The live public catalogue currently surfaces categories under Trybe, Men, Prime, Fashion and Next, but a public listing is only a migration clue; the owner still needs to approve the new catalogue and label assignments. The proposal itself notes that public delivery/returns snippets, social-profile copy and marketplace terms do not establish the direct-store rules. Reconfirm any public-facing claims with Lopaworld before launch.

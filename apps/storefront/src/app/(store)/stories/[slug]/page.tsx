@@ -1,9 +1,24 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { findPublishedRecordsSafely } from '../../../../lib/cms';
 import { CMSImage, record, RichContent, text } from '../../../../components/storefront/content';
+import { canonical } from '../../../../lib/seo';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { records } = await findPublishedRecordsSafely('stories', { slug: { equals: slug } }, 1);
+  const story = records[0];
+  if (!story) return { title: 'Story not found', robots: { index: false, follow: false } };
+  const seo = story.seo && typeof story.seo === 'object' ? story.seo as Record<string, unknown> : {};
+  const title = text(seo.title) ?? text(story.title) ?? 'Lopaworld story';
+  const description = text(seo.description) ?? text(story.excerpt) ?? 'Stories from Lopaworld.';
+  const path = `/stories/${encodeURIComponent(slug)}`;
+  const image = text(record(seo.shareImage)?.url) ?? text(record(story.heroMedia)?.url);
+  return { title, description, alternates: { canonical: canonical(path) }, openGraph: { type: 'article', title, description, url: canonical(path), images: image ? [image] : [] }, twitter: { card: 'summary_large_image', title, description, images: image ? [image] : [] } };
+}
 
 export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

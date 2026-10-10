@@ -71,3 +71,11 @@
 - Decision: Guest tracking requires the order number and checkout email together. The public lookup returns only order, payment and fulfilment statuses and never exposes customer addresses or order contents. The first wishlist stores product references only in the current browser.
 - Context: Guest tracking is in the master brief, while the owner has not confirmed a wider identity-check method, tracking provider or account policy.
 - Consequences: The account portal, saved addresses, server-synced wishlist, courier status and notifications remain follow-up work; do not treat an order's fulfilment status as courier tracking.
+
+## ADR-010 — Keep SEO origins and analytics opt-in
+
+- Status: Accepted for Phase 6 foundation
+- Date: 2026-10-10
+- Decision: Generate absolute canonical, sitemap, structured-data and feed URLs only from `NEXT_PUBLIC_SITE_URL`. Load GA4 only after an explicit analytics opt-in and only when a measurement ID is configured. Keep legacy redirects in a reviewed JSON map.
+- Context: The production domain, analytics/ad accounts, privacy wording and old URL export have not been supplied.
+- Consequences: SEO artifacts can be locally inspected, but production canonicals/sitemap and feed links stay inactive without the domain. Meta CAPI and merchant feed submission require owner configuration and review.

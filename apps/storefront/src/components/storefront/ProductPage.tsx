@@ -9,6 +9,8 @@ import { text } from './content';
 import { listStoreProductsSafely } from '../../lib/store';
 import { LABELS } from '@lopaworld/types';
 import { WishlistButton } from '../account/WishlistButton';
+import { canonical, jsonLd } from '../../lib/seo';
+import { TrackEvent } from '../site/TrackEvent';
 
 const labelNames = new Map<string, string>(LABELS.map(({ slug, name }) => [slug, name]));
 
@@ -30,13 +32,20 @@ export async function ProductPage({ handle }: { handle: string }) {
   const related = relatedResult.products.filter((item) => item.id !== product?.id && (!label || productLabel(item) === label)).slice(0, 4);
   const primaryPrice = product.variants?.find((variant) => variant.calculated_price)?.calculated_price;
   const description = product.description ?? '';
+  const productUrl = canonical(`/p/${encodeURIComponent(product.handle)}`);
   const schema = primaryPrice?.calculated_amount === undefined ? null : {
     '@context': 'https://schema.org', '@type': 'Product', name: product.title, description,
     image: images.map(({ src }) => src), sku: product.variants?.[0]?.sku,
     brand: label ? { '@type': 'Brand', name: labelNames.get(label) ?? label } : undefined,
-    offers: { '@type': 'Offer', priceCurrency: (primaryPrice.currency_code ?? 'NGN').toUpperCase(), price: primaryPrice.calculated_amount, availability: (product.variants ?? []).some((variant) => variant.manage_inventory === false || variant.allow_backorder || (variant.inventory_quantity ?? 0) > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', url: `/p/${product.handle}` },
+    offers: { '@type': 'Offer', priceCurrency: (primaryPrice.currency_code ?? 'NGN').toUpperCase(), price: primaryPrice.calculated_amount, availability: (product.variants ?? []).some((variant) => variant.manage_inventory === false || variant.allow_backorder || (variant.inventory_quantity ?? 0) > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', ...(productUrl ? { url: productUrl } : {}) },
   };
+  const breadcrumbSchema = productUrl ? { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: canonical('/') },
+    { '@type': 'ListItem', position: 2, name: 'Shop', item: canonical('/shop') },
+    { '@type': 'ListItem', position: 3, name: product.title, item: productUrl },
+  ] } : null;
   return <main className="store-page product-page" data-label={label ?? 'lopaworld'}>
+    <TrackEvent name="product_view" params={{ item_id: product.id, item_name: product.title, item_label: label ?? 'unknown' }} />
     <nav className="breadcrumbs" aria-label="Breadcrumb"><Link href="/shop">Shop</Link><span aria-hidden="true">/</span><span aria-current="page">{product.title}</span></nav>
     <div className="product-layout">
       <div className="product-gallery">{images.length ? <Gallery images={images} /> : <div className="media-placeholder product-image-placeholder">Product imagery is being prepared.</div>}</div>
@@ -58,6 +67,7 @@ export async function ProductPage({ handle }: { handle: string }) {
       </div>
     </div>
     {related.length > 0 && <section className="store-section"><header className="section-heading"><p className="eyebrow">Continue exploring</p><h2>Related pieces</h2></header><ProductGrid products={related} /></section>}
-    {schema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} />}
+    {schema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />}
+    {breadcrumbSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbSchema) }} />}
   </main>;
 }

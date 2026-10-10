@@ -4,7 +4,7 @@ import { authenticatedWrite } from '../access/cms';
 export const SEODefaults: GlobalConfig = {
   slug: 'seo-defaults',
   label: 'SEO defaults',
-  access: { read: ({ req }) => Boolean(req.user), update: authenticatedWrite },
+  access: { read: () => true, update: authenticatedWrite },
   versions: { drafts: true },
   fields: [
     { name: 'siteTitle', type: 'text', required: true, maxLength: 70 },

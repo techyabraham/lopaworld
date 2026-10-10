@@ -14,6 +14,8 @@
 4. Start both apps: `pnpm dev`.
 5. Open the storefront at `http://localhost:3000`, Payload at `/admin`, and Medusa admin at `http://localhost:9000/app`.
 
+SEO and feed routes are `/sitemap.xml`, `/robots.txt`, `/feeds/google.xml` and `/feeds/meta.xml`. Set `NEXT_PUBLIC_SITE_URL` to the verified HTTPS site origin before publishing sitemap/canonical links or submitting feeds. GA4 remains unloaded until a measurement ID is configured and the visitor opts in. Use actual test catalog data when validating feeds; incomplete variants are omitted.
+
 The first Medusa boot performs its application initialization/migrations. Create an admin user using the Medusa CLI (`pnpm --filter @lopaworld/medusa exec medusa user -e <email> -p <password>`). Payload prompts you to create its first admin user at `/admin`.
 
 ## Useful commands
@@ -46,7 +48,7 @@ When those owner inputs are ready:
 6. Test a transaction whose verified amount, currency or reference differs from the stored payment session. It must not authorize or create an order.
 7. Exercise full and partial refunds through the Medusa order/payment workflow and verify the provider result and admin record.
 
-Do not advertise delivery fees, delivery windows, returns or refunds until the owner-approved rules are loaded. Courier shipment creation and guest order tracking still require a real provider and customer-identity design.
+Do not advertise delivery fees, delivery windows, returns or refunds until the owner-approved rules are loaded. Guest lookup requires the order number and checkout email; courier shipment creation and carrier status tracking still require a real provider.
 
 ## Backups and recovery
 

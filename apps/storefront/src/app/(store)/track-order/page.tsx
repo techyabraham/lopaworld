@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { GuestOrderLookup } from '../../../components/account/GuestOrderLookup';
 
-export const metadata: Metadata = { title: 'Track an order | Lopaworld' };
+export const metadata: Metadata = { title: 'Track an order', robots: { index: false, follow: false } };
 
 export default function TrackOrderPage() {
   return <main className="page-shell customer-page">

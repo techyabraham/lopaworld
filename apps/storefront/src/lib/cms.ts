@@ -44,3 +44,13 @@ export async function findAnnouncementSafely() {
     return null;
   }
 }
+
+export async function findSEODefaultsSafely() {
+  try {
+    const payload = await getPayload({ config });
+    const value = await payload.findGlobal({ slug: 'seo-defaults', draft: false, overrideAccess: false });
+    return value as unknown as { siteTitle?: string; defaultDescription?: string; defaultShareImage?: unknown; organizationName?: string };
+  } catch {
+    return null;
+  }
+}

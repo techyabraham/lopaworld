@@ -5,6 +5,7 @@ import { Button, QuantityStepper, Sheet } from '@lopaworld/ui';
 import type { StoreProduct } from '../../lib/store';
 import type { CMSRecord } from '../../lib/cms';
 import { RichContent, text } from './content';
+import { trackStoreEvent } from '../../lib/analytics';
 
 type Selection = Record<string, string>;
 type ProductVariant = NonNullable<StoreProduct['variants']>[number];
@@ -49,6 +50,7 @@ export function ProductPurchasePanel({ product, sizeGuide }: { product: StorePro
 
   function setOption(option: { id?: string; title: string }, value: string) {
     setSelection((current) => ({ ...current, [option.id ?? option.title]: value }));
+    trackStoreEvent({ name: 'variant_select', params: { item_id: product.id, option: option.title, value } });
   }
 
   async function addToBag() {
@@ -62,6 +64,7 @@ export function ProductPurchasePanel({ product, sizeGuide }: { product: StorePro
       const body = await response.json() as { error?: string };
       if (!response.ok) throw new Error(body.error ?? 'This piece could not be added to your bag.');
       setAdded(true);
+      trackStoreEvent({ name: 'add_to_bag', params: { item_id: product.id, item_name: product.title, quantity, value: price?.calculated_amount ?? 0, currency: price?.currency_code ?? 'NGN' } });
       window.dispatchEvent(new Event('lw:cart-updated'));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'This piece could not be added to your bag.');
@@ -82,7 +85,7 @@ export function ProductPurchasePanel({ product, sizeGuide }: { product: StorePro
         }) && variantIsAvailable(variant, madeToOrder));
         const disabled = !hasAvailableVariant;
         return <button key={value} type="button" className="option-value" data-selected={selection[selectionKey] === value} aria-pressed={selection[selectionKey] === value} aria-label={`${option.title} ${value}${disabled ? ', sold out' : ''}`} disabled={disabled} onClick={() => setOption(option, value)}>{value}</button>;
-      })}</div>{lowerTitle.includes('size') && sizeGuide && <button className="text-link" type="button" onClick={() => setGuideOpen(true)}>View size guide</button>}</fieldset>;
+      })}</div>{lowerTitle.includes('size') && sizeGuide && <button className="text-link" type="button" onClick={() => { trackStoreEvent({ name: 'size_guide_open', params: { item_id: product.id } }); setGuideOpen(true); }}>View size guide</button>}</fieldset>;
     })}
     {options.length === 0 && <p>One size</p>}
     {madeToOrder && <p className="made-to-order-note">Made to order{typeof product.metadata?.lead_time_days === 'number' ? ` — ready in ${product.metadata.lead_time_days} days` : ''}.</p>}

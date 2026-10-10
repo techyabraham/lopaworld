@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { findPublishedRecordsSafely } from '../../../lib/cms';
 import { CMSImage, record, text } from '../../../components/storefront/content';
+import { canonical } from '../../../lib/seo';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = { title: 'Stories', description: 'Perspectives and notes from the Lopaworld house.', alternates: { canonical: canonical('/stories') } };
 
 export default async function StoriesPage() {
   const { records, error } = await findPublishedRecordsSafely('stories', {}, 100);

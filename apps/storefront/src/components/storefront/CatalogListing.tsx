@@ -5,6 +5,7 @@ import { FilterSheet, type CatalogFilters } from './FilterSheet';
 import { ProductGrid } from './ProductGrid';
 import type { StoreCategory, StoreProduct } from '../../lib/store';
 import { productLabel } from '../../lib/store';
+import { TrackEvent } from '../site/TrackEvent';
 
 const labelOptions = LABELS.map(({ slug, name }) => ({ slug, name }));
 const pageSize = 24;
@@ -41,6 +42,9 @@ export function CatalogListing({
     filters.q && ['q', `Search: ${filters.q}`],
   ].filter((item): item is [string, string] => Array.isArray(item));
   return <main className="store-page catalog-page" data-page="catalog">
+    {pathname !== '/search' && <TrackEvent name="collection_view" params={{ route: pathname }} />}
+    {pathname === '/search' && filters.q && <TrackEvent name={filtered.length ? 'search' : 'search_zero_results'} params={{ search_term: filters.q.slice(0, 80), result_count: filtered.length }} />}
+    {activeFilters.length > 0 && <TrackEvent name="filter_apply" params={{ filter_count: activeFilters.length, route: pathname }} />}
     <header className="catalog-heading"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{count ? `${filtered.length} pieces shown from the current catalogue results.` : 'Discover pieces published by Lopaworld.'}</p></header>
     {pathname === '/search' && <form action="/search" method="get" className="catalog-search"><label htmlFor="catalog-search">Search products</label><input id="catalog-search" name="q" type="search" defaultValue={filters.q ?? ''} placeholder="Search the catalogue" /><button className="lw-button" type="submit">Search</button></form>}
     <div className="catalog-controls"><p className="catalog-count" aria-live="polite">{filtered.length} {filtered.length === 1 ? 'piece' : 'pieces'}</p><FilterSheet pathname={pathname} filters={filters} labels={labelOptions} categories={categories} sizes={availableSizes} colours={availableColours} resultCount={filtered.length} showLabel={!lockedLabel} showCategory={!lockedCategory} /></div>

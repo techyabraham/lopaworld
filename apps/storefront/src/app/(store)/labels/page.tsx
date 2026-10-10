@@ -1,9 +1,12 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { LABELS } from '@lopaworld/types';
 import { findPublishedRecordsSafely } from '../../../lib/cms';
 import { CMSImage, record, text } from '../../../components/storefront/content';
+import { canonical } from '../../../lib/seo';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = { title: 'Labels', description: 'Explore Lopaworld’s seven labels, each with its own point of view.', alternates: { canonical: canonical('/labels') } };
 
 export default async function LabelsPage() {
   const result = await findPublishedRecordsSafely('labels');

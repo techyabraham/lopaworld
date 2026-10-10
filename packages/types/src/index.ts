@@ -10,6 +10,18 @@ export const LABELS = [
 
 export type LabelSlug = (typeof LABELS)[number]['slug'];
 
+export const STORE_ANALYTICS_EVENTS = [
+  'label_select', 'collection_view', 'search', 'search_zero_results', 'filter_apply', 'sort_change',
+  'product_view', 'variant_select', 'add_to_bag', 'remove_from_bag', 'begin_checkout',
+  'payment_failed', 'purchase', 'whatsapp_click', 'size_guide_open', 'notify_me_submit',
+] as const;
+
+export type StoreAnalyticsEventName = (typeof STORE_ANALYTICS_EVENTS)[number];
+export type StoreAnalyticsEvent = {
+  name: StoreAnalyticsEventName;
+  params?: Record<string, string | number | boolean>;
+};
+
 export type ProductEditorialMetadata = {
   label: LabelSlug;
   fit?: string;
@@ -22,4 +34,7 @@ export type ProductEditorialMetadata = {
   occasion?: string[];
   model_info?: string;
   image_alt_texts?: string[];
+  seo_title?: string;
+  seo_description?: string;
+  seo_image_url?: string;
 };

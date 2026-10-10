@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { StoreCart } from '../../lib/cart-types';
+import { trackStoreEvent } from '../../lib/analytics';
 
 type ShippingOption = {
   id: string;
@@ -94,6 +95,7 @@ export function CheckoutForm() {
 
   async function pay() {
     if (!selected) return;
+    trackStoreEvent({ name: 'begin_checkout', params: { currency: cart?.currency_code ?? 'NGN', value: cart?.total ?? 0, item_count: cart?.items?.length ?? 0 } });
     setBusy(true);
     setError('');
     try {
@@ -102,6 +104,7 @@ export function CheckoutForm() {
       if (!response.ok || !result.authorizationUrl) throw new Error(result.error ?? 'Secure payment could not be started.');
       window.location.assign(result.authorizationUrl);
     } catch (reason) {
+      trackStoreEvent({ name: 'payment_failed', params: { stage: 'initialization' } });
       setError(reason instanceof Error ? reason.message : 'Secure payment could not be started.');
       setBusy(false);
     }
