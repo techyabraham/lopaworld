@@ -31,3 +31,27 @@
 - Decision: Unconfirmed product taxonomy, brand content, delivery, returns, payment scope, size data, contacts and legal information remain `TODO_CONFIRM:` and must not be presented as factual claims.
 - Context: The project brief prohibits invented business facts.
 - Consequences: Track unresolved inputs in `OPEN_ITEMS.md` and remove them only after confirmation.
+
+## ADR-005 — Add glyph fallback for the selected brand typefaces
+
+- Status: Accepted by owner
+- Date: 2026-10-09
+- Decision: Keep Bodoni Moda for editorial text and use Noto Serif only when a glyph is missing; DM Sans remains the interface face, with the same fallback available for unsupported characters.
+- Context: The upstream variable files for Bodoni Moda and DM Sans do not include the required Yoruba characters and Naira sign in their Latin subsets.
+- Consequences: Self-host an extended Noto Serif subset under its OFL license. The ordinary Latin text continues to use the selected brand fonts.
+
+## ADR-006 — Keep label identifiers shared and controlled
+
+- Status: Accepted
+- Date: 2026-10-10
+- Decision: Use the seven canonical label slugs from `@lopaworld/types`; assign products through Medusa product metadata and validate required catalog data when a product is published. Use Medusa's editable product-category records instead of hard-coded category enums.
+- Context: The website has seven fixed label destinations, while the product categories and label positioning still need owner approval.
+- Consequences: Labels are controlled values across the CMS and commerce API. Category names and assignments remain editable business data. Incomplete draft products may be saved but cannot transition to published status.
+
+## ADR-007 — Keep editorial data and commerce data separate
+
+- Status: Accepted
+- Date: 2026-10-10
+- Decision: Payload owns editorial collections, media rights markers, homepage blocks and draft previews. CMS product references contain only Medusa handles or IDs.
+- Context: Prices, variants and stock must have one source of truth in Medusa, while editors need reorderable homepage content and a safe draft preview.
+- Consequences: Payload preview requires a server-side `PREVIEW_SECRET`; media does not become a product price or inventory source. Production media storage and automated seed import remain future work.

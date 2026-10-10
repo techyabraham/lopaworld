@@ -5,6 +5,8 @@ dist/
 build/
 coverage/
 .turbo/
+playwright-report/
+test-results/
 .env
 .env.*
 !.env.example
@@ -14,3 +16,4 @@ apps/medusa/uploads/
 apps/storefront/.next/
 apps/storefront/src/payload-types.ts
 *.log
+*.tsbuildinfo

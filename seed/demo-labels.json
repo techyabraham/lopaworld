@@ -1,0 +1,13 @@
+{
+  "_demo": true,
+  "notice": "Synthetic placeholder records. Replace with owner-approved copy and assets before any non-local use.",
+  "labels": [
+    { "name": "Lopa Next", "slug": "next", "description": "DEMO COPY — replace with approved Lopa Next description.", "accentToken": "next" },
+    { "name": "Lopa Trybe", "slug": "trybe", "description": "DEMO COPY — replace with approved Lopa Trybe description.", "accentToken": "trybe" },
+    { "name": "Lopa Prime", "slug": "prime", "description": "DEMO COPY — replace with approved Lopa Prime description.", "accentToken": "prime" },
+    { "name": "Lopa Men", "slug": "men", "description": "DEMO COPY — replace with approved Lopa Men description.", "accentToken": "men" },
+    { "name": "Lopa Fashion", "slug": "fashion", "description": "DEMO COPY — replace with approved Lopa Fashion description.", "accentToken": "fashion" },
+    { "name": "Lopa Bridal", "slug": "bridal", "description": "DEMO COPY — replace with approved Lopa Bridal description.", "accentToken": "bridal" },
+    { "name": "Lopaworld", "slug": "lopaworld", "description": "DEMO COPY — replace with approved Lopaworld description.", "accentToken": "lopaworld" }
+  ]
+}

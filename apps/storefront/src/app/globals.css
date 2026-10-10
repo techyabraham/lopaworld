@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "@lopaworld/ui/tokens.css";
+@import "@lopaworld/ui/styles.css";
+
+@theme inline {
+  --color-paper: var(--color-canvas);
+  --color-foreground: var(--color-ink);
+  --color-muted: var(--color-ink-muted);
+  --color-border: var(--color-line);
+  --color-label: var(--accent);
+  --font-sans: var(--font-interface);
+  --font-display-face: var(--font-editorial);
+  --text-display: var(--type-display);
+  --text-heading-1: var(--type-h1);
+  --text-heading-2: var(--type-h2);
+  --text-heading-3: var(--type-h3);
+  --spacing-lw-1: var(--space-1);
+  --spacing-lw-2: var(--space-2);
+  --spacing-lw-3: var(--space-3);
+  --spacing-lw-4: var(--space-4);
+  --spacing-lw-6: var(--space-6);
+  --spacing-lw-8: var(--space-8);
+  --breakpoint-xs: 30rem;
+  --breakpoint-sm: 48rem;
+  --breakpoint-md: 64rem;
+  --breakpoint-lg: 80rem;
+  --breakpoint-xl: 96rem;
+}
+
+:root {
+  font-synthesis: none;
+}
+
+html { background: var(--color-canvas); }
+body { margin: 0; color: var(--color-ink); background: var(--color-canvas); font-family: var(--font-interface), var(--font-glyph-fallback), Arial, sans-serif; font-size: var(--type-body); line-height: 1.55; }
+a { color: var(--accent); text-underline-offset: 0.18em; }
+button { color: inherit; font: inherit; }
+.site-shell { min-height: 100dvh; }
+.phase-page, .dev-gallery { width: min(100% - 2rem, 80rem); margin-inline: auto; padding-block: clamp(2rem, 7vw, 6rem); }
+.phase-page header { max-width: 52rem; }
+.phase-page h1, .dev-gallery h1 { font-family: var(--font-editorial), var(--font-glyph-fallback), "Bodoni MT", Georgia, serif; font-optical-sizing: auto; font-size: var(--type-display); font-weight: 500; line-height: 1.04; letter-spacing: -.025em; }
+.phase-page header > p:last-child { max-width: 34rem; font-size: clamp(1.125rem, 1rem + .45vw, 1.375rem); color: var(--color-ink-muted); }
+.eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 700; }
+.preview-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 2rem; }
+.preview-links a { min-height: 44px; display: inline-flex; align-items: center; }
+.phase-note { color: var(--color-ink-muted); }
+.specimen { padding: clamp(1rem, 3vw, 2rem); margin-block: 1rem; border: 1px solid var(--color-line); background: var(--color-surface); }
+.specimen h2 { font-size: var(--type-h2); }
+.specimen-copy { font-size: clamp(1rem, 1rem + .4vw, 1.3rem); }
+.specimen-copy.editorial { font-family: var(--font-editorial), var(--font-glyph-fallback), "Bodoni MT", Georgia, serif; font-optical-sizing: auto; }
+.specimen-grid, .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1rem; }
+.token-swatch { display: inline-flex; align-items: center; justify-content: center; min-height: 5rem; margin: .25rem; padding: 1rem; color: var(--accent-contrast); background: var(--accent); border-radius: var(--radius-md); }
+.gallery-section { padding-block: 1.5rem; border-bottom: 1px solid var(--color-line); }
+.gallery-section h2 { font-size: var(--type-h2); }
+.gallery-row { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.gallery-field { width: min(100%, 22rem); }
+.gallery-label { font-weight: 600; }
+.gallery-back { display: inline-flex; min-height: 44px; align-items: center; }
+.dev-banner { padding: .75rem 1rem; color: var(--accent); background: var(--accent-soft); }
+.lw-gallery-zoom { display: block; width: 100%; min-height: 0; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+@media (min-width: 768px) { .phase-page, .dev-gallery { width: min(100% - 4rem, 80rem); } }

@@ -10,6 +10,7 @@
     "seed": "medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
+    "@lopaworld/types": "workspace:*",
     "@medusajs/medusa": "^2.19.0",
     "@medusajs/framework": "^2.19.0",
     "@medusajs/cli": "^2.19.0"

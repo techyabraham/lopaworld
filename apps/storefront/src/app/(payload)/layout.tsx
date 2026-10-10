@@ -3,13 +3,13 @@ import { RootLayout } from '@payloadcms/next/layouts';
 import { handleServerFunctions } from '@payloadcms/next/layouts';
 import { importMap } from './admin/importMap.js';
 
-type Args = { children: React.ReactNode; params: Promise<{ segments: string[] }> };
+type Args = { children: React.ReactNode };
 
-const serverFunction = async (args: { name: string; args: unknown[] }) => {
+const serverFunction = async (args: { name: string; args: Record<string, unknown> }) => {
   'use server';
   return handleServerFunctions({ ...args, config, importMap });
 };
 
-export default function PayloadLayout({ children, params }: Args) {
-  return RootLayout({ children, config, importMap, serverFunction, params });
+export default function PayloadLayout({ children }: Args) {
+  return RootLayout({ children, config, importMap, serverFunction });
 }

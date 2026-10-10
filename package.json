@@ -10,13 +10,17 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "pnpm -r --if-present lint",
+    "tokens:check": "node packages/ui/scripts/check-contrast.mjs",
+    "test:e2e": "playwright test",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
+    "@playwright/test": "^1.55.0",
     "typescript": "^5.9.3"
   }
 }

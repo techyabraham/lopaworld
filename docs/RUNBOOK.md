@@ -8,7 +8,7 @@
 
 ## First run
 
-1. Copy `.env.example` to `.env` and replace all `replace-*` values with unique random secrets. Never commit `.env`.
+1. Copy `.env.example` to `.env` and replace all `replace-*` values with unique random secrets, including `PREVIEW_SECRET`. Never commit `.env`.
 2. Start local dependencies: `pnpm infra:up`.
 3. Install workspace dependencies: `pnpm install`.
 4. Start both apps: `pnpm dev`.
@@ -22,6 +22,11 @@ The first Medusa boot performs its application initialization/migrations. Create
 - `pnpm infra:logs` tails local dependency logs.
 - `pnpm infra:down` stops the dependency containers. Named volumes retain local data.
 - `pnpm typecheck`, `pnpm lint`, and `pnpm build` run workspace quality checks.
+- `pnpm tokens:check` verifies all seven provisional accent themes against the WCAG AA contrast threshold.
+- `pnpm test:e2e` runs Playwright and axe checks for `/dev/type` and `/dev/ui`; the galleries return 404 in production.
+- `python packages/ui/scripts/check-font-glyphs.py` verifies the variable font axes and that Noto Serif covers sample glyphs missing from Bodoni Moda and DM Sans.
+- `seed/demo-labels.json` contains synthetic local-only label records. The application never imports these automatically; do not use the file in production.
+- Payload owns editorial collections and the reorderable Homepage Layout global. Its Preview button opens `/preview/homepage` using a draft-mode cookie created by the secret-protected `/api/preview/homepage` route.
 
 ## Environment and secrets
 

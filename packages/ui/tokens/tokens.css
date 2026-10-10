@@ -1,0 +1,70 @@
+:root {
+  color-scheme: light;
+  --color-canvas: #f8f6f1;
+  --color-surface: #ffffff;
+  --color-ink: #211e1b;
+  --color-ink-muted: #615b55;
+  --color-line: #d8d2ca;
+  --color-neutral-50: #f8f6f1;
+  --color-neutral-100: #eeeae4;
+  --color-neutral-200: #d8d2ca;
+  --color-neutral-400: #a59d94;
+  --color-neutral-600: #615b55;
+  --color-neutral-800: #38322e;
+  --color-neutral-950: #211e1b;
+  --color-danger: #a12828;
+  --color-success: #245c3a;
+
+  --type-display: clamp(2.25rem, 1.65rem + 2.7vw, 4.5rem);
+  --type-h1: clamp(2rem, 1.5rem + 2.2vw, 3.5rem);
+  --type-h2: clamp(1.625rem, 1.35rem + 1.2vw, 2.5rem);
+  --type-h3: clamp(1.25rem, 1.1rem + 0.65vw, 1.75rem);
+  --type-body: 1rem;
+  --type-small: 0.875rem;
+  --type-label: 0.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+  --radius-pill: 999px;
+  --border-width: 1px;
+  --shadow-card: 0 0.25rem 1.25rem rgb(33 30 27 / 8%);
+  --shadow-sheet: 0 0.5rem 2rem rgb(33 30 27 / 18%);
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  --accent: #234e42;
+  --accent-contrast: #ffffff;
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, white);
+}
+
+/* TODO_CONFIRM: Provisional accessible development accents; replace from the approved brand guide. */
+[data-label="next"] { --accent: #70482f; --accent-contrast: #ffffff; }
+[data-label="trybe"] { --accent: #205c52; --accent-contrast: #ffffff; }
+[data-label="prime"] { --accent: #4a426d; --accent-contrast: #ffffff; }
+[data-label="men"] { --accent: #2c5063; --accent-contrast: #ffffff; }
+[data-label="fashion"] { --accent: #842f45; --accent-contrast: #ffffff; }
+[data-label="bridal"] { --accent: #72516f; --accent-contrast: #ffffff; }
+[data-label="lopaworld"] { --accent: #234e42; --accent-contrast: #ffffff; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}
