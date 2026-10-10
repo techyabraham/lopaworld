@@ -52,12 +52,20 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 - `TODO_CONFIRM:` Enabled payment channels, payment-account owner/legal entity, NGN/USD pricing decision, international-card eligibility, settlement account and fees, pay-on-delivery/pickup rules, and refund/dispute ownership. Paystack is only a provider to evaluate, not a confirmed account.
 - `TODO_CONFIRM:` Paystack account onboarding and test/live credentials, approved channels, production callback and webhook URLs, webhook deployment reachability, and test-mode sign-off for success, failure, cancel, abandoned, duplicate, delayed and tampered events plus refunds. The provider is configuration-gated; do not enable it until these are confirmed.
 - `TODO_CONFIRM:` Transactional email provider, sender domain, support mailbox and customer-service escalation process.
-- `TODO_CONFIRM:` Customer order lookup/tracking method and the identity check required for guest access. The current confirmation holds only a private order reference and is not a tracking portal.
+- Guest order lookup now requires the order number and checkout email. `TODO_CONFIRM:` Confirm the exact display format for order numbers; courier tracking still requires an approved provider and status contract.
 - `TODO_CONFIRM:` Official legal business name, public phone, WhatsApp, email and address. The proposal reports conflicting WhatsApp candidates (`+234 805 990 9991` and `+234 805 990 9993`) and third-party directory details; none should be published without direct confirmation.
 - `TODO_CONFIRM:` Previous URL inventory and approved redirect map. The proposal gives examples, not a complete export; reconcile from sitemap, product/collection exports, Search Console and active campaign links.
 - `TODO_CONFIRM:` Privacy notice, terms, delivery/returns/care/legal copy, privacy contact and data-rights request process. Confirm who owns each request and obtain Nigerian legal review.
 - `TODO_CONFIRM:` Analytics, Meta and Google account IDs, consent design and server-side conversion configuration.
 - `TODO_CONFIRM:` Production host/region, managed database and Redis providers, backups/restore, RTO/RPO, monthly budget and service-level targets.
+
+### Phase 5 customer engagement
+
+- `TODO_CONFIRM:` Customer account activation policy (guest/account options), password recovery and account-support process. Account registration, sign-in, saved addresses and customer order history are not yet implemented.
+- `TODO_CONFIRM:` Confirm the exact customer-facing order-number format and whether customers may see only payment/order/fulfilment status or additional support information. Courier tracking remains unavailable until the logistics provider and status contract are chosen.
+- `TODO_CONFIRM:` Approve wishlist persistence and retention expectations. The current wishlist is local to one browser and does not sync across devices or accounts.
+- `TODO_CONFIRM:` Newsletter and back-in-stock consent wording, suppression/unsubscribe handling, provider/API credentials, retention/deletion rules and delivery-once behavior. No customer data is collected and no notification is sent yet.
+- `TODO_CONFIRM:` Official WhatsApp number and support hours/escalation workflow. No WhatsApp CTA is published while the two proposal candidates conflict.
 
 ## Public research is not business approval
 

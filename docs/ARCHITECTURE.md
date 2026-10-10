@@ -71,3 +71,9 @@ Design tokens live in `packages/ui/tokens/tokens.css`; components and their acce
 ## Decision log
 
 See [DECISIONS.md](DECISIONS.md). Update the architecture diagram and this page when service boundaries or data ownership change.
+
+## Customer engagement (Phase 5, partial)
+
+Guest order lookup is served by Medusa at `POST /store/orders/lookup` and proxied through the storefront at `POST /api/track-order`. It requires both the numeric order number and the checkout email, compares the email server-side, and returns only the order, payment and fulfilment status fields. It does not expose addresses, items or courier tracking details. The order number format shown to customers still needs confirmation against the live Medusa deployment.
+
+Wishlist state currently lives in the browser's local storage and is device-specific. Customer accounts, server-synced wishlist, saved addresses and account order history are not implemented yet. Newsletter and back-in-stock collection/dispatch require an approved provider, consent language and persistence/rate-limit policy before activation. WhatsApp support remains hidden until Lopaworld confirms its official number and customer-service workflow.

@@ -8,6 +8,7 @@ import { ProductGrid } from './ProductGrid';
 import { text } from './content';
 import { listStoreProductsSafely } from '../../lib/store';
 import { LABELS } from '@lopaworld/types';
+import { WishlistButton } from '../account/WishlistButton';
 
 const labelNames = new Map<string, string>(LABELS.map(({ slug, name }) => [slug, name]));
 
@@ -42,6 +43,7 @@ export async function ProductPage({ handle }: { handle: string }) {
       <div className="product-info">
         {label && <Link className="eyebrow product-label-link" href={`/l/${label}`}>{label === 'lopaworld' ? 'Lopaworld — The House' : labelNames.get(label) ?? label}</Link>}
         <h1>{product.title}</h1>
+        <WishlistButton item={{ id: product.id, handle: product.handle, title: product.title, image: images[0]?.src }} />
         <ProductPurchasePanel product={product} sizeGuide={sizeGuide} />
         <div className="product-accordions">
           {description && <Accordion title="Details"><p>{description}</p></Accordion>}

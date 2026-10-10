@@ -63,3 +63,11 @@
 - Decision: Storefront checkout saves customer and Nigerian delivery address data to the Medusa cart, obtains delivery options from Medusa, and starts Paystack through a custom Medusa payment provider. The provider initializes only when server-side credentials, a callback URL and an approved channel list are configured; it verifies the transaction against the stored reference, NGN amount and payment session before authorization. The storefront return page asks Medusa to complete the cart and never trusts redirect parameters as payment proof.
 - Context: Checkout requires a single source of truth for product totals, shipping amounts, order creation and payment state. The owner has not yet confirmed a Paystack account, courier, delivery table or customer policies.
 - Consequences: NGN is the only supported checkout currency. Payment and delivery remain unavailable without configuration. Test-mode sign-off, webhook verification, transactional emails, shipment integrations and guest order tracking remain open work.
+
+## ADR-009 — Limit guest order lookup to verified status
+
+- Status: Accepted for Phase 5 foundation
+- Date: 2026-10-10
+- Decision: Guest tracking requires the order number and checkout email together. The public lookup returns only order, payment and fulfilment statuses and never exposes customer addresses or order contents. The first wishlist stores product references only in the current browser.
+- Context: Guest tracking is in the master brief, while the owner has not confirmed a wider identity-check method, tracking provider or account policy.
+- Consequences: The account portal, saved addresses, server-synced wishlist, courier status and notifications remain follow-up work; do not treat an order's fulfilment status as courier tracking.
