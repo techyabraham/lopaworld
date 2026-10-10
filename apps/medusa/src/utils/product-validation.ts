@@ -5,6 +5,7 @@ type ProductOptionValue = { value?: unknown };
 type ProductVariant = {
   title?: unknown;
   sku?: unknown;
+  allow_backorder?: unknown;
   options?: ProductOptionValue[] | Record<string, unknown>;
   prices?: Array<{ currency_code?: unknown; amount?: unknown }>;
 };
@@ -72,6 +73,13 @@ export function validateProductForPublishing(product: PublishedProductCandidate)
   if (metadata.made_to_order === true && metadata.lead_time_days !== null &&
       (typeof metadata.lead_time_days !== 'number' || !Number.isInteger(metadata.lead_time_days) || metadata.lead_time_days < 1)) {
     errors.push(`${title}: made-to-order products need a positive integer metadata.lead_time_days or null.`);
+  }
+  if (metadata.made_to_order === true) {
+    variants.forEach((variant, index) => {
+      if (variant.allow_backorder !== true) {
+        errors.push(`${title}: made-to-order variant ${index + 1} must allow backorders in Medusa so customers can order it when stock is zero.`);
+      }
+    });
   }
 
   return errors;

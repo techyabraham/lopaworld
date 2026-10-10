@@ -34,7 +34,19 @@ The first Medusa boot performs its application initialization/migrations. Create
 
 ## Payments
 
-Payment processing is not implemented in Phase 0. Paystack test-mode setup and webhook verification will be documented in Phase 4. A browser success redirect is never authoritative proof of payment.
+The custom Paystack provider is registered only when `PAYSTACK_SECRET_KEY`, `PAYSTACK_CALLBACK_URL`, and an owner-approved comma-separated `PAYSTACK_CHANNELS` list are configured. Leave the example values in place until the Lopaworld account, enabled channels, legal merchant entity and settlement arrangements are confirmed. The provider accepts NGN only; no USD or pay-on-delivery path is enabled.
+
+When those owner inputs are ready:
+
+1. Use Paystack's test secret key and approved test channels in a non-production `.env`; never use a live key for checkout development.
+2. Set `PAYSTACK_CALLBACK_URL` to the reachable HTTPS storefront return page for the environment. Configure Paystack's webhook URL as `https://<medusa-host>/hooks/payment/paystack_paystack` for provider identifier `paystack` and provider ID `paystack`, then verify it is reachable from Paystack before testing.
+3. Create a test cart with valid NGN products, an approved Nigerian delivery address, and a configured Medusa shipping option. Verify the payment initialization amount is the Medusa cart total in minor units.
+4. Test successful, declined, cancelled, abandoned and delayed transactions. Confirm the storefront only displays an order after Medusa server-side verification; the browser return URL and query parameters are never proof of payment.
+5. Deliver the same signed webhook more than once and replay a webhook with an altered body/signature. Verify duplicate events do not duplicate orders and invalid signatures are rejected.
+6. Test a transaction whose verified amount, currency or reference differs from the stored payment session. It must not authorize or create an order.
+7. Exercise full and partial refunds through the Medusa order/payment workflow and verify the provider result and admin record.
+
+Do not advertise delivery fees, delivery windows, returns or refunds until the owner-approved rules are loaded. Courier shipment creation and guest order tracking still require a real provider and customer-identity design.
 
 ## Backups and recovery
 

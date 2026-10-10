@@ -1,3 +1,5 @@
+'use client';
+
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactElement, ReactNode, SelectHTMLAttributes } from 'react';
 import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from 'react';
 

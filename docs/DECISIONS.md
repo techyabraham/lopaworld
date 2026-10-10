@@ -55,3 +55,11 @@
 - Decision: Payload owns editorial collections, media rights markers, homepage blocks and draft previews. CMS product references contain only Medusa handles or IDs.
 - Context: Prices, variants and stock must have one source of truth in Medusa, while editors need reorderable homepage content and a safe draft preview.
 - Consequences: Payload preview requires a server-side `PREVIEW_SECRET`; media does not become a product price or inventory source. Production media storage and automated seed import remain future work.
+
+## ADR-008 — Keep checkout totals and payment verification in Medusa
+
+- Status: Accepted for Phase 4 implementation
+- Date: 2026-10-10
+- Decision: Storefront checkout saves customer and Nigerian delivery address data to the Medusa cart, obtains delivery options from Medusa, and starts Paystack through a custom Medusa payment provider. The provider initializes only when server-side credentials, a callback URL and an approved channel list are configured; it verifies the transaction against the stored reference, NGN amount and payment session before authorization. The storefront return page asks Medusa to complete the cart and never trusts redirect parameters as payment proof.
+- Context: Checkout requires a single source of truth for product totals, shipping amounts, order creation and payment state. The owner has not yet confirmed a Paystack account, courier, delivery table or customer policies.
+- Consequences: NGN is the only supported checkout currency. Payment and delivery remain unavailable without configuration. Test-mode sign-off, webhook verification, transactional emails, shipment integrations and guest order tracking remain open work.

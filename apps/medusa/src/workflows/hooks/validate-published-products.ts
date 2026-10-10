@@ -5,7 +5,7 @@ import { validateProductForPublishing, type PublishedProductCandidate } from '..
 const productFields = [
   'id', 'title', 'status', 'metadata', 'images.url', 'images.metadata',
   'options.title', 'options.values',
-  'variants.title', 'variants.sku', 'variants.options.value',
+  'variants.title', 'variants.sku', 'variants.allow_backorder', 'variants.options.value',
   'variants.prices.amount', 'variants.prices.currency_code',
 ];
 

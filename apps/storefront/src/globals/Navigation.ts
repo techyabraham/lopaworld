@@ -4,7 +4,7 @@ import { authenticatedWrite } from '../access/cms';
 export const Navigation: GlobalConfig = {
   slug: 'navigation',
   label: 'Navigation',
-  access: { read: ({ req }) => Boolean(req.user), update: authenticatedWrite },
+  access: { read: () => true, update: authenticatedWrite },
   versions: { drafts: true },
   fields: [
     { name: 'primaryLinks', type: 'array', fields: [

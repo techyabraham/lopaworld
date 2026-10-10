@@ -42,13 +42,17 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 ### Delivery and customer policies
 
 - `TODO_CONFIRM:` Delivery zones, fees/rate calculation, order cut-offs, dispatch estimates separate from transit time, same-day Lagos eligibility, exclusions, international destinations, customs/duties and courier coverage. Public claims mentioned in the proposal are not an approved direct-store service table.
+- `TODO_CONFIRM:` Medusa shipping-option IDs and rule table for every approved zone, the address fields used for matching, tax treatment, free-delivery thresholds (if any), and any cutoff/dispatch estimates. Until entered, checkout must show no selectable delivery method and must not invent fees.
+- `TODO_CONFIRM:` Courier/provider selection, API account and credentials, shipment creation timing, tracking URL/status contract, cancellation rules and operational owner. The current adapter is a non-integrated stub and must not claim a shipment exists.
 - `TODO_CONFIRM:` Returns, exchanges and refunds: request window, item condition/packaging, return shipping cost, refund timing, exceptions for custom/personalised items and escalation contact. The proposal says the indexed FAQ is incomplete; marketplace terms are not Lopaworld policy. Obtain Nigerian legal review before publishing.
 - `TODO_CONFIRM:` Size charts by garment and label, whether measurements are body or finished-garment measurements, centimetres/inches, fit notes and measuring instructions. A public Size Guide link is not the actual measurements.
 
 ### Payments and operations
 
 - `TODO_CONFIRM:` Enabled payment channels, payment-account owner/legal entity, NGN/USD pricing decision, international-card eligibility, settlement account and fees, pay-on-delivery/pickup rules, and refund/dispute ownership. Paystack is only a provider to evaluate, not a confirmed account.
+- `TODO_CONFIRM:` Paystack account onboarding and test/live credentials, approved channels, production callback and webhook URLs, webhook deployment reachability, and test-mode sign-off for success, failure, cancel, abandoned, duplicate, delayed and tampered events plus refunds. The provider is configuration-gated; do not enable it until these are confirmed.
 - `TODO_CONFIRM:` Transactional email provider, sender domain, support mailbox and customer-service escalation process.
+- `TODO_CONFIRM:` Customer order lookup/tracking method and the identity check required for guest access. The current confirmation holds only a private order reference and is not a tracking portal.
 - `TODO_CONFIRM:` Official legal business name, public phone, WhatsApp, email and address. The proposal reports conflicting WhatsApp candidates (`+234 805 990 9991` and `+234 805 990 9993`) and third-party directory details; none should be published without direct confirmation.
 - `TODO_CONFIRM:` Previous URL inventory and approved redirect map. The proposal gives examples, not a complete export; reconcile from sitemap, product/collection exports, Search Console and active campaign links.
 - `TODO_CONFIRM:` Privacy notice, terms, delivery/returns/care/legal copy, privacy contact and data-rights request process. Confirm who owns each request and obtain Nigerian legal review.

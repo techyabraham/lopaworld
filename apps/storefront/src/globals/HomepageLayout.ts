@@ -38,6 +38,15 @@ const FeaturedCollection: Block = {
   ],
 };
 
+const NewArrivals: Block = {
+  slug: 'newArrivals',
+  labels: { singular: 'New arrivals', plural: 'New arrivals' },
+  fields: [
+    { name: 'heading', type: 'text', required: true },
+    { name: 'description', type: 'textarea' },
+  ],
+};
+
 const StoryFeature: Block = {
   slug: 'storyFeature',
   labels: { singular: 'Editorial story', plural: 'Editorial stories' },
@@ -72,7 +81,7 @@ const Newsletter: Block = {
 export const HomepageLayout: GlobalConfig = {
   slug: 'homepage-layout',
   label: 'Homepage layout',
-  access: { read: ({ req }) => Boolean(req.user), update: authenticatedWrite },
+  access: { read: () => true, update: authenticatedWrite },
   admin: {
     description: 'Reorder the blocks to compose the homepage. Preview opens the saved draft layout.',
     preview: (_data, { req }) => {
@@ -85,7 +94,7 @@ export const HomepageLayout: GlobalConfig = {
   fields: [
     {
       name: 'layout', type: 'blocks', required: true, minRows: 1,
-      blocks: [CampaignHero, LabelEntrances, FeaturedCollection, StoryFeature, OccasionLinks, Newsletter],
+      blocks: [CampaignHero, LabelEntrances, FeaturedCollection, NewArrivals, StoryFeature, OccasionLinks, Newsletter],
     },
   ],
 };

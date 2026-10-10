@@ -4,7 +4,7 @@ import { authenticatedWrite } from '../access/cms';
 export const AnnouncementBar: GlobalConfig = {
   slug: 'announcement-bar',
   label: 'Announcement bar',
-  access: { read: ({ req }) => Boolean(req.user), update: authenticatedWrite },
+  access: { read: () => true, update: authenticatedWrite },
   versions: { drafts: true },
   fields: [
     { name: 'enabled', type: 'checkbox', defaultValue: false },

@@ -27,6 +27,31 @@ No application has been wired to R2 yet. MinIO is provided for local S3-compatib
 - Payload homepage content is an ordered `blocks` field and has a draft preview route. Uploaded media is marked with rights confirmation before it can be selected for campaign or label hero fields.
 - Secrets are read from environment variables and are not included in client bundles.
 
+## Checkout and payment (Phase 4)
+
+```mermaid
+sequenceDiagram
+  participant Customer
+  participant Storefront as Next.js server
+  participant Medusa
+  participant Paystack
+  Customer->>Storefront: Save contact and NG delivery address
+  Storefront->>Medusa: Update cart, request shipping options and calculate prices
+  Customer->>Storefront: Select delivery option
+  Storefront->>Medusa: Add shipping method and retrieve final cart total
+  Storefront->>Medusa: Create Paystack session from Medusa cart
+  Medusa->>Paystack: Initialize hosted transaction (server-side)
+  Paystack-->>Customer: Hosted authorization page
+  Paystack-->>Medusa: Signed webhook (when configured)
+  Customer-->>Storefront: Return from hosted checkout
+  Storefront->>Medusa: Complete cart; Medusa provider verifies reference, NGN amount and status
+  Medusa-->>Storefront: Order only after successful provider verification
+```
+
+The Paystack module lives in `packages/payment-paystack` and is registered only when its secret, callback URL and approved channels are present. Checkout displays the provider only when Medusa reports it enabled for the cart region. The browser never supplies a payable amount or proof of payment. NGN is the only enabled currency. Keep credentials out of the browser and use only test keys for test-mode checkout.
+
+Medusa shipping options are the source of rates. Calculated-price options use Medusa's calculate route before they are presented; the selected method is attached to the cart before the final total is displayed. No options appear until Medusa has owner-configured coverage. `packages/logistics` defines the adapter boundary for future rate, shipment, tracking and cancellation integrations; it does not currently connect to a courier. Order confirmation can recover a completed order for the originating cart and email, but customer tracking and transactional emails still need their owner-confirmed service and identity details.
+
 Phase 2 configuration lives in `apps/storefront/src/collections`, `apps/storefront/src/globals` and `apps/medusa/src/utils/product-validation.ts`. Synthetic seven-label examples live only in `seed/demo-labels.json`; they are never auto-imported and are not approved Lopaworld copy.
 
 ## Shared design system (Phase 1)

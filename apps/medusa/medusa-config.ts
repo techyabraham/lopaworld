@@ -9,6 +9,10 @@ const required = (name: string): string => {
 };
 
 export default defineConfig({
+  modules: paystackOptions() ? [{
+    resolve: '@medusajs/medusa/payment',
+    options: { providers: [{ resolve: '@lopaworld/payment-paystack', id: 'paystack', options: paystackOptions() }] },
+  }] : [],
   projectConfig: {
     databaseUrl: required('DATABASE_URL'),
     redisUrl: process.env.REDIS_URL,
@@ -21,3 +25,11 @@ export default defineConfig({
     },
   },
 });
+
+function paystackOptions() {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  const callbackUrl = process.env.PAYSTACK_CALLBACK_URL;
+  const channels = process.env.PAYSTACK_CHANNELS?.split(',').map((channel) => channel.trim()).filter(Boolean);
+  if (!secretKey || secretKey.startsWith('replace-') || !callbackUrl || !channels?.length) return null;
+  return { secretKey, callbackUrl, channels };
+}
