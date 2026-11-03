@@ -271,3 +271,17 @@ button { color: inherit; font: inherit; }
   .checkout-summary { position: sticky; top: 1rem; }
   .checkout-fields-two { grid-template-columns: 1fr 1fr; }
 }
+
+.instagram-product-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin: 0; padding: 0; list-style: none; }
+.instagram-product-card { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(15rem, .8fr); align-items: center; gap: clamp(1rem, 4vw, 3rem); }
+.instagram-product-photos { display: grid; grid-template-columns: 1fr; overflow: hidden; background: #f2eee8; }
+.instagram-product-photos.has-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.instagram-product-photo { position: relative; aspect-ratio: 4 / 5; overflow: hidden; }
+.instagram-product-photo img { width: 100%; height: 100%; object-fit: cover; }
+.instagram-product-copy h3 { margin: .2rem 0 .75rem; font-family: var(--font-editorial), Georgia, serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 400; }
+.instagram-product-copy p { max-width: 38rem; }
+.instagram-product-copy .image-credit, .instagram-catalog-note { font-size: .875rem; opacity: .75; }
+.instagram-catalog-note { margin-top: 1.5rem; }
+.label-page-hero-local { width: min(100%, 42rem); height: auto; margin-inline: auto; aspect-ratio: 4 / 5; object-fit: contain; background: var(--color-neutral-100); }
+.instagram-hero-image { aspect-ratio: 4 / 5; object-fit: contain; background: var(--color-neutral-100); }
+@media (max-width: 767px) { .instagram-product-card { grid-template-columns: 1fr; } }

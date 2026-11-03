@@ -5,7 +5,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   access: { create: authenticatedWrite, update: authenticatedWrite, delete: authenticatedWrite },
   upload: {
-    staticDir: 'public/media',
+    staticDir: 'public/media/uploads',
     imageSizes: [
       { name: 'thumbnail', width: 480, height: 480, fit: 'inside' },
       { name: 'card', width: 960, height: 1200, fit: 'cover' },

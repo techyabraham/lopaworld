@@ -1,9 +1,12 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { LABELS } from '@lopaworld/types';
 import { findPublishedRecordsSafely } from '../../lib/cms';
 import { listStoreProductsSafely, productLabel, productsForCollectionHandle, type StoreProduct } from '../../lib/store';
 import { ProductGrid } from './ProductGrid';
+import { InstagramEditorialProducts } from './InstagramEditorialProducts';
+import { instagramProductsForLabel } from '../../data/instagramProducts';
 import { CMSImage, RichContent, record, text } from './content';
 
 const nameBySlug = new Map<string, string>(LABELS.map(({ slug, name }) => [slug, name]));
@@ -30,14 +33,20 @@ export async function LabelLandingPage({ slug }: { slug: string }) {
   return <main className="store-page label-page" data-label={slug}>
     <nav className="breadcrumbs" aria-label="Breadcrumb"><Link href="/labels">Labels</Link><span aria-hidden="true">/</span><span aria-current="page">{slug === 'lopaworld' ? 'Lopaworld — The House' : text(label?.name) ?? canonical}</span></nav>
     <header className="label-intro">
-      {Boolean(label?.heroMedia) && <CMSImage value={label?.heroMedia} alt={record(label?.heroMedia)?.alt} className="label-page-hero" />}
+      {Boolean(label?.heroMedia) ? <CMSImage value={label?.heroMedia} alt={record(label?.heroMedia)?.alt} className="label-page-hero" /> : <LocalLabelHero slug={slug} />}
       <p className="eyebrow">Lopaworld label</p><h1>{slug === 'lopaworld' ? 'Lopaworld — The House' : text(label?.name) ?? canonical}</h1>
       {text(label?.introSummary) && <p className="label-summary">{text(label.introSummary)}</p>}
       {Boolean(label?.intro) && <RichContent value={label?.intro} />}
     </header>
     {contentResult.error && <p className="service-message" role="status">Editorial content is temporarily unavailable.</p>}
     {productResult.error && <p className="service-message" role="status">The product catalogue is temporarily unavailable.</p>}
+    <InstagramEditorialProducts label={slug} />
     {featured.length > 0 && <section className="store-section"><header className="section-heading"><p className="eyebrow">Selected pieces</p><h2>{text(label?.name) ?? canonical} collection</h2></header><ProductGrid products={featured} /></section>}
     <section className="store-section"><header className="section-heading"><p className="eyebrow">Explore</p><h2>All {text(label?.name) ?? canonical}</h2></header><ProductGrid products={remaining} /><Link className="text-link" href={`/shop?label=${slug}`}>Shop all labels with filters</Link></section>
   </main>;
+}
+
+function LocalLabelHero({ slug }: { slug: string }) {
+  const image = instagramProductsForLabel(slug)[0]?.photos[0];
+  return image ? <Image className="label-page-hero label-page-hero-local" src={image.src} alt={image.alt} width={960} height={1200} priority /> : null;
 }

@@ -79,3 +79,11 @@
 - Decision: Generate absolute canonical, sitemap, structured-data and feed URLs only from `NEXT_PUBLIC_SITE_URL`. Load GA4 only after an explicit analytics opt-in and only when a measurement ID is configured. Keep legacy redirects in a reviewed JSON map.
 - Context: The production domain, analytics/ad accounts, privacy wording and old URL export have not been supplied.
 - Consequences: SEO artifacts can be locally inspected, but production canonicals/sitemap and feed links stay inactive without the domain. Meta CAPI and merchant feed submission require owner configuration and review.
+
+## ADR-011 — Require a configured staging release before production cutover
+
+- Status: Accepted for Phase 8 preparation
+- Date: 2026-10-10
+- Decision: Keep production deployment and DNS cutover pending until the owner selects/provisions the production and staging targets, configures secrets and integrations, and records staging acceptance. Require an approved rollback target and explicit approval for a real payment test order.
+- Context: The repository contains local development services and CI checks, but no production host, domain, deployment workflow, payment onboarding or production secret manager is configured.
+- Consequences: Phase 8 launch steps are documented in `LAUNCH-PLAN.md`; deployment, DNS changes, real charges and refunds must be completed in the configured environment with the owner.

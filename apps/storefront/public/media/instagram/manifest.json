@@ -1,0 +1,76 @@
+{
+  "sourceAccount": "https://www.instagram.com/lopafashion/",
+  "additionalSourceAccounts": ["https://www.instagram.com/lopa_trybe/", "https://www.instagram.com/lopaprime/", "https://www.instagram.com/lopanext/", "https://www.instagram.com/lopabridal/"],
+  "importMethod": "Public Instagram post page assets rendered in an anonymous browser session",
+  "usageRightsStatus": "Not independently verified; images are attributed to the official account posts and are for the requested local storefront build. Confirm permission before production publication.",
+  "items": [
+    {
+      "label": "lopaworld",
+      "title": "Handcrafted crochet dress",
+      "post": "https://www.instagram.com/lopafashion/p/Dc03A3ejXvV/",
+      "postedAt": "2026-09-03",
+      "files": ["lopaworld-crochet-dress-01.jpg", "lopaworld-crochet-dress-02.jpg", "lopaworld-crochet-dress-03.jpg", "lopaworld-crochet-dress-04.jpg"],
+      "postCaptionSummary": "Handcrafted crochet; bold colour; timeless silhouette. The public post tags @lopaworld.",
+      "imageMarks": ["LOPA FASHION"]
+    },
+    {
+      "label": "men",
+      "title": "Gold flare set",
+      "post": "https://www.instagram.com/lopafashion/p/Dc_TX7eDTDO/",
+      "postedAt": "2026-09-07",
+      "files": ["lopamen-gold-outfit-01.jpg"],
+      "postCaptionSummary": "Cropped top, flare pants and oversized bomber; metallic gold with a soft pink accent. Caption credits the outfit to @lopamen.",
+      "imageMarks": ["ACEPHOTO.ART photographer watermark"]
+    },
+    {
+      "label": "trybe",
+      "title": "Yoruba heritage Agbada",
+      "post": "https://www.instagram.com/lopa_trybe/p/DUD1PVkDSyB/",
+      "sourceAccount": "https://www.instagram.com/lopa_trybe/",
+      "postedAt": "2026-01-28",
+      "files": ["lopatrybe-yoruba-agbada-01.jpg"],
+      "postCaptionSummary": "Describes a Yoruba Agbada as a statement of cultural pride and royalty. The post says the Agbada was made by @lopa_trybe and credits @lopaworld.",
+      "imageMarks": []
+    },
+    {
+      "label": "prime",
+      "title": "Black suit with silver-grey piping",
+      "post": "https://www.instagram.com/lopaprime/p/DLKvc2UioC_/",
+      "sourceAccount": "https://www.instagram.com/lopaprime/",
+      "postedAt": "2025-06-21",
+      "files": ["lopaprime-black-piped-suit-01.jpg"],
+      "postCaptionSummary": "Describes a black suit with silver-grey piping. The post names @lopaprime as the suit source, credits @lopaworld, and invites orders for suits.",
+      "imageMarks": ["LOPA PRIME"]
+    },
+    {
+      "label": "fashion",
+      "title": "Mustard embroidered set",
+      "post": "https://www.instagram.com/lopafashion/p/DcwAThIjdsc/",
+      "sourceAccount": "https://www.instagram.com/lopafashion/",
+      "postedAt": "2026-09-01",
+      "files": ["lopafashion-mustard-embroidered-set-01.jpg"],
+      "postCaptionSummary": "Identifies the mustard set and signature embroidery. The outfit is credited to @lopafashion, co-shared with @lopaworld, and listed as available in limited quantity in the post.",
+      "imageMarks": ["LOPA FASHION"]
+    },
+    {
+      "label": "next",
+      "title": "Peach embroidered Asoebi gown",
+      "post": "https://www.instagram.com/lopanext/p/Dc3zsrJDXDG/",
+      "sourceAccount": "https://www.instagram.com/lopanext/",
+      "postedAt": "2026-09-04",
+      "files": ["lopanext-asoebi-gown-01.jpg"],
+      "postCaptionSummary": "Describes Lopa Next as the choice for Asoebi and identifies the dress as @lopanext, with credit to @lopaworld and styling by @styledby_Isabella.",
+      "imageMarks": ["LOPA NEXT"]
+    },
+    {
+      "label": "bridal",
+      "title": "Timeless white wedding gown",
+      "post": "https://www.instagram.com/lopabridal/p/DMaX3ZNou9s/",
+      "sourceAccount": "https://www.instagram.com/lopabridal/",
+      "postedAt": "2025-07-22",
+      "files": ["lopabridal-timeless-wedding-gown-01.jpg"],
+      "postCaptionSummary": "Tells the story of a custom wedding gown designed through sketches, fabric selection and fittings, describes it as the bride’s forever, and invites brides to book an appointment.",
+      "imageMarks": ["LOPA BRIDAL"]
+    }
+  ]
+}

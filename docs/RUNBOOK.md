@@ -60,6 +60,10 @@ Use `docs/PHASE-7-QA-CHECKLIST.md` for launch verification. The storefront sets 
 
 Public order lookup has no shared rate limiter yet. Add one backed by the production Redis/service before exposing it to meaningful traffic. Run accessibility, Lighthouse, browser E2E, load, dependency-scan and backup/restore checks in staging; source review and local type/lint checks do not replace those deployment checks.
 
+## Phase 8 launch and aftercare
+
+See `docs/LAUNCH-PLAN.md` for staged deployment, DNS cutover, smoke-test, rollback and first-30-day review steps. No production provider, DNS target, staging environment, or deployment workflow is configured in this repository. Do not point DNS or use live payment credentials until owner inputs are confirmed and staging acceptance is recorded. A real low-value order/refund requires explicit owner approval and an agreed maximum charge.
+
 ## Operations
 
 Sentry, uptime checks, structured logging, alerting and deployment procedures are not configured yet. Add provider-specific commands and recovery steps when infrastructure is selected.

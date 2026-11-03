@@ -84,6 +84,15 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 - `TODO_CONFIRM:` Dependency/secret scanning, error monitoring, uptime alerts and incident escalation in the chosen CI/hosting environment.
 - `TODO_CONFIRM:` Complete the evidence-based manual checklist in `docs/PHASE-7-QA-CHECKLIST.md`; accessibility, Lighthouse thresholds, load targets and recovery are not signed off by source review alone.
 
+### Phase 8 launch and aftercare
+
+- `TODO_CONFIRM:` Select/provision production and staging hosting and region for the storefront/Payload plus separate Medusa server/worker; configure managed PostgreSQL, Redis, Cloudflare R2/CDN, TLS, secret storage and deployment/rollback.
+- `TODO_CONFIRM:` Supply production and staging domain names, DNS owner/access, canonical origin (`NEXT_PUBLIC_SITE_URL`), DNS cutover window, current records and rollback target. No DNS cutover has been performed.
+- `TODO_CONFIRM:` Configure production email, uptime/error monitoring, alert routing and incident contacts. No provider or dashboard is configured.
+- `TODO_CONFIRM:` Complete staging acceptance, smoke checks, load/accessibility/performance checks and backup restore evidence before production deployment.
+- `TODO_CONFIRM:` Approve a maximum amount and timing for a real low-value production order, payment verification, refund and reconciliation. No real charge or refund has been initiated.
+- `TODO_CONFIRM:` Populate the first-30-day backlog in `docs/LAUNCH-PLAN.md` with live search terms, abandoned checkout, exits, support contacts, errors and Core Web Vitals after launch.
+
 ## Public research is not business approval
 
 The proposal's descriptions and service statements were gathered from public storefront/social listings and third-party sources. The live public catalogue currently surfaces categories under Trybe, Men, Prime, Fashion and Next, but a public listing is only a migration clue; the owner still needs to approve the new catalogue and label assignments. The proposal itself notes that public delivery/returns snippets, social-profile copy and marketplace terms do not establish the direct-store rules. Reconfirm any public-facing claims with Lopaworld before launch.

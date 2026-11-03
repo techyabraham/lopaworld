@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { LABELS } from '@lopaworld/types';
 import { findHomepageLayoutSafely, findPublishedRecordsSafely } from '../../lib/cms';
 import { listStoreProductsSafely, productsForCollectionHandle } from '../../lib/store';
 import { ProductGrid } from './ProductGrid';
+import { InstagramEditorialProducts } from './InstagramEditorialProducts';
+import { instagramProductsForLabel } from '../../data/instagramProducts';
 import { CMSImage, record, safeHref, text } from './content';
 
 const labelNames = new Map<string, string>(LABELS.map(({ slug, name }) => [slug, name]));
@@ -16,11 +19,22 @@ export async function HomePage() {
   const labels = labelResult.records;
   return <main className="store-page home-page" data-page="home">
     {layoutResult.error && <p className="service-message" role="status">{layoutResult.error}</p>}
-    {blocks.length ? blocks.map((block, index) => <HomeBlock key={text(block.id) ?? `${text(block.blockType) ?? 'block'}-${index}`} block={block} labels={labels} />) : <section className="home-intro">
-      <p className="eyebrow">A Nigerian fashion house</p><h1>One house.<br />Seven labels.</h1>
-      <p>Explore the Lopaworld labels and find the pieces published in our catalogue.</p>
-      <Link className="lw-button" href="/shop">Explore the collection</Link>
-    </section>}
+    {blocks.length ? blocks.map((block, index) => <HomeBlock key={text(block.id) ?? `${text(block.blockType) ?? 'block'}-${index}`} block={block} labels={labels} />) : <>
+      <section className="campaign-hero">
+        <div className="campaign-hero-copy"><p className="eyebrow">Lopaworld</p><h1>One house.<br />Seven labels.</h1>
+          <p>Handcrafted crochet. Bold colour. Timeless silhouette.</p>
+          <Link className="lw-button" href="/l/lopaworld">Explore Lopaworld</Link></div>
+        <Image className="campaign-hero-image instagram-hero-image" src="/media/instagram/lopaworld-crochet-dress-01.jpg" alt="Colourful handcrafted crochet dress featured by LOPA FASHION." width={1200} height={1500} priority />
+      </section>
+      <section className="store-section label-entrances">
+        <SectionHeading eyebrow="Find your expression" title="Seven labels" />
+        <ul className="label-grid">{LABELS.map(({ slug, name }) => {
+      const label = labels.find((entry) => entry.slug === slug);
+          return <LabelEntrance key={slug} label={{ id: label?.id ?? slug, name: text(label?.name) ?? name, slug, ...(label ?? {}) }} />;
+        })}</ul>
+      </section>
+    </>}
+    <InstagramEditorialProducts label="all" />
   </main>;
 }
 
@@ -30,12 +44,15 @@ async function HomeBlock({ block, labels }: { block: Record<string, unknown>; la
     const cta = safeHref(block.ctaUrl);
     return <section className="campaign-hero">
       <div className="campaign-hero-copy"><p className="eyebrow">Lopaworld</p><h1>{text(block.headline) ?? 'Stories and style from Lopaworld'}</h1>{text(block.supportingCopy) && <p>{text(block.supportingCopy)}</p>}{cta && text(block.ctaLabel) && <Link className="lw-button" href={cta}>{text(block.ctaLabel)}</Link>}</div>
-      {Boolean(block.image) && <CMSImage value={block.image} alt={block.imageAlt} className="campaign-hero-image" />}
+      {Boolean(block.image) ? <CMSImage value={block.image} alt={block.imageAlt} className="campaign-hero-image" /> : <Image className="campaign-hero-image" src="/media/instagram/lopaworld-crochet-dress-01.jpg" alt="Colourful handcrafted crochet dress featured by LOPA FASHION." width={1200} height={1500} />}
     </section>;
   }
   if (type === 'labelEntrances') return <section className="store-section label-entrances">
     <SectionHeading eyebrow="Find your expression" title={text(block.heading) ?? 'Seven labels'} />
-    {labels.length ? <ul className="label-grid">{labels.map((label) => <LabelEntrance key={label.id} label={label} />)}</ul> : <p className="empty-inline">Label pages are being prepared in the editorial system.</p>}
+    <ul className="label-grid">{LABELS.map(({ slug, name }) => {
+      const label = labels.find((entry) => entry.slug === slug);
+      return <LabelEntrance key={slug} label={{ id: label?.id ?? slug, name: text(label?.name) ?? name, slug, ...(label ?? {}) }} />;
+    })}</ul>
   </section>;
   if (type === 'featuredCollection') {
     const handle = text(block.medusaCollectionHandle);
@@ -73,9 +90,10 @@ function LabelEntrance({ label }: { label: Record<string, unknown> & { id: strin
   const slug = text(label.slug);
   if (!slug) return null;
   const hero = label.heroMedia;
+  const localImage = instagramProductsForLabel(slug ?? '')[0]?.photos[0];
   const name = text(label.name) ?? labelNames.get(slug) ?? slug;
   return <li><Link href={`/l/${slug}`} className="label-entrance" data-label={slug}>
-    {Boolean(hero) ? <CMSImage value={hero} alt={record(hero)?.alt} className="label-entrance-image" /> : <span className="label-entrance-placeholder" aria-hidden="true">{name.slice(0, 1)}</span>}
+    {Boolean(hero) ? <CMSImage value={hero} alt={record(hero)?.alt} className="label-entrance-image" /> : localImage ? <Image src={localImage.src} alt={localImage.alt} width={480} height={600} className="label-entrance-image" /> : <span className="label-entrance-placeholder" aria-hidden="true">{name.slice(0, 1)}</span>}
     <span><strong>{slug === 'lopaworld' ? 'Lopaworld — The House' : name}</strong>{text(label.introSummary) && <small>{text(label.introSummary)}</small>}</span>
   </Link></li>;
 }
