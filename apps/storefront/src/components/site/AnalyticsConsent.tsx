@@ -3,8 +3,10 @@
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
 import { CONSENT_KEY } from '../../lib/analytics';
+import { useLocalStorageValue } from '../../lib/use-local-storage-value';
 
 const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const CHANGE_EVENT = 'lopaworld-consent-change';
 type Choice = 'accepted' | 'rejected' | null;
 
 function activateMeasurement() {
@@ -19,21 +21,19 @@ function activateMeasurement() {
 }
 
 export function AnalyticsConsent() {
-  const [choice, setChoice] = useState<Choice>(null);
-  const [ready, setReady] = useState(false);
+  const stored = useLocalStorageValue(CONSENT_KEY, CHANGE_EVENT);
+  // undefined until hydrated: render nothing rather than a prompt the visitor may already have answered.
+  const ready = stored !== undefined;
+  const choice: Choice = stored === 'accepted' || stored === 'rejected' ? stored : null;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(CONSENT_KEY);
-    const savedChoice: Choice = stored === 'accepted' || stored === 'rejected' ? stored : null;
-    setChoice(savedChoice);
-    if (savedChoice === 'accepted') activateMeasurement();
-    setReady(true);
-  }, []);
+    if (choice === 'accepted') activateMeasurement();
+  }, [choice]);
 
   function decide(next: Exclude<Choice, null>) {
     window.localStorage.setItem(CONSENT_KEY, next);
-    setChoice(next);
+    window.dispatchEvent(new Event(CHANGE_EVENT));
     setOpen(false);
     if (measurementId && window.gtag) {
       window.gtag('consent', 'update', { analytics_storage: next === 'accepted' ? 'granted' : 'denied' });
