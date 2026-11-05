@@ -51,3 +51,20 @@ The `SecurityFatalError` text includes instructions addressed to a coding agent 
 | `pnpm lint` | new | **fail (unchanged)** | Same `6 problems (2 errors, 4 warnings)` as baseline. |
 
 **Not covered:** behaviour against a real Medusa process restarting (needs a booted stack).
+
+### 0.4 — B3 fix
+
+**Change:** new `retrieveUsableCart(fields)` in `apps/storefront/src/lib/cart.ts` reads the cart named by `lw_cart_id` and adds `+completed_at,+region_id` to the requested fields. If Medusa answers 404, the cart is completed, or its region differs from the current store region, the cookie is cleared and `null` is returned. Any other Medusa failure is rethrown and the cookie is kept, so a temporary outage does not discard a bag. `createOrReadCart` (add-to-bag), `GET /api/cart` (bag and launcher) and `GET /api/checkout` use it. `medusaFetch` now throws `MedusaStoreError` carrying the HTTP status; the message text is unchanged. The completion route deliberately does not use it, because a completed cart is meaningful there.
+
+**Tests:** `apps/storefront/src/lib/cart.test.ts`. The global `fetch` is stubbed at the Medusa HTTP boundary, so the real `medusaFetch`, `getStoreRegion` and route handlers run.
+
+| Command | Code | Result | Key output |
+|---|---|---|---|
+| `pnpm test` | old (B3 present) | **fail, as expected** | `Tests 6 failed \| 14 passed (20)`. Missing, completed and wrong-region carts: `expected 'cart_old' to be 'cart_new'`. Medusa 503: `promise resolved "'cart_old'" instead of rejecting`. `GET /api/cart`: `expected 503 to be 200`. `GET /api/checkout`: `expected 503 to be 404`. |
+| `pnpm test` | new | **pass** | `Test Files 4 passed (4)`, `Tests 20 passed (20)` |
+| `pnpm typecheck` | new | **pass** | |
+| `pnpm lint` | new | **fail (unchanged)** | Same `6 problems (2 errors, 4 warnings)` as baseline. |
+
+**Behaviour to note:** a cart left in a retired region is replaced, not migrated, so its items are dropped (as specified in brief 0.4). The other cart routes (`PATCH`/`DELETE /api/cart/items`, checkout `POST`, shipping, payment) still read the cookie directly. They are reached only after the bag or checkout `GET` has validated the cart.
+
+**Not covered:** that Medusa 2.21.2 really returns 404 for an unknown cart id, and that `+completed_at,+region_id` keeps the default fields, have not been checked against a running Medusa.

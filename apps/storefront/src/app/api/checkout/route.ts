@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { cartCookie, cartFields } from '../../../lib/cart';
+import { cartCookie, cartFields, retrieveUsableCart } from '../../../lib/cart';
 import type { StoreCart } from '../../../lib/cart-types';
 import { clearCompletedOrderCookie } from '../../../lib/order-cookie';
 import { medusaFetch } from '../../../lib/store';
@@ -42,13 +42,11 @@ async function paystackIsEnabled(regionId?: string) {
 }
 
 export async function GET() {
-  const cartId = (await cookies()).get(cartCookie)?.value;
-  if (!cartId) return NextResponse.json({ error: 'Your bag is empty.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   try {
-    const params = new URLSearchParams({ fields: `${cartFields},email,shipping_address,billing_address,shipping_methods,*shipping_methods.shipping_option,*payment_collection` });
-    const { cart } = await medusaFetch<{ cart: StoreCart & { region_id?: string } }>(`/store/carts/${encodeURIComponent(cartId)}?${params}`);
+    const cart = await retrieveUsableCart(`${cartFields},email,shipping_address,billing_address,shipping_methods,*shipping_methods.shipping_option,*payment_collection`);
+    if (!cart) return NextResponse.json({ error: 'Your bag is empty.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     const [shippingOptions, paymentEnabled] = await Promise.all([
-      listCheckoutShippingOptions(cartId),
+      listCheckoutShippingOptions(cart.id),
       paystackIsEnabled(cart.region_id),
     ]);
     return NextResponse.json({ cart, shippingOptions: shippingOptions.filter(Boolean), paymentEnabled }, { headers: { 'Cache-Control': 'no-store' } });

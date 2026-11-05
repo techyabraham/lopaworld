@@ -35,6 +35,14 @@ const publishableKey = () => {
   return value && !value.startsWith('replace-') ? value : undefined;
 };
 
+export class MedusaStoreError extends Error {
+  readonly status: number;
+  constructor(status: number) {
+    super(`Medusa Store API returned ${status}.`);
+    this.status = status;
+  }
+}
+
 export async function medusaFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const key = publishableKey();
   if (!key) throw new Error('Medusa publishable API key is not configured.');
@@ -47,7 +55,7 @@ export async function medusaFetch<T>(path: string, init: RequestInit = {}): Prom
       ...init.headers,
     },
   });
-  if (!response.ok) throw new Error(`Medusa Store API returned ${response.status}.`);
+  if (!response.ok) throw new MedusaStoreError(response.status);
   return response.json() as Promise<T>;
 }
 
