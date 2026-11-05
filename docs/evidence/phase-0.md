@@ -291,3 +291,78 @@ The stack job is the first real run of the production layout: Medusa migrates sc
 - "A fresh empty Postgres plus `docker compose up` (local stack using the built images) boots. Payload admin loads, the Medusa admin loads, and `/api/ready` returns 200.": **met in CI with `docker run`** (stack job). Not yet run as `docker compose up` on this workstation.
 - "CI is green on the PR": the `Images` workflow is green; the quality workflow (`ci.yml`) is task 0.11 and no PR is open yet.
 - "Regression tests for B1–B3 fail on the old code and pass on the new code": **met** (0.2–0.4).
+
+### 0.11 — CI quality gates
+
+**`.github/workflows/ci.yml`** (on PRs and on pushes to `main`, `master` and `phase/**`; `contents: read`; concurrency per ref)
+- Job `quality`: `postgres:17-alpine` and `redis:7-alpine` services; pnpm and Node from the repo pins (`packageManager`, `.node-version`); `PREVIEW_SECRET` added (N4).
+- Steps: frozen install → font-glyph check → `pnpm typecheck` → `pnpm lint` → `pnpm test` (Vitest, both packages) → `pnpm tokens:check` → `pnpm audit:gate` → Playwright design-system tests (dev server on its **own** database `ci_dev`) → `pnpm build`. Build failures publish the log tail as an annotation.
+- Job `secrets`: gitleaks v8.18.4 (`zricethezav/gitleaks`) over the full git history (`fetch-depth: 0`), run as the runner user, `--redact`.
+
+**Audit gate** (`scripts/audit-gate.mjs`, `security/audit-allowlist.json`, ADR-013): fails on any high/critical production advisory that is not allow-listed or whose entry has expired; warns about stale entries. Local negative test: with one entry expired and one removed, the gate printed `allow-list entry expired 2026-11-01 …` and `not allow-listed … zod` and exited 1. With the real list it exited 0 (`7 high/critical finding(s), all allow-listed and unexpired`).
+
+**Playwright against the booted stack:** `e2e/stack/smoke.spec.ts` via `playwright.stack.config.ts` (`pnpm test:e2e:stack`), run by the Images workflow's `stack` job against the built images on one shared Postgres:
+- health/ready;
+- the homepage shell;
+- the empty-bag state;
+- `/shop` degrading without a catalogue;
+- both admins in a real browser.
+
+The main Playwright config ignores `e2e/stack`.
+
+**Problems the new gates found and fixed**
+
+| # | Found by | Problem | Fix |
+|---|---|---|---|
+| N5 | `pnpm lint` | `react-hooks/set-state-in-effect` in `WishlistButton.tsx` and `AnalyticsConsent.tsx` | Shared `useLocalStorageValue` hook (`useSyncExternalStore`): cross-tab and in-tab sync, `undefined` during SSR/hydration. Verified in the browser: fresh visitor sees the consent prompt; reject stores `rejected` and shows the settings button; reopen works; reload remembers the choice. Lint now **0 errors** (4 `<img>` warnings remain, B6). |
+| N8 | stack smoke test (real browser) | `/admin` crashed after load: React hydration error #418, then `insertBefore`/`removeChild` DOM errors. Cause: `app/layout.tsx` rendered `<html>` around Payload's own `RootLayout`, nesting two documents. curl-based checks only saw the server-rendered 200. | The site root layout, `globals.css` and the `(store)`, `dev` and `preview` routes moved into an `app/(site)` route group (Payload's expected structure). URLs unchanged; 21 files' relative imports rewritten by script. Verified on the production standalone server in a fresh tab: `/admin` → `/admin/create-first-user` and `/` both with **no console messages**. |
+| N9 | CI `pnpm build` | `next dev` (Playwright design-system tests) let Payload push its schema into the CI database; the following `next build` (migrations via `prodMigrations`) stopped at Payload's interactive prompt *"It looks like you've run Payload in dev mode … data loss will occur. Would you like to proceed?"*, and static page generation timed out. | Dev-server tests use a separate database (`ci_dev`); RUNBOOK documents the rule. |
+| — | first CI build attempt | `pnpm build` failure had no readable detail without job-log access | Build log tail published as an annotation |
+
+**Runs**
+
+| Run | Commit | Result | Key output |
+|---|---|---|---|
+| CI [42084210819](https://github.com/techyabraham/lopaworld/actions/runs/42084210819) | `75e1636` | fail | every step up to the build passed (glyphs, typecheck, lint, Vitest, tokens, audit gate, Playwright 5/5); build failed (N9, not yet diagnosed); gitleaks passed |
+| Images [42084210932](https://github.com/techyabraham/lopaworld/actions/runs/42084210932) | `75e1636` | fail | stack smoke 4/5; `both admin applications load` failed: `toHaveTitle(/Payload/)` received `""`, `<html id="__next_error__">` (N8) |
+| CI [42088630437](https://github.com/techyabraham/lopaworld/actions/runs/42088630437) | `cb7ae99` | fail | build log annotation showed the Payload dev-push prompt (N9) |
+| Images [42088630616](https://github.com/techyabraham/lopaworld/actions/runs/42088630616) | `cb7ae99` | **pass** | stack smoke `5 passed` after the layout fix |
+| CI [42090639811](https://github.com/techyabraham/lopaworld/actions/runs/42090639811) | `0bf12ba` | **pass** | quality (all steps incl. `pnpm build`, Playwright `5 passed (18.5s)`) and secrets (gitleaks, full history) both green, ~3 min |
+| Images [42090640055](https://github.com/techyabraham/lopaworld/actions/runs/42090640055) | `0bf12ba` | **pass** | storefront 110 MB, `/api/health` 200, `/api/ready` 503 with Medusa down, runs as node; medusa 173 MB, `/health` 200 after ~12s, 147 tables, runs as node; stack `/api/ready` 200, `public` 147 + `payload` 55 tables in one database, both admins 200, Playwright `5 passed (3.6s)` |
+
+### 0.12 — Paystack provider tests
+
+`packages/payment-paystack/src/service.test.ts`: **56 Vitest tests**, with Paystack's HTTP API stubbed (no network; placeholder test key). Covered:
+- `validateOptions`;
+- `initiatePayment`: kobo amounts, deterministic reference, context fallbacks, NGN-only, invalid input, API refusal;
+- `toMinorUnits` half-up cases;
+- `authorizePayment`, `updatePayment`, `retrievePayment`, `getPaymentStatus` mappings;
+- amount, currency and reference mismatch (authorize and refund);
+- capture/cancel/delete as no-ops;
+- refund cap, zero amount and unsuccessful transaction;
+- webhook: wrong key, body altered after signing, missing header, unsupported event, tampered amount, non-NGN currency, reference not derived from the metadata, missing metadata, missing reference, `charge.failed`, and **identical results for duplicate deliveries** (verify-only calls).
+
+**`toMinorUnits` rounding** (brief: "e.g. 1999.995"): before writing tests, the current implementation was compared with exact decimal half-up rounding (`BigNumber#times(100).integerValue(ROUND_HALF_UP)`) for 1999.995, '1999.995', 1.005, 10.005, 12345.675, 150000.005, 249999.995, 1234567.895, 0.1+0.2, 99.99 and 150000. **All matched**: 1999.995 → 200000 kobo. The implementation was left unchanged and the tests pin that behaviour. (An initial suspicion of a float-rounding bug was checked and found to be wrong.)
+
+**Mutation check** (each change applied alone, then `service.ts` restored byte-for-byte):
+
+| Mutation | Result |
+|---|---|
+| webhook signature check returns `true` | 2 tests fail |
+| authorize/refund amount comparison removed | 2 fail |
+| webhook expected-amount check removed | 1 fails |
+| `toMinorUnits` uses `Math.floor` | 3 fail |
+| refund cap removed | 1 fails |
+
+**Checks:** `pnpm test` locally: `packages/payment-paystack … Tests 56 passed (56)`, `apps/storefront … Tests 29 passed (29)`. In CI, the same `pnpm test` step passed in [42090639811](https://github.com/techyabraham/lopaworld/actions/runs/42090639811). `pnpm typecheck` and `pnpm lint` (0 errors) pass locally. `vitest@5.1.0` added as a dev dependency of the package (already in the lockfile; 4-line lockfile change).
+
+**Not covered:** live Paystack *test-mode* round trips (success, decline, abandon, delayed webhook, refund). These need Paystack test credentials and a reachable webhook URL; Phase 6.1 and OPEN_ITEMS track them.
+
+## Phase 0 acceptance (5 November 2026)
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| CI is green on the PR (link the run) | **Green on the branch**: CI [42090639811](https://github.com/techyabraham/lopaworld/actions/runs/42090639811) and Images [42090640055](https://github.com/techyabraham/lopaworld/actions/runs/42090640055) at `0bf12ba`. The PR runs the same workflows. | 0.11 |
+| `docker build` succeeds for both images on Linux; sizes recorded | **Met**: storefront 110 MB, Medusa 173 MB (size caveat in 0.9) | 0.8, 0.9, 0.11 |
+| Fresh empty Postgres + local stack from the built images boots; Payload admin loads; Medusa admin loads; `/api/ready` 200 | **Met in CI** (stack job, `docker run`, one shared database, real-browser admin check). Not run as `docker compose up` on this workstation. | 0.10, 0.11 |
+| Regression tests for B1–B3 fail on the old code and pass on the new code | **Met** | 0.2–0.4 |
