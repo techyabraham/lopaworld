@@ -1,0 +1,22 @@
+# Disposable PostgreSQL 17 for proving migrations against a fresh, empty database.
+# Separate Compose project (`pnpm db:verify:up`), loopback-only port 5433, data on tmpfs:
+# it creates no Docker volume and never touches the development stack or its volumes.
+# The credentials are local placeholders for this throwaway instance only.
+name: lopaworld-verify
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: verify
+      POSTGRES_PASSWORD: verify
+      POSTGRES_DB: lopaworld_verify
+    ports:
+      - "127.0.0.1:5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verify -d lopaworld_verify"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

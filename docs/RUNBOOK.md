@@ -23,6 +23,8 @@ The first Medusa boot performs its application initialization/migrations. Create
 - `pnpm dev:storefront` and `pnpm dev:medusa` run one application independently.
 - `pnpm infra:logs` tails local dependency logs.
 - `pnpm infra:down` stops the dependency containers. Named volumes retain local data.
+- If another PostgreSQL already listens on 5432 (on the original workstation, a native Windows PostgreSQL 18 service does), set `POSTGRES_HOST_PORT=5434` in `.env` and use port 5434 in `DATABASE_URL`. Otherwise `pnpm infra:up` cannot bind the port, and connections reach the other server (the source of the earlier `28P01` errors).
+- `pnpm db:verify:up` starts a disposable, empty PostgreSQL 17 on `127.0.0.1:5433` (Compose project `lopaworld-verify`, tmpfs, no volume) for proving migrations; `pnpm db:verify:down` discards it. Example: `DATABASE_URL=postgres://verify:verify@127.0.0.1:5433/lopaworld_verify pnpm payload migrate`.
 - `pnpm typecheck`, `pnpm lint`, and `pnpm build` run workspace quality checks.
 - `pnpm test` runs the Vitest unit tests (storefront: `apps/storefront/src/**/*.test.ts`).
 - `pnpm tokens:check` verifies all seven provisional accent themes against the WCAG AA contrast threshold.

@@ -16,7 +16,9 @@
     "test:e2e": "playwright test",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs -f"
+    "infra:logs": "docker compose logs -f",
+    "db:verify:up": "docker compose -f docker/compose.verify.yml up -d --wait",
+    "db:verify:down": "docker compose -f docker/compose.verify.yml down"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
