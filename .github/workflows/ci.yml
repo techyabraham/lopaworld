@@ -74,7 +74,12 @@ jobs:
       - run: pnpm tokens:check
       - name: Dependency audit gate (high/critical, expiring allow-list)
         run: pnpm audit:gate
+      # `next dev` lets Payload push its schema directly; it must never share a database with the
+      # migration-based build below, or Payload stops at an interactive data-loss prompt. Payload
+      # creates this separate database on first connect.
       - name: Playwright design-system tests
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci_dev
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm test:e2e
