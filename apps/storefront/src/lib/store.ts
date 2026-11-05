@@ -29,7 +29,8 @@ export type StoreProduct = {
 export type StoreCategory = { id: string; name: string; handle: string; parent_category?: { handle?: string } | null };
 export type StoreRegion = { id: string; currency_code: string; name: string; countries?: Array<{ iso_2: string }> };
 
-const backend = () => (process.env.MEDUSA_BACKEND_URL ?? 'http://localhost:9000').replace(/\/$/, '');
+export const medusaBackendUrl = () => (process.env.MEDUSA_BACKEND_URL ?? 'http://localhost:9000').replace(/\/$/, '');
+const backend = medusaBackendUrl;
 const publishableKey = () => {
   const value = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
   return value && !value.startsWith('replace-') ? value : undefined;

@@ -3,7 +3,10 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
-    alias: { 'server-only': fileURLToPath(new URL('./src/test/server-only.ts', import.meta.url)) },
+    alias: {
+      'server-only': fileURLToPath(new URL('./src/test/server-only.ts', import.meta.url)),
+      '@payload-config': fileURLToPath(new URL('./src/test/payload-config.ts', import.meta.url)),
+    },
   },
   test: {
     environment: 'node',
