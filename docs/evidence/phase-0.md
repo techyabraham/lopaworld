@@ -180,3 +180,50 @@ Payload 3.93.0 (published 2026-11-04) was tried first. pnpm accepted it only by 
 - `prodMigrations` runs on Payload's first connection (the first request that touches Payload), not at process start.
 - Because `next build` runs with `NODE_ENV=production`, a build whose `DATABASE_URL` reaches a real database would apply migrations during the build. The Dockerfile's build-time URL (`127.0.0.1:5432/build`) is unreachable inside the build container, so this cannot happen in image builds; keep it that way.
 - Payload admin loading against the **Medusa-shared** database, and `/api/ready`, belong to the Phase 0 stack acceptance (tasks 0.9–0.10).
+
+### 0.8 — Medusa production artefact (proven on clean Linux in GitHub Actions)
+
+The local Linux probe (`docker build --target build` on this workstation) was stopped after about 20 minutes still inside `pnpm install`: registry downloads were very slow and some failed and retried. The owner chose GitHub Actions instead. The new workflow `.github/workflows/images.yml` builds the image without pushing it anywhere, then boots it.
+
+**Root causes found and fixed**
+
+| # | Symptom | Cause | Fix |
+|---|---|---|---|
+| N1 | `Cannot find module './maps.js'` from `emittery@0.13.0` (Windows **and** Linux CI) | The npm tarball of `emittery@0.13.0` (2022-08-25 03:36) contains only `license, index.js, package.json, readme.md, index.d.ts`, although `index.js` requires `./maps.js`. `0.13.1`, published 6 h later, adds it. The lockfile pinned 0.13.0 via `umzug@3.8.2` (`^0.13.0`) → `@mikro-orm/migrations` → `@medusajs/deps`. | `pnpm update -r --depth Infinity emittery` → `0.13.1` (lockfile-only, within range) |
+| — | `Cannot find module 'ts-node'`, then `Error in loading config` | The Medusa CLI loads `medusa-config.ts` through `ts-node`; the app never declared it | `ts-node` dev dependency |
+| — | `Backend build completed successfully`, but no backend files emitted | `apps/medusa/tsconfig.json` had `"noEmit": true` | Removed it; `rootDir: "./"`, `outDir: "./.medusa/server"` as in Medusa's starter. The `typecheck` script keeps `--noEmit`. |
+| — | Vite: cannot resolve `react/jsx-dev-runtime`, `@medusajs/dashboard`, `@medusajs/draft-order/admin`, `@medusajs/admin-shared`; then `"defineRouteConfig" is not exported by "__vite-optional-peer-dep:@medusajs/admin-sdk…"` | pnpm's strict layout: the admin entry and the admin Vite plugin's virtual modules resolve from the app, and `@medusajs/draft-order`'s admin bundle uses **optional peers** that pnpm only links when the app declares them | Build-time dev dependencies at the versions already locked: `react`/`react-dom` 18.3.1, `@medusajs/{dashboard,admin-sdk,admin-shared,draft-order,icons}` 2.21.2, `@medusajs/ui` 4.2.6, `react-router-dom` 7.18.2 |
+| — | Workspace packages would load TypeScript from `node_modules` at runtime | Both `@lopaworld/*` packages export `./src/index.ts` | `tsc` build to `dist`, with `publishConfig` exports → `dist` (dev and Next keep `src`) |
+| — | `pnpm deploy --prod --legacy` links `@lopaworld/*` to their source; non-legacy deploy refuses (`ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE`) | pnpm 11 requires workspace-wide `inject-workspace-packages` for non-legacy deploy, which would change dev linking for every package | Keep `--legacy`; replace each `@lopaworld/*` link with its `pnpm pack` output (publishConfig applied, `dist` only) |
+| — | CI: guard "links outside /app" failed | Legacy deploy leaves `node_modules/.pnpm/node_modules/@lopaworld/medusa` linked to the workspace app source | Remove that self-link |
+
+**Image (`docker/medusa.Dockerfile`)**
+- Build stage: install → build `@lopaworld/types` and `@lopaworld/payment-paystack` → `medusa build` (placeholder build-time env, unreachable DB) → `pnpm deploy --prod --legacy /app` → swap in packed workspace packages → overlay `.medusa/server` (except its `package.json`, which still says `workspace:*`).
+- Build-time guards: both workspace packages export `dist`; `import('@lopaworld/payment-paystack')` and `import('@lopaworld/types')` succeed from `/app`; `medusa-config.js` and `public/admin` exist; no link resolves outside `/app`.
+- Runtime stage: `node:24.15.0-bookworm-slim`, only `/app` copied, `USER node`, `CMD` runs `medusa db:migrate` then `medusa start`.
+
+**Checks**
+
+| Command / run | Env | Result | Key output |
+|---|---|---|---|
+| `pnpm --filter @lopaworld/medusa build` (with `.env`) | Win10, Node 24.15.0 | **pass** | `Backend build completed successfully (27.13s)`, `Frontend build completed successfully (142.04s)`; `.medusa/server` holds `medusa-config.js`, `src/…`, `public/admin` |
+| local `pnpm deploy --prod --legacy` + pack swap | same | **pass** | both `@lopaworld/*` export `./dist/index.js`; `import()` of both succeeds from the deployed tree |
+| Images [run 42061720916](https://github.com/techyabraham/lopaworld/actions/runs/42061720916) @ `7f07c04` | ubuntu-latest | fail | `medusa build` step (emittery, before the fixes above) |
+| Images [run 42067586671](https://github.com/techyabraham/lopaworld/actions/runs/42067586671) @ `6a3f965` | ubuntu-latest | fail | build-time guard: link outside `/app` (the self-link) |
+| Images [run 42068296986](https://github.com/techyabraham/lopaworld/actions/runs/42068296986) @ `084882e` | ubuntu-latest | **pass** | build, boot, health, admin, migrations |
+| Images [run 42069950453](https://github.com/techyabraham/lopaworld/actions/runs/42069950453) @ `4fa45b1` | ubuntu-latest | **pass** | notices: `Medusa image size: 173 MB (target <= 600 MB)`; `GET /health -> 200 after ~16s`; `GET /app (admin) -> 200`; `Medusa tables after db:migrate: 147` |
+
+Boot used a fresh `postgres:17-alpine` and `redis:7-alpine` and CI-only placeholder values. That includes a deliberately fake Paystack test key (`sk_test_ci_placeholder`), so the Paystack provider package is registered at boot; Medusa would fail to start if it could not load it. No call to Paystack is made.
+
+**Caveats**
+- `173 MB` is `docker image inspect --format '{{.Size}}'`. Under Docker's containerd image store this can be the compressed content size; 0.9 should record both compressed and uncompressed sizes.
+- Job logs and the job summary require GitHub authentication (`gh` is not signed in on this workstation; logs API returned 403). Results were read from the public runs/jobs/annotations APIs. The workflow now publishes measurements as `::notice` and failures as `::error` annotations.
+- The repository is **publicly readable**: the GitHub API answered without authentication.
+
+**Medusa 2.22.x evaluation (audit leftovers from 0.6)**
+- Candidate under ADR-012: **2.22.2** (2026-10-30). 2.22.3 (2026-11-04) is younger than the release-age gate.
+- It would fix 2 of the 5 Medusa-side high findings: `zod` (`@medusajs/deps` pins 4.6.6 instead of 4.2.0) and `tmp` (`@medusajs/cli` moves to `inquirer@^14`, which no longer depends on `tmp`).
+- It would not fix `lodash@4.17.23` or `@graphql-tools/utils@10`: `@medusajs/utils` 2.21.2 and 2.22.2 both require `@graphql-codegen/core@^4.0.2` → `@graphql-codegen/plugin-helpers@5` (`lodash ~4.17.0`). The fix for those needs `@graphql-codegen/core` 6.x upstream.
+- Not done: it is a framework minor upgrade touching every `@medusajs/*` package, the Paystack peer pin and the admin build pins. It is proposed as its own change, verified by the same Images workflow.
+
+**Housekeeping:** a local `pnpm deploy --prod` test left the workspace `node_modules` flagged production-only, and the next `pnpm typecheck` aborted in pnpm's dependency pre-check. `pnpm install --frozen-lockfile --config.confirmModulesPurge=false` restored it; typecheck (5/5), tests (21/21) and lint (baseline) were then re-run. One pair of commits (`af4b717`, `6a3f965`) was pushed while that check was red; after the restore the same code passed, so no follow-up commit was needed.

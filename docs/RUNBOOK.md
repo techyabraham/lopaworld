@@ -70,3 +70,9 @@ See `docs/LAUNCH-PLAN.md` for staged deployment, DNS cutover, smoke-test, rollba
 ## Operations
 
 Sentry, uptime checks, structured logging, alerting and deployment procedures are not configured yet. Add provider-specific commands and recovery steps when infrastructure is selected.
+
+## Production images
+
+- `docker/medusa.Dockerfile` builds the Medusa image: workspace packages → `medusa build` → `pnpm deploy --prod --legacy /app` → packed `@lopaworld/*` swapped in → `.medusa/server` overlaid. The build fails if a workspace package would load TypeScript at runtime or if any link points outside `/app`.
+- `.github/workflows/images.yml` builds it on clean Linux on every push to `phase/**` and on PRs, then boots it against fresh Postgres 17 and Redis 7 and checks `/health`, `/app` and migrations. Measurements appear as notice annotations on the run; failures publish the build or container log tail as an error annotation.
+- New Medusa admin or plugin dependencies may need declaring in `apps/medusa/package.json` (dev dependencies) because pnpm's strict layout does not expose undeclared or optional peer packages to the admin build.
