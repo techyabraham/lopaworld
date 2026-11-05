@@ -91,6 +91,7 @@ The diagram represents intended and current boundaries, with dotted integrations
 
 - Storefront routes proxy cart, checkout, shipping, payment, preview, and order flows. State-changing browser requests use same-origin validation in `src/lib/request-security.ts`.
 - Medusa guest lookup: `POST /store/orders/lookup`; storefront proxy: `POST /api/track-order`.
+- Health: storefront `GET /api/health` (liveness, no dependencies; used by the Compose healthcheck) and `GET /api/ready` (Payload database + Medusa `/health`, 2 s timeouts, 503 naming the failed check); Medusa `GET /health`. CI's `stack` job boots both images on one shared Postgres and expects `/api/ready` 200.
 - Paystack webhook path documented for provider ID `paystack`: `/hooks/payment/paystack_paystack`. Verify actual provider registration and reachability in staging.
 
 ## Features already implemented

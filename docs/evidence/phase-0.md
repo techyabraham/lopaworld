@@ -254,3 +254,40 @@ Boot used a fresh `postgres:17-alpine` and `redis:7-alpine` and CI-only placehol
 **Size measurement caveat:** the workflow labels the second figure "uncompressed (docker save)". Under Docker's containerd image store, `docker save` also exports compressed layer blobs, so both figures are probably compressed sizes. Unpacked sizes were not measured. Both images are well under their targets (109/400 MB, 173/600 MB) even allowing for a large decompression ratio. To measure exactly, add `docker run --rm --entrypoint du <image> -sxm /` to the workflow.
 
 **Not done in 0.9:** the storefront healthcheck in `coolify.compose.yaml` still requests `/` (B10, task 0.10). Images are not pushed to a registry (release workflow, brief §6). The Compose file still has `build:` sections instead of GHCR `image:` references (brief §6, Phase 6 deploy).
+
+### 0.10 — Health and readiness endpoints (B10)
+
+**Change**
+- `GET /api/health` (`apps/storefront/src/app/api/health/route.ts`): `200 {"status":"ok"}`, `Cache-Control: no-store`, no dependency checks.
+- `GET /api/ready` (`src/app/api/ready/route.ts` + `src/lib/readiness.ts`): Payload database ping (`select 1` on the adapter's `pg` pool, after `getPayload`) and Medusa `GET /health`, run in parallel with 2 s timeouts each. Returns `200 {"status":"ready","checks":{…}}` or `503 {"status":"unavailable","checks":{…}}`. The body names which check failed; error detail goes only to `logServerError`. The first call also initialises Payload, which applies `prodMigrations` in production, so readiness stays 503 until migrations finish.
+- Medusa keeps its built-in `/health`.
+- `coolify.compose.yaml`: the storefront healthcheck requests `/api/health` (it was `/`, which rendered the full homepage).
+- Both route files are dynamic in the build (`ƒ /api/health`, `ƒ /api/ready`). The installed Next docs (`01-getting-started/15-route-handlers.md:51`) say route handlers are not cached by default.
+
+**Tests:** `src/lib/readiness.test.ts`, 8 tests:
+- health answers without touching Payload or fetch;
+- database ok, query failure, and Payload not initialising within the timeout;
+- Medusa `/health` URL building, non-2xx and network failure;
+- `/api/ready` 200, and 503 without error text.
+
+`@payload-config` is aliased to a stub in `vitest.config.ts`.
+
+**Checks**
+
+| Command / run | Env | Result | Key output |
+|---|---|---|---|
+| `pnpm test` | Win10, Node 24.15.0 | **pass** | `Test Files 6 passed (6)`, `Tests 29 passed (29)` |
+| `pnpm typecheck` | same | **pass** | |
+| `pnpm lint` | same | baseline | 6 problems (a new `import/no-anonymous-default-export` warning in the test stub was fixed) |
+| `dotenv -e .env -- pnpm --filter @lopaworld/storefront build` | same | **pass** | `ƒ /api/health`, `ƒ /api/ready` |
+| Images [run 42080408883](https://github.com/techyabraham/lopaworld/actions/runs/42080408883) @ `7e11c13`, job **storefront** (Medusa deliberately absent) | ubuntu-latest | **pass** | `GET /api/health -> 200 {"status":"ok"}`; `GET /api/ready (Medusa down) -> 503 {"status":"unavailable","checks":{"database":"ok","medusa":"unavailable"}}`; size 109 MB; `runs as node` |
+| same run, job **medusa** | ubuntu-latest | **pass** | as in 0.9 |
+| same run, job **stack**: both images, one shared `postgres:17-alpine` database `lopaworld` + `redis:7-alpine`, Medusa started first | ubuntu-latest | **pass** | `GET /api/ready (full stack) -> 200 {"status":"ready","checks":{"database":"ok","medusa":"ok"}}`; `Shared database lopaworld: public tables 147, payload tables 55, payload migrations 20261105_144453_initial_schema`; `GET /admin -> 200; GET :9000/app -> 200` |
+
+The stack job is the first real run of the production layout: Medusa migrates schema `public` first, then the storefront applies the Payload baseline into schema `payload` in the **same existing database**. This proves the reviewed `CREATE SCHEMA IF NOT EXISTS "payload"` addition from 0.7.
+
+**Phase 0 acceptance status after 0.10**
+- "`docker build` succeeds for both images on Linux. Sizes are recorded.": **met** (runs above; size caveat in 0.9).
+- "A fresh empty Postgres plus `docker compose up` (local stack using the built images) boots. Payload admin loads, the Medusa admin loads, and `/api/ready` returns 200.": **met in CI with `docker run`** (stack job). Not yet run as `docker compose up` on this workstation.
+- "CI is green on the PR": the `Images` workflow is green; the quality workflow (`ci.yml`) is task 0.11 and no PR is open yet.
+- "Regression tests for B1–B3 fail on the old code and pass on the new code": **met** (0.2–0.4).
