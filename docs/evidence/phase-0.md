@@ -67,4 +67,21 @@ The `SecurityFatalError` text includes instructions addressed to a coding agent 
 
 **Behaviour to note:** a cart left in a retired region is replaced, not migrated, so its items are dropped (as specified in brief 0.4). The other cart routes (`PATCH`/`DELETE /api/cart/items`, checkout `POST`, shipping, payment) still read the cookie directly. They are reached only after the bag or checkout `GET` has validated the cart.
 
-**Not covered:** that Medusa 2.21.2 really returns 404 for an unknown cart id, and that `+completed_at,+region_id` keeps the default fields, have not been checked against a running Medusa.
+**Not covered (B3):** that Medusa 2.21.2 really returns 404 for an unknown cart id, and that `+completed_at,+region_id` keeps the default fields, have not been checked against a running Medusa.
+
+### 0.5 — B12 fix
+
+**Search:** every `error.message` / `instanceof Error` use under `apps/` was reviewed. The only server route returning raw error text was `POST /api/cart/items` (`route.ts:42-44`). The client components that display `reason.message` show either the server's `error` string or the browser's own fetch/JSON error, not server internals.
+
+**Change:** the `POST /api/cart/items` catch now always returns `Your bag could not be updated. Please try again.` (503) and records the detail with the new `logServerError(scope, error)` in `apps/storefront/src/lib/server-log.ts`. That helper writes one JSON line to `console.error` with the scope, error name and message only. Structured logging with request IDs is still task 1.9.
+
+**Tests:** `apps/storefront/src/app/api/cart/items/route.test.ts`. With no cart cookie and no publishable key, the internal message must not reach the browser and must appear in the server log.
+
+| Command | Code | Result | Key output |
+|---|---|---|---|
+| `pnpm test` | old (B12 present) | **fail, as expected** | `Tests 1 failed \| 20 passed (21)`: `expected 'Medusa publishable API key is not con…' to be 'Your bag could not be updated. Please…'` |
+| `pnpm test` | new | **pass** | `Test Files 5 passed (5)`, `Tests 21 passed (21)` |
+| `pnpm typecheck` | new | **pass** | |
+| `pnpm lint` | new | **fail (unchanged)** | Same `6 problems (2 errors, 4 warnings)` as baseline. |
+
+**Follow-up:** when a route returns a non-JSON 5xx, the client components can show the browser's raw parse message (e.g. `Unexpected token '<'`). That is not a server leak, but it breaks the "short and human" rule in brief §7, and it belongs with the Phase 2 component rebuild.

@@ -208,6 +208,7 @@ See [Payload migration docs](https://payloadcms.com/docs/database/migrations) an
 
 ## Security and privacy model
 
+- Storefront API routes return short generic error messages; internal detail is logged server-side (`lib/server-log.ts`, currently JSON lines on stderr) and never sent to the browser (audit B12).
 - Same-origin checks guard state-changing cart/checkout APIs. Do not weaken them to make a cross-origin test pass.
 - Payment totals and authorization are obtained/verified server-side through Medusa and Paystack; browser-supplied amount or return URL is not payment proof.
 - Guest lookup requires order number plus checkout email and exposes a narrow status record. Add shared rate limiting before meaningful public traffic.

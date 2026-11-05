@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createOrReadCart, cartCookie, cartFields } from '../../../../lib/cart';
 import { medusaFetch, retrieveStoreProduct, variantIsAvailable } from '../../../../lib/store';
 import { isSameOriginRequest } from '../../../../lib/request-security';
+import { logServerError } from '../../../../lib/server-log';
 import type { StoreCart } from '../../../../lib/cart-types';
 
 type CartResponse = { cart: StoreCart };
@@ -38,10 +39,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ cart }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
-    const cookieJar = await cookies();
-    if (!cookieJar.get(cartCookie)) {
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'Your bag could not be updated.' }, { status: 503 });
-    }
+    logServerError('api/cart/items POST', error);
     return NextResponse.json({ error: 'Your bag could not be updated. Please try again.' }, { status: 503 });
   }
 }
