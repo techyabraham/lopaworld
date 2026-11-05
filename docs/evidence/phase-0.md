@@ -85,3 +85,42 @@ The `SecurityFatalError` text includes instructions addressed to a coding agent 
 | `pnpm lint` | new | **fail (unchanged)** | Same `6 problems (2 errors, 4 warnings)` as baseline. |
 
 **Follow-up:** when a route returns a non-JSON 5xx, the client components can show the browser's raw parse message (e.g. `Unexpected token '<'`). That is not a server leak, but it breaks the "short and human" rule in brief §7, and it belongs with the Phase 2 component rebuild.
+
+### 0.6 — Next.js security upgrade and production audit
+
+**Target:** `next` 16.4.5 is npm `latest` and the newest 16.x (published 2026-11-03). The three Next advisories on 16.4.0 are patched in `>=16.4.1`. I followed the manual path in the installed docs (`node_modules/next/dist/docs/01-app/01-getting-started/18-upgrading.md`), because this is a patch upgrade within 16.4 with no migration guide. `next upgrade --agent` was not used.
+
+**Changes**
+
+| Package | Before | After | Why |
+|---|---|---|---|
+| `next` | 16.4.0 (`^16.2.6`) | 16.4.5 (`^16.4.5`) | 2 critical RCE + 1 high DoS; `SecurityFatalError` on build |
+| `eslint-config-next` | `^16.2.6` | 16.4.5 (`^16.4.5`) | kept in step with `next` (brief 0.6) |
+| `payload`, `@payloadcms/{next,db-postgres,richtext-lexical}` | 3.90.2 (`^3.84.0`) | 3.92.1 (`^3.92.1`) | pins `undici@7.30.1`, which clears 6 high `undici` advisories |
+| `dompurify` (via `@payloadcms/ui` → `@monaco-editor/react` → `monaco-editor@0.57.0`, exact pin) | 3.4.15 | 3.4.17 via `pnpm-workspace.yaml` `overrides` (scoped to `monaco-editor>dompurify`) | 1 critical + 1 high |
+| In-range transitive updates (`pnpm update -r --depth Infinity …`) | | `body-parser` 1.20.9, `multer` 2.5.0, `follow-redirects` 1.16.2, `ansi-regex` 4.1.1/5.0.1, `happy-dom` 20.14.6, newer `lodash`/`zod`/`@graphql-tools/utils` where ranges allowed | patch/minor security releases within declared ranges |
+
+Payload 3.93.0 (published 2026-11-04) was tried first. pnpm accepted it only by writing `minimumReleaseAgeExclude` entries into `pnpm-workspace.yaml`, i.e. by bypassing its release-age safeguard. That was reverted. 3.92.1 (2026-10-27) carries the same `undici` fix without an exclusion. See ADR-012.
+
+**Checks (after)**
+
+| Command | Env | Result | Key output |
+|---|---|---|---|
+| `dotenv -e .env -- pnpm --filter @lopaworld/storefront build` | Win10, Node 24.15.0 | **pass** | `▲ Next.js 16.4.5`, `✓ Compiled successfully`, full route table; no security notice. Prerender logged Payload `28P01 password authentication failed` from the known local Postgres credential problem (handoff, task 0.7); pages fell back and the build completed. |
+| `pnpm typecheck` | same | **pass** | |
+| `pnpm test` | same | **pass** | `Tests 21 passed (21)` |
+| `pnpm tokens:check` | same | **pass** | `Contrast check passed for 7 label themes.` |
+| `pnpm lint` | same | **fail (unchanged)** | `6 problems (2 errors, 4 warnings)`, same as baseline |
+| `pnpm audit --prod` | same | 7 high, 0 critical | was `10 low \| 21 moderate \| 19 high \| 3 critical`; now `4 low \| 10 moderate \| 7 high \| 0 critical` |
+
+**Remaining high findings (recorded, not fixed)**
+
+| Advisory | Package@version | Path | Why not fixed now | Plan |
+|---|---|---|---|---|
+| GHSA-834v-8h66-3h79, GHSA-c8p4-j97h-3vg8 | `happy-dom@20.14.6` | storefront → `@payloadcms/richtext-lexical` → `@lexical/headless` (`^20.9.0`) | The 20.x fix (`>=20.14.7`) is not published; the other fix needs 21.x, a major jump inside Lexical's headless DOM. Exposure: server-side parsing of rich-text HTML written by authenticated Payload editors. | Re-check on every Payload bump; override to 21.x only with a rich-text HTML conversion test. |
+| GHSA-r5fr-rjxr-66jc | `lodash@4.17.23` | medusa → `@medusajs/utils` and others | Pinned inside `@medusajs/*` 2.21.2 | Evaluate Medusa 2.22.x in task 0.8, where a clean Linux Medusa build can verify it (local Medusa build is broken, audit N1). |
+| GHSA-mrhx-c7xc-m3w5 | `zod@4.2.0` | medusa → `@medusajs/deps`, `@medusajs/utils` | Same | Same |
+| GHSA-7mx3-vvmw-hjmv, GHSA-c4qx-w738-7hr3 | `@graphql-tools/utils@10.11.0` | medusa → `@medusajs/utils`, `@medusajs/modules-sdk` | Fix is 12.x (major) | Same |
+| GHSA-ph9p-34f9-6g65 | `tmp@0.0.33` | medusa → `@medusajs/cli` → `inquirer` | Fix is 0.2.x; CLI-only path | Same |
+
+**Not verified:** the in-range transitive updates also changed the Medusa dependency tree (`body-parser`, `multer`, `follow-redirects`). `pnpm typecheck` passes for `apps/medusa`, but Medusa could not be built or booted locally (N1), so its runtime is unverified until task 0.8. CI's planned "fail on high/critical" gate (task 0.11) would fail on the 7 findings above. They need fixing or a documented, expiring allow-list by then.

@@ -87,3 +87,11 @@
 - Decision: Keep production deployment and DNS cutover pending until the owner selects/provisions the production and staging targets, configures secrets and integrations, and records staging acceptance. Require an approved rollback target and explicit approval for a real payment test order.
 - Context: The repository contains local development services and CI checks, but no production host, domain, deployment workflow, payment onboarding or production secret manager is configured.
 - Consequences: Phase 8 launch steps are documented in `LAUNCH-PLAN.md`; deployment, DNS changes, real charges and refunds must be completed in the configured environment with the owner.
+
+## ADR-012 — Respect pnpm's release-age gate; patch pinned transitive vulnerabilities with scoped overrides
+
+- Status: Accepted (engineering)
+- Date: 2026-11-05
+- Decision: Never install a version that pnpm's `minimumReleaseAge` rejects by adding `minimumReleaseAgeExclude` entries. When the newest release is too young, use the newest release that passes the gate, provided it contains the security fix. When an upstream package pins a vulnerable transitive dependency exactly, apply a `pnpm-workspace.yaml` `overrides` entry scoped to that parent (`parent>child`), only for a patch or minor bump. Record each override with the evidence and remove it once the parent ships the fix.
+- Context: During task 0.6, `pnpm add payload@^3.93.0` silently wrote release-age exclusions for eight Payload packages published the previous day. 3.92.1 carries the same `undici` fix. `monaco-editor@0.57.0` (Payload admin) pins `dompurify@3.4.15` exactly, which has a critical advisory fixed in 3.4.17.
+- Consequences: Payload is at 3.92.1 rather than npm `latest` 3.93.0 until 3.93.x passes the gate. Major-version fixes inside upstream frameworks (`happy-dom` 21, `@graphql-tools/utils` 12) are not forced through overrides; they are recorded in `docs/evidence/phase-0.md` and re-checked on each framework upgrade.
