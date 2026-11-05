@@ -2,7 +2,7 @@
 
 ## Current launch state
 
-**Status: production deployment not yet configured.** The repository has local Docker Compose services and a quality workflow, but no production hosting provider, application Dockerfiles, deployment workflow, staging environment or DNS target is configured. CI runs on pull requests and pushes to `main`/`master`; it can also be started manually. A green hosted run is still required before release.
+**Status: production deployment not yet configured.** The repository now includes application Dockerfiles, a Coolify Docker Compose definition, a Contabo/Coolify guide, local Docker Compose services, and a quality workflow. These files have not been proven in a clean Linux build or deployed to a VPS. No production host, Coolify project, staging environment, DNS target, production secrets, or release/rollback target is configured. CI runs on pull requests and pushes to `main`/`master`; it can also be started manually. A green hosted run is still required before release.
 
 The code expects `NEXT_PUBLIC_SITE_URL` for canonical URLs, sitemap, structured data and feeds. It is not set in `.env.example`. Production commerce also needs managed PostgreSQL and Redis, working media storage/CDN, separate Medusa server and worker processes, approved shipping configuration, payment onboarding and test sign-off, transactional email, monitoring and backup/restore. See `docs/OPEN_ITEMS.md` for owner inputs. Do not deploy with example credentials or demo seed data.
 
