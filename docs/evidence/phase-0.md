@@ -125,7 +125,7 @@ Payload 3.93.0 (published 2026-11-04) was tried first. pnpm accepted it only by 
 
 **Not verified:** the in-range transitive updates also changed the Medusa dependency tree (`body-parser`, `multer`, `follow-redirects`). `pnpm typecheck` passes for `apps/medusa`, but Medusa could not be built or booted locally (N1), so its runtime is unverified until task 0.8. CI's planned "fail on high/critical" gate (task 0.11) would fail on the 7 findings above. They need fixing or a documented, expiring allow-list by then.
 
-### 0.7 — Payload baseline migration (partial: generated, not yet applied)
+### 0.7 — Payload baseline migration
 
 **Environment findings**
 - Docker: `docker version` → `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`; `C:\Program Files\Docker\Docker\Docker Desktop.exe` does not exist.
@@ -144,7 +144,7 @@ Payload 3.93.0 (published 2026-11-04) was tried first. pnpm accepted it only by 
 `migrate:create` runs with `disableDBConnect: true` (`payload/dist/bin/migrate.js:40`), so no database was contacted. `@swc/core`'s postinstall is disabled in `allowBuilds` (`false`); its Windows native binary comes from the optional platform package.
 
 **Review of `20261105_144453_initial_schema.ts`**
-- `up()`: 24 `CREATE TYPE` + 68 `CREATE TABLE`, all in `"payload"`; 215 `CREATE INDEX`; 76 foreign keys. No statement references `public`. No `DROP` before `down()`.
+- `up()`: 24 `CREATE TYPE` + 55 `CREATE TABLE` (corrected from an earlier miscount of 68), all in `"payload"`; 215 `CREATE INDEX`; 76 foreign keys. No statement references `public`. No `DROP` before `down()`.
 - Label enums are exactly `next, trybe, prime, men, fashion, bridal, lopaworld`, matching `packages/types`.
 - **Reviewed addition:** `CREATE SCHEMA IF NOT EXISTS "payload";` as the first statement of `up()`. The adapter creates the schema only when it creates the database itself (`@payloadcms/drizzle/dist/postgres/createDatabase.js:53`, reached only on `database … does not exist`, `db-postgres/dist/connect.js:89-92`). In the brief's first-deploy order, Medusa creates the shared database first. `down()` leaves the schema in place.
 
@@ -159,6 +159,24 @@ Payload 3.93.0 (published 2026-11-04) was tried first. pnpm accepted it only by 
 | `pnpm test` | **pass**, 21/21 |
 | `pnpm lint` | **fail (unchanged)**, 6 problems, same as baseline |
 
-**Not done:** applying the migration to a fresh, empty Postgres 17 and loading Payload admin. No usable local database: Docker is absent, and the native PostgreSQL 18 service needs credentials that Claude does not hold.
+**Applying it:** see "0.7 — applied to a fresh Postgres 17" below. The first attempt was blocked: Docker was not installed, and the native PostgreSQL 18 service needs credentials Claude does not hold.
 
 **New finding:** Payload warns `Image resizing is enabled … but sharp not installed`. `Media` defines image sizes, so resizing and derived sizes will not work until `sharp` is installed and passed to `buildConfig` (Phase 1.2/1.3 media work).
+
+### 0.7 — applied to a fresh Postgres 17
+
+**Environment:** the owner installed Docker Desktop (engine 29.8.2, linux/amd64; Compose v5.5.1) after enabling hardware virtualisation in firmware. Disposable database from `pnpm db:verify:up`: PostgreSQL 17.11 (`postgres:17-alpine`), `127.0.0.1:5433`, tmpfs, no volume. Before each run: `0` rows for schema `payload`.
+
+| Step | Command | Result | Key output |
+|---|---|---|---|
+| CLI apply | `DATABASE_URL=…5433/lopaworld_verify pnpm payload migrate` | **pass** | `Migrated: 20261105_144453_initial_schema (1004ms)` |
+| Status | `pnpm payload migrate:status` | **pass** | `20261105_144453_initial_schema │ 1 │ Yes` |
+| Contents | `psql` counts | as reviewed | 55 tables and 24 enums in `payload`; 0 tables in `public`; `enum_labels_slug` = `next,trybe,prime,men,fashion,bridal,lopaworld` |
+| Reversible | `pnpm payload migrate:down`, then `migrate` | **pass** | down in 699 ms → 0 `payload` tables; re-applied in 1095 ms |
+| Production path | fresh instance; `next build` (not pointed at it); `NODE_ENV=production next start` against it; `GET /`, `GET /admin` | **pass** | Server log: `Migrating: 20261105_144453_initial_schema` → `Migrated (671ms)` on first request. `GET /` 200; `GET /admin` 200, `<title>Dashboard - Payload \| Lopaworld</title>` with the create-first-user screen. DB afterwards: 55 tables, `payload_migrations` = `20261105_144453_initial_schema batch=1`, 0 users. |
+| Cleanup | stop server; `pnpm db:verify:down` | done | 0 `lopaworld-verify` containers; `docker volume ls` empty |
+
+**Notes**
+- `prodMigrations` runs on Payload's first connection (the first request that touches Payload), not at process start.
+- Because `next build` runs with `NODE_ENV=production`, a build whose `DATABASE_URL` reaches a real database would apply migrations during the build. The Dockerfile's build-time URL (`127.0.0.1:5432/build`) is unreachable inside the build container, so this cannot happen in image builds; keep it that way.
+- Payload admin loading against the **Medusa-shared** database, and `/api/ready`, belong to the Phase 0 stack acceptance (tasks 0.9–0.10).
