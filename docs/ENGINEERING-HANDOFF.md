@@ -73,7 +73,7 @@ The diagram represents intended and current boundaries, with dotted integrations
 | `seed` | Synthetic local demo label data. Never approved production copy; no automatic import. |
 | `docker-compose.yml` | Local PostgreSQL, Redis, and MinIO services with named volumes. |
 | `coolify.compose.yaml` | Draft Coolify production composition: PostgreSQL, Redis, Medusa, storefront and named persistent volumes. |
-| `docker/*.Dockerfile` | Production image build definitions for storefront and Medusa. Validate them on clean Linux before release. |
+| `docker/*.Dockerfile` | Multi-stage production images on `node:24.15.0-bookworm-slim`, running as `node`. Storefront: Next standalone `server.js` (109 MB). Medusa: `.medusa/server` + production-only `pnpm deploy` (173 MB). Built and booted on clean Linux by `.github/workflows/images.yml`; not yet pushed to a registry. `docker/compose.verify.yml` is a disposable Postgres 17 for migration checks. |
 | `docs/` | Architecture, decisions, runbooks, unresolved owner inputs, launch QA, deployment guide, and this handoff. |
 | `e2e/`, `playwright.config.ts` | Playwright/axe checks for developer design galleries. Full storefront commerce E2E coverage is still open work. |
 | `.github/workflows/ci.yml` | GitHub Actions quality workflow for install, font checks, typecheck, lint, token contrast, Playwright/axe, and build. A configured workflow is not proof of a recent green run. |

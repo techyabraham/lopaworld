@@ -227,3 +227,30 @@ Boot used a fresh `postgres:17-alpine` and `redis:7-alpine` and CI-only placehol
 - Not done: it is a framework minor upgrade touching every `@medusajs/*` package, the Paystack peer pin and the admin build pins. It is proposed as its own change, verified by the same Images workflow.
 
 **Housekeeping:** a local `pnpm deploy --prod` test left the workspace `node_modules` flagged production-only, and the next `pnpm typecheck` aborted in pnpm's dependency pre-check. `pnpm install --frozen-lockfile --config.confirmModulesPurge=false` restored it; typecheck (5/5), tests (21/21) and lint (baseline) were then re-run. One pair of commits (`af4b717`, `6a3f965`) was pushed while that check was red; after the restore the same code passed, so no follow-up commit was needed.
+
+### 0.9 — Production Dockerfiles (B9)
+
+**Storefront** (`docker/storefront.Dockerfile`, `apps/storefront/next.config.ts`)
+- `output: 'standalone'` with `outputFileTracingRoot` at the monorepo root, per the installed Next docs (`01-app/03-api-reference/05-config/01-next-config-js/output.md`: monorepo caveat; copy `public` and `.next/static` beside `server.js`).
+- Build stage: install → `next build` with placeholder secrets and an **unreachable** `DATABASE_URL` (`next build` runs with `NODE_ENV=production`, so a reachable database would get migrations applied during the build) → copy `public` and `.next/static` into the standalone tree. The build fails if `server.js` is missing or the standalone output contains absolute links.
+- Runtime stage: `node:24.15.0-bookworm-slim`, only `.next/standalone` copied to `/app`, `USER node`, `WORKDIR /app/apps/storefront`, `CMD ["node", "server.js"]`. `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` and `NEXT_PUBLIC_GA_MEASUREMENT_ID` are build args.
+
+**Medusa** (`docker/medusa.Dockerfile`): as in 0.8; already multi-stage, slim, non-root.
+
+**`.dockerignore`:** now also excludes `.env*` at any depth (keeping `.env.example`), `*.pem`/`*.key`, local upload folders (`apps/storefront/public/media/uploads`, `apps/medusa/uploads`, `apps/medusa/static`, so local media can never be baked into an image), `.claude`/`.vscode`/`.idea`, and `docs`, `e2e`, `seed` and the Compose files, which no build uses.
+
+**`coolify.compose.yaml`:** volume mounts moved to the new layouts, `medusa_uploads:/app/uploads` and `payload_media:/app/apps/storefront/public/media/uploads`. Medusa's local file provider still writes to `static/` by default (B5, Phase 1.2).
+
+**Checks**
+
+| Command / run | Env | Result | Key output |
+|---|---|---|---|
+| `dotenv -e .env -- pnpm --filter @lopaworld/storefront build` | Win10, Node 24.15.0 | **pass** | `.next/standalone/apps/storefront/server.js`; standalone tree 78 MB; `public` 3.4 MB (3.1 MB Instagram reference set) |
+| local `node server.js` from the standalone tree, `NODE_ENV=production`, fresh Postgres 17 (`pnpm db:verify:up`) | same | **pass** | `GET /` 200; `GET /_next/static/chunks/…css` 200; `GET /media/instagram/…jpg` 200; `GET /admin` 200 (`Dashboard - Payload \| Lopaworld`); log `Migrated: 20261105_144453_initial_schema (4538ms)`; DB discarded afterwards |
+| `pnpm typecheck` / `pnpm test` / `pnpm lint` | same | pass / 21 of 21 / baseline 6 problems | |
+| Images [run 42074110043](https://github.com/techyabraham/lopaworld/actions/runs/42074110043) @ `78f2cd6`, job **storefront** | ubuntu-latest | **pass** | `Storefront image size: inspect 109 MB, … 109 MB (target <= 400 MB)`; `GET / -> 200 after ~4s` with Medusa deliberately unreachable; static CSS 200; `/media/instagram/…jpg` 200; `GET /admin -> 200 <title>Dashboard - Payload \| Lopaworld</title>`; `Payload migrations applied in-process: 20261105_144453_initial_schema (55 tables)`; `runs as node` |
+| same run, job **medusa** | ubuntu-latest | **pass** | `Medusa image size: inspect 173 MB, … 173 MB (target <= 600 MB)`; `GET /health -> 200 after ~18s`; `GET /app (admin) -> 200`; `Medusa tables after db:migrate: 147`; `runs as node` |
+
+**Size measurement caveat:** the workflow labels the second figure "uncompressed (docker save)". Under Docker's containerd image store, `docker save` also exports compressed layer blobs, so both figures are probably compressed sizes. Unpacked sizes were not measured. Both images are well under their targets (109/400 MB, 173/600 MB) even allowing for a large decompression ratio. To measure exactly, add `docker run --rm --entrypoint du <image> -sxm /` to the workflow.
+
+**Not done in 0.9:** the storefront healthcheck in `coolify.compose.yaml` still requests `/` (B10, task 0.10). Images are not pushed to a registry (release workflow, brief §6). The Compose file still has `build:` sections instead of GHCR `image:` references (brief §6, Phase 6 deploy).
