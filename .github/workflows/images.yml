@@ -1,0 +1,82 @@
+name: Images
+
+# Proves the production images build on clean Linux and boot against fresh dependencies.
+# Images are built and tested only; nothing is pushed to a registry from this workflow.
+on:
+  pull_request:
+  push:
+    branches: ['phase/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  medusa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Medusa image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/medusa.Dockerfile
+          load: true
+          push: false
+          tags: lopaworld-medusa:ci
+          cache-from: type=gha,scope=medusa
+          cache-to: type=gha,mode=max,scope=medusa
+
+      - name: Record image size
+        run: |
+          docker image inspect lopaworld-medusa:ci --format '{{.Size}}' \
+            | awk '{ printf "Medusa image size: %.0f MB (target <= 600 MB)\n", $1 / 1000 / 1000 }' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Fresh, empty Postgres 17 and Redis 7. Every value below is a CI-only placeholder; the Paystack
+      # key is deliberately fake so the workspace provider package is loaded without contacting Paystack.
+      - name: Boot against fresh Postgres 17 and Redis 7
+        run: |
+          docker network create lw
+          docker run -d --name pg --network lw -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=medusa postgres:17-alpine
+          docker run -d --name redis --network lw redis:7-alpine
+          until docker exec pg pg_isready -U ci -d medusa >/dev/null 2>&1; do sleep 1; done
+          docker run -d --name medusa --network lw -p 9000:9000 \
+            -e DATABASE_URL='postgres://ci:ci@pg:5432/medusa?sslmode=disable' \
+            -e REDIS_URL=redis://redis:6379 \
+            -e STORE_CORS=http://localhost:3000 \
+            -e ADMIN_CORS=http://localhost:9000 \
+            -e AUTH_CORS=http://localhost:3000,http://localhost:9000 \
+            -e JWT_SECRET=ci-only-not-a-deployment-secret \
+            -e COOKIE_SECRET=ci-only-not-a-deployment-secret \
+            -e PAYSTACK_SECRET_KEY=sk_test_ci_placeholder \
+            -e PAYSTACK_CALLBACK_URL=https://ci.invalid/checkout/return \
+            -e PAYSTACK_CHANNELS=card \
+            lopaworld-medusa:ci
+          for i in $(seq 1 120); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9000/health)" = "200" ]; then
+              echo "GET /health -> 200 after ~$((i * 2))s" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' medusa)" != "true" ]; then echo "medusa container exited"; exit 1; fi
+            sleep 2
+          done
+          echo "Medusa did not become healthy"; exit 1
+
+      - name: Check admin and Paystack provider
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:9000/app)
+          echo "GET /app (admin) -> $code" | tee -a "$GITHUB_STEP_SUMMARY"
+          test "$code" = "200"
+          docker logs medusa 2>&1 | grep -i -E "paystack|payment" | head -20 || true
+          tables=$(docker exec pg psql -U ci -d medusa -Atc "select count(*) from information_schema.tables where table_schema='public'")
+          echo "Medusa tables after db:migrate: $tables" | tee -a "$GITHUB_STEP_SUMMARY"
+          test "$tables" -gt 0
+
+      - name: Medusa logs
+        if: always()
+        run: docker logs medusa 2>&1 | tail -150 || true
