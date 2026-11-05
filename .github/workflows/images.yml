@@ -285,6 +285,22 @@ jobs:
           echo "GET /admin -> $code; GET :9000/app -> $(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:9000/app)" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Stack admins::/"
           test "$code" = "200"
 
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Playwright smoke tests against the running stack
+        env:
+          STACK_BASE_URL: http://localhost:3000
+          STACK_MEDUSA_URL: http://localhost:9000
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:e2e:stack
+
       - name: Stack logs
         if: always()
         run: |
