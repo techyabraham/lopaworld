@@ -3,7 +3,12 @@
 @import "@lopaworld/ui/styles.css";
 
 @theme inline {
-  --color-paper: var(--color-canvas);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-rule: var(--rule);
+  --color-signal: var(--signal);
+  --color-signal-text: var(--signal-text);
+  --font-display: var(--font-interface);
   --color-foreground: var(--color-ink);
   --color-muted: var(--color-ink-muted);
   --color-border: var(--color-line);
