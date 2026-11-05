@@ -46,7 +46,7 @@ jobs:
         run: |
           docker image inspect lopaworld-medusa:ci --format '{{.Size}}' \
             | awk '{ printf "Medusa image size: %.0f MB (target <= 600 MB)\n", $1 / 1000 / 1000 }' \
-            | tee -a "$GITHUB_STEP_SUMMARY"
+            | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa image::/"
 
       # Fresh, empty Postgres 17 and Redis 7. Every value below is a CI-only placeholder; the Paystack
       # key is deliberately fake so the workspace provider package is loaded without contacting Paystack.
@@ -70,7 +70,7 @@ jobs:
             lopaworld-medusa:ci
           for i in $(seq 1 120); do
             if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9000/health)" = "200" ]; then
-              echo "GET /health -> 200 after ~$((i * 2))s" | tee -a "$GITHUB_STEP_SUMMARY"
+              echo "GET /health -> 200 after ~$((i * 2))s" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa boot::/"
               exit 0
             fi
             if [ "$(docker inspect -f '{{.State.Running}}' medusa)" != "true" ]; then echo "medusa container exited"; exit 1; fi
@@ -81,11 +81,11 @@ jobs:
       - name: Check admin and Paystack provider
         run: |
           code=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:9000/app)
-          echo "GET /app (admin) -> $code" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "GET /app (admin) -> $code" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa admin::/"
           test "$code" = "200"
           docker logs medusa 2>&1 | grep -i -E "paystack|payment" | head -20 || true
           tables=$(docker exec pg psql -U ci -d medusa -Atc "select count(*) from information_schema.tables where table_schema='public'")
-          echo "Medusa tables after db:migrate: $tables" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Medusa tables after db:migrate: $tables" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa migrations::/"
           test "$tables" -gt 0
 
       - name: Medusa logs
