@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { cartCookie, cartFields } from '../../../lib/cart';
 import type { StoreCart } from '../../../lib/cart-types';
+import { clearCompletedOrderCookie } from '../../../lib/order-cookie';
 import { medusaFetch } from '../../../lib/store';
 import { isSameOriginRequest } from '../../../lib/request-security';
 
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
     phone: phone.slice(0, 40),
   };
 
+  await clearCompletedOrderCookie();
   try {
     const { cart } = await medusaFetch<{ cart: StoreCart }>(`/store/carts/${encodeURIComponent(cartId)}`, {
       method: 'POST',

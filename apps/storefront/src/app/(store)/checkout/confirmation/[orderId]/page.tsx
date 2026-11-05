@@ -2,13 +2,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { TrackEvent } from '../../../../../components/site/TrackEvent';
+import { orderCookie as orderCookieName } from '../../../../../lib/order-cookie';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Order confirmation', robots: { index: false, follow: false } };
 
 export default async function OrderConfirmationPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
-  const orderCookie = (await cookies()).get('lw_order_id')?.value;
+  const orderCookie = (await cookies()).get(orderCookieName)?.value;
   if (!orderCookie || orderCookie !== orderId) {
     return <main className="store-page checkout-return"><p className="eyebrow">Order confirmation</p><h1>Order details unavailable</h1><p>This order confirmation can only be viewed in the browser that completed checkout.</p><Link href="/shop">Continue shopping</Link></main>;
   }

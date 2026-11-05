@@ -121,7 +121,7 @@ Uploaded CMS media has required alternative text and a `rightsConfirmed` marker.
 - Cart creation requires a Medusa NGN region. Cart and completed-order references use HTTP-only, SameSite=Lax cookies; cookies are Secure in production.
 - Checkout validates contact/address fields, requires Nigerian country code `NG`, obtains available shipping options from Medusa, and adds the chosen option before retrieving the final total.
 - Paystack is optional and configuration-gated. It only accepts NGN, initializes a hosted Paystack checkout server-side, verifies the provider transaction against stored reference/amount/currency before authorization, validates webhook signatures, and checks the transaction with Paystack before processing supported events.
-- Completion trusts Medusa's provider verification, not callback query parameters. Return flows can retry lookup for a completed order. Refund behavior exists in the provider, but must not be used without approved live/test credentials and an owner-approved test plan.
+- Completion trusts Medusa's provider verification, not callback query parameters. Return flows can retry lookup for a completed order. The completion route always completes the current cart first; the `lw_order_id` cookie only renders the confirmation page (or answers a reload when no cart is pending) and is cleared whenever a new checkout starts (audit B1, fixed on `phase/0-stabilise` with unit tests). Refund behavior exists in the provider, but must not be used without approved live/test credentials and an owner-approved test plan.
 - No approved Paystack account/channels, delivery table, courier, production callback, or end-to-end checkout sign-off is recorded.
 
 ### Customer engagement, SEO, analytics
