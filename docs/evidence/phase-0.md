@@ -124,3 +124,41 @@ Payload 3.93.0 (published 2026-11-04) was tried first. pnpm accepted it only by 
 | GHSA-ph9p-34f9-6g65 | `tmp@0.0.33` | medusa → `@medusajs/cli` → `inquirer` | Fix is 0.2.x; CLI-only path | Same |
 
 **Not verified:** the in-range transitive updates also changed the Medusa dependency tree (`body-parser`, `multer`, `follow-redirects`). `pnpm typecheck` passes for `apps/medusa`, but Medusa could not be built or booted locally (N1), so its runtime is unverified until task 0.8. CI's planned "fail on high/critical" gate (task 0.11) would fail on the 7 findings above. They need fixing or a documented, expiring allow-list by then.
+
+### 0.7 — Payload baseline migration (partial: generated, not yet applied)
+
+**Environment findings**
+- Docker: `docker version` → `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine`; `C:\Program Files\Docker\Docker\Docker Desktop.exe` does not exist.
+- Port 5432 is held by process `postgres` (PID 5828), the Windows service `postgresql-x64-18` (PostgreSQL 18, Running). This is why the `.env` Compose credentials got `28P01`. The service was only inspected, never modified.
+
+**CLI loader attempts** (Payload 3.92.1, Node 24.15.0, from `apps/storefront` with `.env` loaded)
+
+| Attempt | Result |
+|---|---|
+| `payload migrate:create initial_schema` (default `tsx`) | **fail**: `TypeError: Illegal constructor` at `undici/lib/web/cache/cachestorage.js:17`. `tsx` + `undici` load fine in isolation, so the conflict is with Payload's own `module.registerHooks` Lexical resolve hook (`dist/bin/index.js:29-34`). |
+| `… --disable-transpile` (Node native TS) | **fail**: `ERR_MODULE_NOT_FOUND … src/collections/Campaigns` (extensionless imports) |
+| `… --use-swc` (after adding `@swc-node/register`, `@swc/core` dev deps) | **fail**: `Named export 'AnnouncementBar' not found … is a CommonJS module` (no `"type": "module"`) |
+| `… --use-swc` with `"type": "module"` in `apps/storefront/package.json` | **pass**: `Migration created at …/src/migrations/20261105_144453_initial_schema.ts` |
+| `pnpm payload migrate:create no_changes_check --skip-empty` (new root script) | **pass**, no file written, so config and migration are in sync |
+
+`migrate:create` runs with `disableDBConnect: true` (`payload/dist/bin/migrate.js:40`), so no database was contacted. `@swc/core`'s postinstall is disabled in `allowBuilds` (`false`); its Windows native binary comes from the optional platform package.
+
+**Review of `20261105_144453_initial_schema.ts`**
+- `up()`: 24 `CREATE TYPE` + 68 `CREATE TABLE`, all in `"payload"`; 215 `CREATE INDEX`; 76 foreign keys. No statement references `public`. No `DROP` before `down()`.
+- Label enums are exactly `next, trybe, prime, men, fashion, bridal, lopaworld`, matching `packages/types`.
+- **Reviewed addition:** `CREATE SCHEMA IF NOT EXISTS "payload";` as the first statement of `up()`. The adapter creates the schema only when it creates the database itself (`@payloadcms/drizzle/dist/postgres/createDatabase.js:53`, reached only on `database … does not exist`, `db-postgres/dist/connect.js:89-92`). In the brief's first-deploy order, Medusa creates the shared database first. `down()` leaves the schema in place.
+
+**Other changes:** `payload.config.ts` sets `prodMigrations: migrations` (`db-postgres/dist/connect.js:116-120` runs them on connect when `NODE_ENV=production`). `docker/storefront.Dockerfile` `CMD` is now `["pnpm", "start"]` (B8). `src/migrations/**` is excluded from ESLint (generated code; 4 unused-parameter warnings).
+
+**Checks (after)**
+
+| Command | Result |
+|---|---|
+| `dotenv -e .env -- pnpm --filter @lopaworld/storefront build` | **pass** (`✓ Compiled successfully`) with `"type": "module"` |
+| `pnpm typecheck` | **pass** |
+| `pnpm test` | **pass**, 21/21 |
+| `pnpm lint` | **fail (unchanged)**, 6 problems, same as baseline |
+
+**Not done:** applying the migration to a fresh, empty Postgres 17 and loading Payload admin. No usable local database: Docker is absent, and the native PostgreSQL 18 service needs credentials that Claude does not hold.
+
+**New finding:** Payload warns `Image resizing is enabled … but sharp not installed`. `Media` defines image sizes, so resizing and derived sizes will not work until `sharp` is installed and passed to `buildConfig` (Phase 1.2/1.3 media work).

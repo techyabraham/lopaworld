@@ -23,7 +23,7 @@ The implementation includes the storefront route structure, CMS schemas and home
 
 ### Current blockers and limits
 
-- **Local Payload database connection is broken.** A connection attempt to the local PostgreSQL service was rejected with PostgreSQL `28P01` (password authentication failure). The storefront can return HTTP 200, but its homepage displays “Homepage content is temporarily unavailable.” No Payload baseline migration exists; `apps/storefront/src/migrations` currently contains only its README.
+- **Local Payload database connection is broken.** A connection attempt to the local PostgreSQL service was rejected with PostgreSQL `28P01` (password authentication failure). Cause found on 5 November 2026: port 5432 is held by a native Windows PostgreSQL 18 service, not the Compose Postgres, and Docker Desktop is not installed (see the database section). The storefront can return HTTP 200, but its homepage displays “Homepage content is temporarily unavailable.” No Payload baseline migration exists; `apps/storefront/src/migrations` currently contains only its README.
 - **Next.js security upgrade done on `phase/0-stabilise` (not yet merged).** Next.js 16.4.0 stopped production builds with `SecurityFatalError`. The branch now resolves Next.js 16.4.5 and Payload 3.92.1, and `next build` completes locally (Windows, 5 November 2026). `pnpm audit --prod` still reports 7 high findings (Payload's `happy-dom`, and pins inside Medusa 2.21.2); they are recorded with plans in `docs/evidence/phase-0.md`. See ADR-012 for the release-age and override policy.
 - **Medusa image build has not been verified on Linux.** A prior build on the Windows workspace failed in the installed dependency tree (`emittery` could not find `maps.js`). A clean Linux build in Coolify is still required; treat this as an unresolved compatibility issue, not as a proven Coolify failure.
 - **Coolify deployment files are preparation only.** `docker/storefront.Dockerfile`, `docker/medusa.Dockerfile`, and `coolify.compose.yaml` exist, but there is no configured Contabo VPS, Coolify project, DNS cutover, staging acceptance, production secret store, backup destination, or successful production deployment.
@@ -193,18 +193,16 @@ Never paste real secrets into issues, docs, shell transcripts, or the client bun
 
 Payload uses `@payloadcms/db-postgres` and the `payload` schema. Local development and production both need a reachable database. A brand-new production database cannot rely on Payload dev push/sync; it needs committed migrations.
 
-Current state: only `apps/storefront/src/migrations/README.md` exists. Initial migration generation is blocked because local `.env` credentials fail authentication (`28P01`). The Payload CLI also needs a compatibility fix in this workspace: the direct package executable was not resolved by pnpm on Windows; invoking the package entry point under Node 24 failed with `ERR_REQUIRE_ASYNC_MODULE` while loading the Lexical editor; the Node 22 fallback path did not load the extensionless TypeScript imports without an additional supported loader. These happened before a migration was written. No database data was changed. Reproduce and solve both the database connection and CLI/config loading problems before generating anything. Do not generate against production and do not erase the existing local database volume to bypass authentication.
+Current state (branch `phase/0-stabilise`, 5 November 2026):
 
-When unblocked:
+- **Baseline migration exists but has not been applied to any database yet.** `apps/storefront/src/migrations/20261105_144453_initial_schema.ts` (+ `.json` snapshot, `index.ts`) was generated with Payload 3.92.1 and reviewed: 68 tables and 24 enums, all in schema `payload`, nothing in `public`. One reviewed addition: `CREATE SCHEMA IF NOT EXISTS "payload"`, because Payload only creates its schema when it creates the whole database, and production shares Medusa's existing database.
+- **Production applies migrations in-process.** `payload.config.ts` passes `prodMigrations: migrations`; the adapter runs them when Payload first connects with `NODE_ENV=production`. The storefront Dockerfile no longer runs `payload migrate` (audit B8).
+- **Generating migrations.** From the repo root: `pnpm payload migrate:create <name>` (loads `.env`, runs the CLI with `--use-swc`). `migrate:create` does not connect to the database. The default `tsx` loader fails in this workspace: `undici` throws `Illegal constructor` when combined with Payload's Lexical resolve hook. `--disable-transpile` cannot resolve the config's extensionless imports. The storefront package now declares `"type": "module"`, which the swc path requires.
+- **Why local `.env` credentials failed (`28P01`).** A native Windows PostgreSQL 18 service (`postgresql-x64-18`) listens on port 5432, and Docker Desktop is not installed on this workstation. The Compose Postgres was never the server answering. The native service was not modified.
 
-1. Ensure the Payload config and collections represent the intended schema.
-2. Use a working isolated development PostgreSQL database with a valid connection in the local environment.
-3. Run Payload's `migrate:create` command from `apps/storefront` with the root `.env` loaded, using the supported CLI/config loader for the pinned Node and Payload versions; inspect generated SQL/TypeScript carefully.
-4. Apply the generated migration to the development database and confirm it completes.
-5. Commit the migration files under `apps/storefront/src/migrations` and deploy those files. Production starts with `payload migrate`; the Dockerfile runs this before starting Next.js.
-6. Back up production before later schema migrations; never edit production schema manually as a substitute.
+Still to do: apply the migration to a fresh, empty Postgres 17 database, then confirm Payload admin loads (brief 0.7/Phase 0 acceptance). Back up production before later schema migrations; never edit production schema manually as a substitute.
 
-See [Payload migration docs](https://payloadcms.com/docs/database/migrations) and the [deployment guide](COOLIFY-CONTABO.md). Also resolve the CLI's current Node/config import behavior against the supported Payload/Node versions before relying on the generation command.
+See [Payload migration docs](https://payloadcms.com/docs/database/migrations) and the [deployment guide](COOLIFY-CONTABO.md).
 
 ## Security and privacy model
 

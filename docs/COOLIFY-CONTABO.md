@@ -50,13 +50,13 @@ Back up Coolify's installation secrets at `/data/coolify/source/.env` outside th
 
 Push this repository to a Git host Coolify can access. Keep `.env` out of Git. Use a private repository and a Coolify deploy key if the source is private.
 
-Before deploying, create and commit the Payload migration from a working development database whose schema is synchronized with the current Payload config. From the repository root, the CLI command is:
+The Payload baseline migration is committed under `apps/storefront/src/migrations`. It is applied in-process by `prodMigrations` when the storefront first connects with `NODE_ENV=production`; the container does not run the Payload CLI. To create a later migration, from the repository root:
 
 ```bash
-pnpm --filter @lopaworld/storefront exec payload migrate:create initial_schema
+pnpm payload migrate:create <name>
 ```
 
-Review the generated TypeScript migration and commit all files under `apps/storefront/src/migrations`. Do not point migration generation at a production database. The current local `.env` database login was rejected during setup, so correct that local PostgreSQL credential or use a clean development database before generating this migration. Without the committed initial migration, Payload tables are absent on a fresh VPS database and CMS content will fail to load.
+Review the generated SQL and commit all files under `apps/storefront/src/migrations`. Never point Payload at a production database from a workstation. Every schema change must be backward compatible (expand → migrate → contract) so an app rollback never needs a database restore.
 
 ## 4. Create the Coolify Compose application
 
