@@ -14,6 +14,8 @@
     "test": "pnpm -r --if-present test",
     "tokens:check": "node packages/ui/scripts/check-contrast.mjs",
     "test:e2e": "playwright test",
+    "test:e2e:stack": "playwright test -c playwright.stack.config.ts",
+    "audit:gate": "node scripts/audit-gate.mjs",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f",

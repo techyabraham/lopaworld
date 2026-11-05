@@ -1,0 +1,61 @@
+{
+  "_comment": "Temporarily accepted high/critical advisories in production dependencies. scripts/audit-gate.mjs fails on any finding not listed here and on any entry past its expiry. Every entry needs an owner-visible reason and plan; see docs/DECISIONS.md ADR-013 and docs/evidence/phase-0.md (0.6, 0.8).",
+  "entries": [
+    {
+      "ghsa": "GHSA-834v-8h66-3h79",
+      "package": "happy-dom",
+      "path": "storefront > @payloadcms/richtext-lexical > @lexical/headless (^20.9.0)",
+      "reason": "Fix needs happy-dom 21 (major) inside Lexical's headless DOM. Exposure: server-side parsing of rich-text HTML written by authenticated Payload editors.",
+      "plan": "Re-check on each Payload upgrade; override to 21.x only with a rich-text HTML conversion test.",
+      "expires": "2026-12-05"
+    },
+    {
+      "ghsa": "GHSA-c8p4-j97h-3vg8",
+      "package": "happy-dom",
+      "path": "storefront > @payloadcms/richtext-lexical > @lexical/headless (^20.9.0)",
+      "reason": "The 20.x fix (>=20.14.7) is not published; the other fix is 21.x (major). Same exposure as above.",
+      "plan": "Take 20.14.7 when published (in range) or 21.x as above.",
+      "expires": "2026-12-05"
+    },
+    {
+      "ghsa": "GHSA-r5fr-rjxr-66jc",
+      "package": "lodash",
+      "path": "medusa > @medusajs/utils > @graphql-codegen/core ^4.0.2 > @graphql-codegen/plugin-helpers 5 (lodash ~4.17.0)",
+      "reason": "Pinned by Medusa's GraphQL codegen chain in both 2.21.2 and 2.22.2; the advisory concerns _.template imports.",
+      "plan": "Resolved when @medusajs/utils moves to @graphql-codegen/core 6.x.",
+      "expires": "2026-12-05"
+    },
+    {
+      "ghsa": "GHSA-7mx3-vvmw-hjmv",
+      "package": "@graphql-tools/utils",
+      "path": "medusa > @medusajs/utils > @graphql-codegen/core ^4.0.2",
+      "reason": "Fix is 12.x (major) and pinned by Medusa's codegen chain in 2.21.2 and 2.22.2.",
+      "plan": "Same as lodash above.",
+      "expires": "2026-12-05"
+    },
+    {
+      "ghsa": "GHSA-c4qx-w738-7hr3",
+      "package": "@graphql-tools/utils",
+      "path": "medusa > @medusajs/utils > @graphql-codegen/core ^4.0.2",
+      "reason": "As above.",
+      "plan": "Same as lodash above.",
+      "expires": "2026-12-05"
+    },
+    {
+      "ghsa": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "path": "medusa > @medusajs/deps 2.21.2 (zod 4.2.0)",
+      "reason": "Pinned inside @medusajs/deps 2.21.2.",
+      "plan": "Fixed by Medusa 2.22.2 (zod 4.6.6); remove with that upgrade.",
+      "expires": "2026-12-05"
+    },
+    {
+      "ghsa": "GHSA-ph9p-34f9-6g65",
+      "package": "tmp",
+      "path": "medusa > @medusajs/cli 2.21.2 > inquirer ^8",
+      "reason": "CLI-only path (interactive prompts), pinned by @medusajs/cli 2.21.2.",
+      "plan": "Fixed by Medusa 2.22.2 (inquirer 14 has no tmp); remove with that upgrade.",
+      "expires": "2026-12-05"
+    }
+  ]
+}
