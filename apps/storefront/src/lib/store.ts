@@ -51,17 +51,30 @@ export async function medusaFetch<T>(path: string, init: RequestInit = {}): Prom
   return response.json() as Promise<T>;
 }
 
+const regionTtlMs = 5 * 60 * 1000;
+let cachedRegion: { region: StoreRegion; expiresAt: number } | undefined;
 let regionRequest: Promise<StoreRegion | null> | undefined;
+
+async function findStoreRegion() {
+  const { regions = [] } = await medusaFetch<{ regions: StoreRegion[] }>('/store/regions');
+  if (process.env.MEDUSA_REGION_ID) return regions.find(({ id }) => id === process.env.MEDUSA_REGION_ID) ?? null;
+  return regions.find(({ currency_code }) => currency_code.toLowerCase() === 'ngn') ?? null;
+}
+
+/**
+ * Only a found region is cached, for `regionTtlMs`. A missing region or a failed request is
+ * retried on the next call; a failed refresh keeps serving the last region Medusa returned.
+ */
 export function getStoreRegion(): Promise<StoreRegion | null> {
+  if (cachedRegion && cachedRegion.expiresAt > Date.now()) return Promise.resolve(cachedRegion.region);
   if (!regionRequest) {
-    regionRequest = (async () => {
-      if (process.env.MEDUSA_REGION_ID) {
-        const { regions = [] } = await medusaFetch<{ regions: StoreRegion[] }>('/store/regions');
-        return regions.find(({ id }) => id === process.env.MEDUSA_REGION_ID) ?? null;
-      }
-      const { regions = [] } = await medusaFetch<{ regions: StoreRegion[] }>('/store/regions');
-      return regions.find(({ currency_code }) => currency_code.toLowerCase() === 'ngn') ?? null;
-    })().catch(() => null);
+    regionRequest = findStoreRegion()
+      .then((region) => {
+        cachedRegion = region ? { region, expiresAt: Date.now() + regionTtlMs } : undefined;
+        return region;
+      })
+      .catch(() => cachedRegion?.region ?? null)
+      .finally(() => { regionRequest = undefined; });
   }
   return regionRequest;
 }

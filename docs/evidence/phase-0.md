@@ -36,3 +36,18 @@ The `SecurityFatalError` text includes instructions addressed to a coding agent 
 **Dependency added:** `vitest@5.1.0` (dev, storefront) — brief 0.11 requires Vitest for unit tests. `pnpm add` also let pnpm deduplicate about a dozen transitive lockfile entries onto versions already in the lock (e.g. `inquirer` → `ansi-escapes`, `express` → `cookie`). No new packages other than Vitest's own tree; `next`, `payload`, `react` and `@medusajs/*` resolutions are unchanged.
 
 **Not covered:** no end-to-end run with a real Medusa cart and Paystack test payment (needs a booted stack, task 0.10–0.11).
+
+### 0.3 — B2 fix
+
+**Change:** `getStoreRegion` (`apps/storefront/src/lib/store.ts`) caches only a found region, for 5 minutes. A missing region or a failed request is not cached, so the next call retries. Concurrent callers share one in-flight request. If a refresh after the TTL fails, the last region Medusa returned is still served (stale-on-error), so a brief Medusa outage does not break add-to-bag for a region that was already known.
+
+**Tests:** `apps/storefront/src/lib/store-region.test.ts` (global `fetch` stubbed, `Date` faked). `server-only` is aliased to an empty stub in `vitest.config.ts`, because Next resolves it internally and it is not installed as a package.
+
+| Command | Code | Result | Key output |
+|---|---|---|---|
+| `pnpm test` | old (B2 present) | **fail, as expected** | `Tests 3 failed \| 9 passed (12)`. The unreachable and no-NGN retry tests got `null` on the second call; the TTL-refresh test got the original region after the TTL. |
+| `pnpm test` | new | **pass** | `Test Files 3 passed (3)`, `Tests 12 passed (12)` |
+| `pnpm typecheck` | new | **pass** | |
+| `pnpm lint` | new | **fail (unchanged)** | Same `6 problems (2 errors, 4 warnings)` as baseline. |
+
+**Not covered:** behaviour against a real Medusa process restarting (needs a booted stack).
