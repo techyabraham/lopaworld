@@ -46,7 +46,7 @@ services:
       PAYSTACK_CALLBACK_URL: ${PAYSTACK_CALLBACK_URL:-}
       PAYSTACK_CHANNELS: ${PAYSTACK_CHANNELS:-}
     volumes:
-      - medusa_uploads:/workspace/apps/medusa/uploads
+      - medusa_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,7 +79,7 @@ services:
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in Coolify}
       PREVIEW_SECRET: ${PREVIEW_SECRET:?Set PREVIEW_SECRET in Coolify}
     volumes:
-      - payload_media:/workspace/apps/storefront/public/media/uploads
+      - payload_media:/app/apps/storefront/public/media/uploads
     depends_on:
       postgres:
         condition: service_healthy

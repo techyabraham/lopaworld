@@ -1,8 +1,13 @@
+import { fileURLToPath } from 'node:url';
 import { withPayload } from '@payloadcms/next/withPayload';
 import type { NextConfig } from 'next';
 import redirects from './redirects.json';
 
 const nextConfig: NextConfig = {
+  // Self-contained server for the Docker image; trace from the monorepo root because pnpm keeps
+  // dependencies (and workspace packages) outside apps/storefront.
+  output: 'standalone',
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   transpilePackages: ['@lopaworld/ui', '@lopaworld/types'],
   async redirects() {
     return redirects;
