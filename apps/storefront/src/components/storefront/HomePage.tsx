@@ -18,7 +18,6 @@ export async function HomePage() {
   const blocks = layoutResult.layout?.layout ?? [];
   const labels = labelResult.records;
   return <main className="store-page home-page" data-page="home">
-    {layoutResult.error && <p className="service-message" role="status">{layoutResult.error}</p>}
     {blocks.length ? blocks.map((block, index) => <HomeBlock key={text(block.id) ?? `${text(block.blockType) ?? 'block'}-${index}`} block={block} labels={labels} />) : <>
       <section className="campaign-hero">
         <div className="campaign-hero-copy"><p className="eyebrow">Lopaworld</p><h1>One house.<br />Seven labels.</h1>
@@ -78,7 +77,8 @@ async function HomeBlock({ block, labels }: { block: Record<string, unknown>; la
       return href ? <li key={`${text(item.label) ?? 'occasion'}-${index}`}><Link href={href}>{text(item.label) ?? 'Explore'}</Link></li> : null;
     })}</ul> : <p className="empty-inline">Occasion links will appear when they are confirmed.</p>}</section>;
   }
-  if (type === 'newsletter') return <section className="newsletter-panel"><div><p className="eyebrow">Stay in touch</p><h2>{text(block.heading) ?? 'News from Lopaworld'}</h2>{text(block.description) && <p>{text(block.description)}</p>}</div><p className="service-message">Newsletter sign-up will be enabled after the email provider and consent wording are confirmed.</p></section>;
+  // Hidden until sign-up is wired (Phase 5: email provider and consent wording); no placeholder copy for customers.
+  if (type === 'newsletter') return null;
   return null;
 }
 
