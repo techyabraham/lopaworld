@@ -33,6 +33,7 @@ RUN pnpm --filter @lopaworld/medusa deploy --prod --legacy /app \
       && mkdir -p /app/node_modules/@lopaworld/$name \
       && tar -xzf /tmp/packs/lopaworld-$name-*.tgz -C /app/node_modules/@lopaworld/$name --strip-components=1; \
     done \
+ && rm -rf /app/node_modules/.pnpm/node_modules/@lopaworld/medusa \
  && rm -rf /app/src /app/medusa-config.ts /app/tsconfig.json \
  && cd apps/medusa/.medusa/server \
  && tar --exclude=./package.json -cf - . | tar -xf - -C /app

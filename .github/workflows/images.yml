@@ -21,6 +21,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build Medusa image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -30,6 +31,16 @@ jobs:
           tags: lopaworld-medusa:ci
           cache-from: type=gha,scope=medusa
           cache-to: type=gha,mode=max,scope=medusa
+
+      # Re-run the failed build on the same builder (layers are cached) and publish the log tail as an
+      # annotation, which stays readable without signing in to download job logs.
+      - name: Surface build error
+        if: failure() && steps.build.outcome == 'failure'
+        run: |
+          docker buildx build -f docker/medusa.Dockerfile --progress=plain . > build.log 2>&1 || true
+          grep -v -E '^#[0-9]+ (sha256|extracting|resolve)' build.log | tail -60 > tail.log
+          msg=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' tail.log | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=Medusa image build (last 60 lines)::$msg"
 
       - name: Record image size
         run: |
@@ -79,4 +90,10 @@ jobs:
 
       - name: Medusa logs
         if: always()
-        run: docker logs medusa 2>&1 | tail -150 || true
+        run: |
+          docker logs medusa > medusa.log 2>&1 || true
+          tail -150 medusa.log
+          if [ "${{ job.status }}" != "success" ] && [ -s medusa.log ]; then
+            msg=$(tail -60 medusa.log | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Medusa container log (last 60 lines)::$msg"
+          fi
