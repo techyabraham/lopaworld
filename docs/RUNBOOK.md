@@ -24,6 +24,7 @@ The first Medusa boot performs its application initialization/migrations. Create
 - `pnpm infra:logs` tails local dependency logs.
 - `pnpm infra:down` stops the dependency containers. Named volumes retain local data.
 - `pnpm typecheck`, `pnpm lint`, and `pnpm build` run workspace quality checks.
+- `pnpm test` runs the Vitest unit tests (storefront: `apps/storefront/src/**/*.test.ts`).
 - `pnpm tokens:check` verifies all seven provisional accent themes against the WCAG AA contrast threshold.
 - `pnpm test:e2e` runs Playwright and axe checks for `/dev/type` and `/dev/ui`; the galleries return 404 in production.
 - `python packages/ui/scripts/check-font-glyphs.py` verifies the variable font axes and that Noto Serif covers sample glyphs missing from Bodoni Moda and DM Sans.

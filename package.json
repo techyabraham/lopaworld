@@ -10,6 +10,7 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
     "tokens:check": "node packages/ui/scripts/check-contrast.mjs",
     "test:e2e": "playwright test",
     "infra:up": "docker compose up -d",
