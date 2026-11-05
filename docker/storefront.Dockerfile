@@ -28,4 +28,5 @@ WORKDIR /workspace/apps/storefront
 RUN mkdir -p public/media/uploads && chown -R node:node public/media/uploads
 USER node
 EXPOSE 3000
-CMD ["sh", "-c", "PAYLOAD_CONFIG_PATH=./payload.config.ts pnpm exec payload migrate && exec pnpm start"]
+# Payload migrations run in-process on first connect (prodMigrations in payload.config.ts).
+CMD ["pnpm", "start"]

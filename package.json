@@ -7,6 +7,7 @@
     "dev": "dotenv -e .env -- concurrently -k -n storefront,medusa -c blue,magenta \"pnpm --filter @lopaworld/storefront dev\" \"pnpm --filter @lopaworld/medusa dev\"",
     "dev:storefront": "dotenv -e .env -- pnpm --filter @lopaworld/storefront dev",
     "dev:medusa": "dotenv -e .env -- pnpm --filter @lopaworld/medusa dev",
+    "payload": "dotenv -e .env -- pnpm --filter @lopaworld/storefront payload",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "pnpm -r --if-present lint",
