@@ -78,7 +78,17 @@ jobs:
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm test:e2e
-      - run: pnpm build
+      - name: Build all workspaces
+        run: |
+          set -o pipefail
+          pnpm build 2>&1 | tee build.log
+      - name: Surface build error
+        if: failure()
+        run: |
+          [ -s build.log ] || exit 0
+          grep -v -E '^\s*$' build.log | tail -60 > tail.log
+          msg=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' tail.log | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=pnpm build (last 60 lines)::$msg"
 
   secrets:
     runs-on: ubuntu-latest
