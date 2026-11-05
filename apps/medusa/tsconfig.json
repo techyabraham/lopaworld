@@ -8,8 +8,10 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "rootDir": "./",
+    "outDir": "./.medusa/server",
     "types": ["node"]
   },
-  "include": ["medusa-config.ts", "src/**/*.ts"]
+  "include": ["medusa-config.ts", "src/**/*.ts"],
+  "exclude": ["node_modules", ".medusa"]
 }

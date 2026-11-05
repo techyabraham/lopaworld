@@ -10,14 +10,24 @@
     "seed": "medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
-    "@lopaworld/types": "workspace:*",
     "@lopaworld/payment-paystack": "workspace:*",
-    "@medusajs/medusa": "^2.19.0",
+    "@lopaworld/types": "workspace:*",
+    "@medusajs/cli": "^2.19.0",
     "@medusajs/framework": "^2.19.0",
-    "@medusajs/cli": "^2.19.0"
+    "@medusajs/medusa": "^2.19.0"
   },
   "devDependencies": {
+    "@medusajs/admin-sdk": "2.21.2",
+    "@medusajs/admin-shared": "2.21.2",
+    "@medusajs/dashboard": "2.21.2",
+    "@medusajs/draft-order": "2.21.2",
+    "@medusajs/icons": "2.21.2",
+    "@medusajs/ui": "4.2.6",
     "@types/node": "^24.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "7.18.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }
