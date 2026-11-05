@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lopa Trybe — Label storefront</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0;background:#F7F6F3}
+a{color:#0F0E0D}a:hover{color:#D93A1E}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 100%; background: #F7F6F3; color: #0F0E0D; font-family: 'Archivo', system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+  <header style="border-bottom: 1px solid #DAD6D0">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 18px 40px; display: flex; flex-wrap: wrap; gap: 16px 40px; align-items: center; justify-content: space-between">
+      <a href="Main.dc.html" style="text-decoration: none; display: flex; align-items: baseline; gap: 8px; color: #0F0E0D">
+        <span style="font-weight: 900; font-stretch: 62%; font-size: 34px; line-height: 1">LOPA</span>
+        <span style="font-size: 11px; letter-spacing: 0.42em; font-weight: 500">WORLD</span>
+      </a>
+      <nav aria-label="Labels" style="display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; font-weight: 500">
+        <a href="#" style="text-decoration: none">Next</a>
+        <a href="#" style="text-decoration: none; border-bottom: 2px solid #0F0E0D">Trybe</a>
+        <a href="#" style="text-decoration: none">Prime</a>
+        <a href="#" style="text-decoration: none">Men</a>
+        <a href="#" style="text-decoration: none">Fashion</a>
+      </nav>
+      <a href="#" style="height: 44px; padding: 0 16px; background: #0F0E0D; color: #F7F6F3; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600">Bag <span style="background: #D93A1E; color: #FFFFFF; font-size: 11px; padding: 1px 7px">2</span></a>
+    </div>
+  </header>
+
+  <!-- Label hero -->
+  <section style="background: #18241C; color: #F7F6F3">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 64px 40px 0; display: flex; flex-wrap: wrap; gap: 40px">
+      <div style="flex: 999 1 520px; min-width: 0; padding-bottom: 56px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px">
+        <div style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.75">02 · A Lopaworld label</div>
+        <div>
+          <h1 style="margin: 0; font-weight: 900; font-stretch: 62%; font-size: clamp(80px, 12vw, 200px); line-height: 0.82; text-transform: uppercase">Lopa<br>Trybe</h1>
+          <p style="margin: 16px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 48px; line-height: 1">Tradition, in motion.</p>
+        </div>
+        <p style="margin: 0; max-width: 460px; color: #CFD6CF">Contemporary native tailoring — agbada, senator, kaftan and danshiki cut close, finished clean and made to move through a Lagos day. [Approved label copy]</p>
+      </div>
+      <div style="flex: 1 1 380px; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-self: end">
+        <div style="aspect-ratio: 3 / 5; background: #2B3A2F; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Campaign · full look]</div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="flex: 1; background: #33463A; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Embroidery detail]</div>
+          <div style="flex: 1; background: #3D5244; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Aso oke weave]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category rail -->
+  <nav aria-label="Lopa Trybe categories" style="border-bottom: 1px solid #DAD6D0; background: #F7F6F3">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 0 40px; display: flex; gap: 32px; overflow-x: auto">
+      <sc-for list="{{cats}}" as="c" hint-placeholder-count="6">
+        <button onClick="{{c.pick}}" aria-pressed="{{c.active}}" style="background: transparent; border: 0; border-bottom: 3px solid {{c.bar}}; padding: 20px 0 17px; white-space: nowrap; font-size: 15px; font-weight: {{c.weight}}; color: #0F0E0D; min-height: 44px">{{c.name}} <span style="color: #5E5A55; font-weight: 400; font-size: 13px">{{c.count}}</span></button>
+      </sc-for>
+    </div>
+  </nav>
+
+  <!-- Toolbar -->
+  <div style="max-width: 1440px; margin: 0 auto; padding: 20px 40px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <button style="min-height: 44px; padding: 0 18px; background: #0F0E0D; color: #F7F6F3; border: 0; font-size: 13px; font-weight: 600; display: flex; gap: 8px; align-items: center">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F7F6F3" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>Filter · 2
+      </button>
+      <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 6px 0 12px; border: 1px solid #0F0E0D; font-size: 13px">Size 42 <button aria-label="Remove size 42" style="width: 32px; height: 32px; background: transparent; border: 0">×</button></span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 6px 0 12px; border: 1px solid #0F0E0D; font-size: 13px">Made to measure <button aria-label="Remove made to measure" style="width: 32px; height: 32px; background: transparent; border: 0">×</button></span>
+      <button style="background: transparent; border: 0; text-decoration: underline; font-size: 13px; min-height: 44px; padding: 0 8px">Clear all</button>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: center; font-size: 13px">
+      <span style="color: #5E5A55">{{countText}}</span>
+      <div role="group" aria-label="View" style="display: flex; border: 1px solid #0F0E0D">
+        <button onClick="{{showGrid}}" aria-pressed="{{gridOn}}" style="min-height: 40px; padding: 0 16px; border: 0; font-size: 13px; font-weight: 600; background: {{gridBg}}; color: {{gridFg}}">Grid</button>
+        <button onClick="{{showLook}}" aria-pressed="{{lookOn}}" style="min-height: 40px; padding: 0 16px; border: 0; font-size: 13px; font-weight: 600; background: {{lookBg}}; color: {{lookFg}}">Lookbook</button>
+      </div>
+      <label for="sort" style="color: #5E5A55">Sort</label>
+      <select id="sort" style="min-height: 40px; border: 1px solid #DAD6D0; background: #FFFFFF; font-family: inherit; font-size: 13px; padding: 0 8px">
+        <option>Newest</option><option>Price, low to high</option><option>Price, high to low</option><option>Ready soonest</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Grid view -->
+  <sc-if value="{{gridView}}" hint-placeholder-val="{{ true }}">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 8px 40px 96px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 36px 16px">
+      <sc-for list="{{items}}" as="p" hint-placeholder-count="8">
+        <a href="Product.dc.html" style="text-decoration: none; color: #0F0E0D; display: flex; flex-direction: column; gap: 10px">
+          <div style="aspect-ratio: 3 / 4; background: {{p.tone}}; color: #F7F6F3; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; position: relative">
+            [Photo]
+            <span style="position: absolute; left: 12px; top: 12px; background: #F7F6F3; color: #0F0E0D; font-size: 11px; font-weight: 600; padding: 4px 8px; text-transform: none; letter-spacing: 0.02em">{{p.badge}}</span>
+          </div>
+          <div style="display: flex; gap: 6px">
+            <span style="width: 14px; height: 14px; background: {{p.tone}}; border: 1px solid #0F0E0D"></span>
+            <span style="width: 14px; height: 14px; background: #E2D7C3; border: 1px solid #0F0E0D"></span>
+            <span style="width: 14px; height: 14px; background: #0F0E0D; border: 1px solid #0F0E0D"></span>
+            <span style="font-size: 12px; color: #5E5A55; margin-left: 4px">3 colours</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; gap: 12px">
+            <div style="font-size: 15px; font-weight: 600; line-height: 1.3">{{p.name}}</div>
+            <div style="font-size: 15px; font-weight: 600; white-space: nowrap">₦ [PRICE]</div>
+          </div>
+          <div style="font-size: 12px; color: #5E5A55">{{p.ready}}</div>
+        </a>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- Lookbook view: editorial, full looks with shoppable pieces -->
+  <sc-if value="{{lookView}}" hint-placeholder-val="{{ false }}">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 8px 40px 96px; display: flex; flex-direction: column; gap: 64px">
+      <sc-for list="{{looks}}" as="lk" hint-placeholder-count="2">
+        <article style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center">
+          <div style="flex: 999 1 560px; min-width: 0; aspect-ratio: 16 / 10; background: {{lk.tone}}; color: #F7F6F3; display: flex; align-items: flex-end; padding: 24px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase">[Editorial look · {{lk.where}}]</div>
+          <div style="flex: 1 1 340px; min-width: 0">
+            <div style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #5E5A55">Look {{lk.num}}</div>
+            <h3 style="margin: 4px 0 20px; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 44px; line-height: 1">{{lk.title}}</h3>
+            <ul style="list-style: none; margin: 0; padding: 0; border-top: 1px solid #0F0E0D">
+              <sc-for list="{{lk.pieces}}" as="pc" hint-placeholder-count="3">
+                <li style="display: flex; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid #DAD6D0">
+                  <span>{{pc}}</span><span style="font-weight: 600">₦ [PRICE]</span>
+                </li>
+              </sc-for>
+            </ul>
+            <a href="Product.dc.html" style="display: inline-block; margin-top: 20px; background: #0F0E0D; color: #F7F6F3; text-decoration: none; padding: 14px 24px; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase">Add the full look</a>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <footer style="background: #0F0E0D; color: #9A948C; font-size: 12px">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 24px 40px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between">
+      <span>Lopa Trybe is a Lopaworld label.</span><span>@lopa_trybe</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { cat: 'All', view: 'grid' };
+  }
+  renderVals() {
+    var self = this;
+    var ALL = [
+      { cat: 'Agbada', name: 'Aso Oke agbada, three-piece', tone: '#2B3A2F', badge: 'Made to measure', ready: 'Ready-to-wear ships in 48h · bespoke in [X] days' },
+      { cat: 'Agbada', name: 'Royal agbada, hand-embroidered', tone: '#3D5244', badge: 'Made to measure', ready: 'Bespoke in [X] days' },
+      { cat: 'Agbada', name: 'Heritage agbada', tone: '#24302A', badge: 'New', ready: 'In stock · Lagos same-day' },
+      { cat: 'Senator', name: 'Senator, Roots cut', tone: '#33463A', badge: 'Lagos same-day', ready: 'In stock · S–XXXL' },
+      { cat: 'Senator', name: 'Senator, Contemporary cut', tone: '#1F2B22', badge: 'Only 2 left in 42', ready: 'In stock' },
+      { cat: 'Kaftan & Jalamia', name: 'Long jalamia with cap', tone: '#4A5A4C', badge: 'New', ready: 'In stock · Lagos same-day' },
+      { cat: 'Danshiki', name: "Women's danshiki", tone: '#2F3D33', badge: 'New', ready: 'In stock' },
+      { cat: "Children's", name: "Children's agbada, matching set", tone: '#3A4A3E', badge: 'Pairs with adult', ready: 'Ages 2–12' }
+    ];
+    var names = ['All', 'Agbada', 'Senator', 'Kaftan & Jalamia', 'Danshiki', "Children's"];
+    var cats = names.map(function (n) {
+      var on = n === self.state.cat;
+      var count = n === 'All' ? ALL.length : ALL.filter(function (x) { return x.cat === n; }).length;
+      return { name: n, count: count, active: on ? 'true' : 'false', bar: on ? '#0F0E0D' : 'transparent', weight: on ? 700 : 500, pick: function () { self.setState({ cat: n }); } };
+    });
+    var items = self.state.cat === 'All' ? ALL : ALL.filter(function (x) { return x.cat === self.state.cat; });
+    var g = self.state.view === 'grid';
+    var looks = [
+      { num: '01', title: 'The groom, at golden hour', where: 'Ikoyi rooftop', tone: '#2B3A2F', pieces: ['Royal agbada, hand-embroidered', 'Fila, matching aso oke', 'Leather slides, Lopa Men'] },
+      { num: '02', title: 'Friday prayers, Friday plans', where: 'Lagos Island', tone: '#33463A', pieces: ['Long jalamia with cap', 'Prayer beads [if stocked]', 'Suede loafers'] }
+    ];
+    return {
+      cats: cats, items: items, looks: looks,
+      countText: items.length + ' pieces',
+      gridView: g, lookView: !g,
+      gridOn: g ? 'true' : 'false', lookOn: g ? 'false' : 'true',
+      gridBg: g ? '#0F0E0D' : 'transparent', gridFg: g ? '#F7F6F3' : '#0F0E0D',
+      lookBg: g ? 'transparent' : '#0F0E0D', lookFg: g ? '#0F0E0D' : '#F7F6F3',
+      showGrid: function () { self.setState({ view: 'grid' }); },
+      showLook: function () { self.setState({ view: 'look' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
