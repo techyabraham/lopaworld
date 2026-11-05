@@ -7,3 +7,8 @@ allowBuilds:
   protobufjs: true
   '@medusajs/telemetry': false
   msgpackr-extract: false
+
+# Security patches for transitive pins that upstream has not released yet. Remove each entry once
+# its parent ships the fix. See docs/evidence/phase-0.md (task 0.6).
+overrides:
+  'monaco-editor>dompurify': 3.4.17
