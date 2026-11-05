@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LopaWorld — Mobile home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0F0E0D}a:hover{color:#D93A1E}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 2600px; position: relative; overflow: hidden; background: #F7F6F3; color: #0F0E0D; font-family: 'Archivo', system-ui, sans-serif; font-size: 15px; line-height: 1.45">
+
+  <!-- Header -->
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 10px 16px; border-bottom: 1px solid #DAD6D0">
+    <button aria-label="Menu" style="width: 44px; height: 44px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h10"></path></svg>
+    </button>
+    <a href="Main.dc.html" style="text-decoration: none; display: flex; align-items: baseline; gap: 6px; color: #0F0E0D">
+      <span style="font-weight: 900; font-stretch: 62%; font-size: 28px; line-height: 1">LOPA</span>
+      <span style="font-size: 9px; letter-spacing: 0.4em">WORLD</span>
+    </a>
+    <div style="display: flex">
+      <button aria-label="Search" style="width: 44px; height: 44px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Story-style label rail (Instagram-native) -->
+  <div role="tablist" aria-label="Labels" style="display: flex; gap: 14px; padding: 14px 16px; overflow-x: auto">
+    <sc-for list="{{labels}}" as="l" hint-placeholder-count="6">
+      <button role="tab" aria-selected="{{l.active}}" onClick="{{l.pick}}" style="background: transparent; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; width: 64px">
+        <span style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid {{l.ring}}; padding: 3px; box-sizing: border-box; display: block">
+          <span style="display: block; width: 100%; height: 100%; border-radius: 50%; background: {{l.photo}}"></span>
+        </span>
+        <span style="font-size: 11px; font-weight: {{l.weight}}; color: #0F0E0D">{{l.short}}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <!-- Hero -->
+  <section style="background: {{hero.tone}}; color: {{hero.fg}}; height: 560px; padding: 20px 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; position: relative">
+    <div style="display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8">
+      <span>The Entrance · AW26</span><span>[Film · poster frame]</span>
+    </div>
+    <div>
+      <h1 style="margin: 0; font-weight: 900; font-stretch: 62%; font-size: 84px; line-height: 0.84; text-transform: uppercase">Look<br>important.</h1>
+      <p style="margin: 6px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 40px; line-height: 1">Be important.</p>
+      <div style="margin-top: 20px; font-weight: 800; font-stretch: 75%; font-size: 18px; text-transform: uppercase">{{hero.name}}</div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 20px">{{hero.line}}</div>
+      <a href="Label.dc.html" style="margin-top: 16px; display: flex; align-items: center; justify-content: center; min-height: 52px; background: {{hero.fg}}; color: {{hero.tone}}; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase">Enter {{hero.name}}</a>
+    </div>
+  </section>
+
+  <!-- Occasions rail -->
+  <section style="padding: 32px 0 8px">
+    <h2 style="margin: 0 16px 14px; font-weight: 900; font-stretch: 62%; font-size: 36px; line-height: 0.9; text-transform: uppercase">Where are you <span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; text-transform: none">walking in?</span></h2>
+    <div style="display: flex; gap: 8px; overflow-x: auto; padding: 0 16px">
+      <a href="Label.dc.html" style="flex: none; width: 150px; height: 200px; background: #5A2A1E; color: #F7F6F3; text-decoration: none; padding: 12px; box-sizing: border-box; display: flex; align-items: flex-end; font-weight: 800; font-stretch: 70%; font-size: 22px; text-transform: uppercase; line-height: 1">Owambe</a>
+      <a href="Label.dc.html" style="flex: none; width: 150px; height: 200px; background: #2E151B; color: #F7F6F3; text-decoration: none; padding: 12px; box-sizing: border-box; display: flex; align-items: flex-end; font-weight: 800; font-stretch: 70%; font-size: 22px; text-transform: uppercase; line-height: 1">The wedding</a>
+      <a href="Label.dc.html" style="flex: none; width: 150px; height: 200px; background: #18241C; color: #F7F6F3; text-decoration: none; padding: 12px; box-sizing: border-box; display: flex; align-items: flex-end; font-weight: 800; font-stretch: 70%; font-size: 22px; text-transform: uppercase; line-height: 1">Sallah &amp; Eid</a>
+    </div>
+  </section>
+
+  <!-- Drop -->
+  <section style="padding: 32px 16px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #0F0E0D; padding-bottom: 10px; margin-bottom: 14px">
+      <div>
+        <div style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #D93A1E; font-weight: 700">● Live now</div>
+        <h2 style="margin: 2px 0 0; font-weight: 900; font-stretch: 62%; font-size: 36px; line-height: 0.9; text-transform: uppercase">The Drop</h2>
+      </div>
+      <a href="Label.dc.html" style="font-size: 13px; font-weight: 600">See all 48</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 8px">
+      <sc-for list="{{products}}" as="p" hint-placeholder-count="4">
+        <a href="Product.dc.html" style="text-decoration: none; color: #0F0E0D">
+          <div style="aspect-ratio: 3 / 4; background: {{p.tone}}; position: relative">
+            <span style="position: absolute; left: 8px; top: 8px; background: #F7F6F3; font-size: 10px; font-weight: 600; padding: 3px 6px">{{p.badge}}</span>
+          </div>
+          <div style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #5E5A55; margin-top: 8px">{{p.label}}</div>
+          <div style="font-size: 13px; font-weight: 600; line-height: 1.3">{{p.name}}</div>
+          <div style="font-size: 13px; font-weight: 600; margin-top: 2px">₦ [PRICE]</div>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- MTM -->
+  <section style="background: #0F0E0D; color: #F7F6F3; padding: 36px 16px">
+    <div style="font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.7">Prime · Trybe · Bridal</div>
+    <h2 style="margin: 8px 0 0; font-weight: 900; font-stretch: 62%; font-size: 56px; line-height: 0.86; text-transform: uppercase">Measured once.</h2>
+    <p style="margin: 4px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 32px; line-height: 1">Fitted forever.</p>
+    <p style="margin: 16px 0 0; color: #C9C4BD; font-size: 14px">Save your Lopa Fit Profile once — studio, video or self-measure — and every bespoke piece is cut from it.</p>
+    <a href="Product.dc.html" style="margin-top: 20px; display: flex; align-items: center; justify-content: center; min-height: 52px; background: #F7F6F3; color: #0F0E0D; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase">Book a fitting</a>
+  </section>
+
+  <!-- Aso-ebi -->
+  <section style="padding: 36px 16px 120px">
+    <div style="aspect-ratio: 4 / 3; background: #2B3A2F"></div>
+    <h2 style="margin: 16px 0 0; font-weight: 900; font-stretch: 62%; font-size: 44px; line-height: 0.88; text-transform: uppercase">Dress the whole party.</h2>
+    <p style="margin: 10px 0 0; color: #3D3A36; font-size: 14px">One fabric, one link on WhatsApp. Every guest adds their size and pays their share.</p>
+    <a href="#" style="margin-top: 16px; display: flex; align-items: center; justify-content: center; min-height: 52px; background: #0F0E0D; color: #F7F6F3; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase">Start a group order</a>
+  </section>
+
+  <!-- Bottom bar (thumb zone) -->
+  <nav aria-label="App" style="position: absolute; left: 0; right: 0; bottom: 0; background: #F7F6F3; border-top: 1px solid #DAD6D0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px 4px 18px">
+    <a href="Main.dc.html" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; font-size: 10px; font-weight: 700">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6"><path d="M4 11l8-7 8 7v9H4z"></path></svg>Home</a>
+    <a href="Label.dc.html" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; font-size: 10px; color: #5E5A55">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E5A55" stroke-width="1.6"><rect x="4" y="4" width="7" height="7"></rect><rect x="13" y="4" width="7" height="7"></rect><rect x="4" y="13" width="7" height="7"></rect><rect x="13" y="13" width="7" height="7"></rect></svg>Labels</a>
+    <a href="#" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; font-size: 10px; color: #5E5A55">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E5A55" stroke-width="1.6"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"></path></svg>Saved</a>
+    <a href="#" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; font-size: 10px; color: #5E5A55">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E5A55" stroke-width="1.6"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"></path></svg>Stylist</a>
+    <a href="#" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; font-size: 10px; color: #5E5A55; position: relative">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E5A55" stroke-width="1.6"><path d="M5 8h14l-1 12H6z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>Bag · 2</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { label: 1 };
+  }
+  renderVals() {
+    var self = this;
+    var L = [
+      { name: 'Lopa Next', short: 'Next', line: 'A moment of your own.', tone: '#2E151B', photo: '#4A2530', fg: '#F7F6F3' },
+      { name: 'Lopa Trybe', short: 'Trybe', line: 'Tradition, in motion.', tone: '#18241C', photo: '#2B3A2F', fg: '#F7F6F3' },
+      { name: 'Lopa Prime', short: 'Prime', line: 'Cut for the arrival.', tone: '#11151E', photo: '#222A3A', fg: '#F7F6F3' },
+      { name: 'Lopa Men', short: 'Men', line: 'The everyday entrance.', tone: '#2A1F1A', photo: '#46342B', fg: '#F7F6F3' },
+      { name: 'Lopa Fashion', short: 'Fashion', line: 'Wear the room.', tone: '#231A27', photo: '#3A2C40', fg: '#F7F6F3' },
+      { name: 'Lopa Bridal', short: 'Bridal', line: 'The day, in your own shape.', tone: '#E8E3DB', photo: '#D3CBBF', fg: '#0F0E0D' }
+    ];
+    var labels = L.map(function (l, i) {
+      var on = i === self.state.label;
+      return { short: l.short, photo: l.photo, active: on ? 'true' : 'false', ring: on ? '#D93A1E' : '#DAD6D0', weight: on ? 700 : 500, pick: function () { self.setState({ label: i }); } };
+    });
+    var products = [
+      { label: 'Lopa Trybe', name: 'Aso Oke agbada', tone: '#2B3A2F', badge: 'Made to measure' },
+      { label: 'Lopa Prime', name: 'Double-breasted suit', tone: '#222A3A', badge: 'New' },
+      { label: 'Lopa Men', name: 'Denim-on-denim set', tone: '#46342B', badge: 'Lagos same-day' },
+      { label: 'Lopa Fashion', name: 'The Velour Set', tone: '#3A2C40', badge: 'Only 3 left' }
+    ];
+    return { labels: labels, hero: L[this.state.label], products: products };
+  }
+}
+</script>
+</body>
+</html>
