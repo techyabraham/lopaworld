@@ -43,7 +43,7 @@ button { color: inherit; font: inherit; }
 .site-shell { min-height: 100dvh; }
 .phase-page, .dev-gallery { width: min(100% - 2rem, 80rem); margin-inline: auto; padding-block: clamp(2rem, 7vw, 6rem); }
 .phase-page header { max-width: 52rem; }
-.phase-page h1, .dev-gallery h1 { font-family: var(--font-editorial), var(--font-glyph-fallback), "Bodoni MT", Georgia, serif; font-optical-sizing: auto; font-size: var(--type-display); font-weight: 500; line-height: 1.04; letter-spacing: -.025em; }
+.phase-page h1, .dev-gallery h1 { font-family: var(--font-editorial), var(--font-glyph-fallback), Georgia, serif; font-size: var(--type-display); font-weight: 500; line-height: 1.04; letter-spacing: -.025em; }
 .phase-page header > p:last-child { max-width: 34rem; font-size: clamp(1.125rem, 1rem + .45vw, 1.375rem); color: var(--color-ink-muted); }
 .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 700; }
 .preview-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 2rem; }
@@ -52,7 +52,7 @@ button { color: inherit; font: inherit; }
 .specimen { padding: clamp(1rem, 3vw, 2rem); margin-block: 1rem; border: 1px solid var(--color-line); background: var(--color-surface); }
 .specimen h2 { font-size: var(--type-h2); }
 .specimen-copy { font-size: clamp(1rem, 1rem + .4vw, 1.3rem); }
-.specimen-copy.editorial { font-family: var(--font-editorial), var(--font-glyph-fallback), "Bodoni MT", Georgia, serif; font-optical-sizing: auto; }
+.specimen-copy.editorial { font-family: var(--font-editorial), var(--font-glyph-fallback), Georgia, serif; }
 .specimen-grid, .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1rem; }
 .token-swatch { display: inline-flex; align-items: center; justify-content: center; min-height: 5rem; margin: .25rem; padding: 1rem; color: var(--accent-contrast); background: var(--accent); border-radius: var(--radius-md); }
 .gallery-section { padding-block: 1.5rem; border-bottom: 1px solid var(--color-line); }
@@ -290,3 +290,5 @@ button { color: inherit; font: inherit; }
 .label-page-hero-local { width: min(100%, 42rem); height: auto; margin-inline: auto; aspect-ratio: 4 / 5; object-fit: contain; background: var(--color-neutral-100); }
 .instagram-hero-image { aspect-ratio: 4 / 5; object-fit: contain; background: var(--color-neutral-100); }
 @media (max-width: 767px) { .instagram-product-card { grid-template-columns: 1fr; } }
+.specimen-display { font-size: clamp(3rem, 9vw, 7rem); margin: 0; }
+.specimen-voice { font-size: clamp(2rem, 4.4vw, 4rem); margin: .25rem 0 0; }

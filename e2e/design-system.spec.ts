@@ -10,16 +10,11 @@ test('type specimen renders required glyphs without horizontal overflow at every
 
   const fonts = await page.evaluate(async () => {
     const sample = 'LOPA TRYBE · Modern nativewear · ₦150,000 · Size 36 · Lagos delivery · Ẹ̀wù ọ̀ṣọ́ ṣẹ́ẹ̀ ń';
-    await Promise.all([
-      document.fonts.load('500 24px "Bodoni Moda"', sample),
-      document.fonts.load('400 16px "DM Sans"', sample),
-      document.fonts.load('400 16px "Noto Serif"', sample),
-    ]);
-    const names = ['editorialFont', 'interfaceFont', 'glyphFallbackFont'];
-    await Promise.all(names.map((name) => document.fonts.load(`400 16px "${name}"`, sample)));
-    return names.map((name) => document.fonts.check(`400 16px "${name}"`, sample));
+    const faces = ['400 16px "interfaceFont"', 'italic 400 16px "voiceFont"', '400 16px "editorialFont"', '400 16px "glyphFallbackFont"'];
+    await Promise.all(faces.map((face) => document.fonts.load(face, sample)));
+    return faces.map((face) => document.fonts.check(face, sample));
   });
-  expect(fonts).toEqual([true, true, true]);
+  expect(fonts).toEqual([true, true, true, true]);
 
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
