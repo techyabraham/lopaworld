@@ -1,0 +1,51 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "storefront-verify-db",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "dotenv",
+        "-e",
+        ".env",
+        "-v",
+        "DATABASE_URL=postgres://verify:verify@127.0.0.1:5433/lopaworld_verify",
+        "--",
+        "pnpm",
+        "--filter",
+        "@lopaworld/storefront",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "storefront-standalone-verify-db",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "dotenv",
+        "-e",
+        ".env",
+        "-v",
+        "DATABASE_URL=postgres://verify:verify@127.0.0.1:5433/lopaworld_verify",
+        "-v",
+        "NODE_ENV=production",
+        "-v",
+        "PORT=3000",
+        "-v",
+        "HOSTNAME=127.0.0.1",
+        "--",
+        "node",
+        "apps/storefront/.next/standalone/apps/storefront/server.js"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "storefront-dev-env",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev:storefront"
+      ],
+      "port": 3000
+    }
+  ]
+}
