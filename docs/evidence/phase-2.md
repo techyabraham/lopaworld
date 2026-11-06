@@ -133,3 +133,44 @@ Not kept, pending ADR-015: `experimental.inlineCss`. `pnpm test:lhci` is not add
 | `pnpm test:e2e --trace off` | **pass** | `19 passed (36.7s)` |
 
 Environment note: the container restarted mid-session (Postgres crash recovery in its log); the throwaway cluster was restarted and every build after that used a fresh database. Starting the standalone server **without** `HOSTNAME` made cart writes from `localhost` fail with 403 too, which is more evidence for the same-origin finding above.
+
+## ADR-015 accepted, §5.7, §6, §8 and §9 — 6 November 2026 (cloud session, continued)
+
+The owner chose **ADR-015 option 1**. Commits `e72493f` (inline CSS, `pnpm test:lhci`), `c3263b4` (gallery, flagged components, Data Saver), `609eeae` (checkout regression), `0d59a56` (screenshots), and the docs commit that follows.
+
+- **§7 / ADR-015:** `experimental.inlineCss: true`; `pnpm test:lhci` = Lighthouse CI 0.15.1 (0.16.0 is under two weeks old, ADR-012), applied throttling gating performance ≥ 90, LCP ≤ 2.0 s and CLS ≤ 0.05, then simulated throttling gating TBT ≤ 200 ms; median of 3 runs per URL. In CI (run 21, commit `e72493f`) both passes ran 12 audits each with no failed assertion (step "Lighthouse budgets", 7 min 21 s). The report upload found nothing because `upload-artifact` skips dot-directories; fixed with `include-hidden-files: true`.
+- **CLS regression found and fixed:** the final run measured CLS 0.048 on `/` (gate 0.05). The Drop section moved when Archivo arrived, because the overflow hardening added earlier (`overflow-wrap: anywhere` on the hero and label names) made "LOPAWORLD" wrap in the Arial fallback, which ignores `font-stretch: 62%`, and unwrap in Archivo. Now the names do not wrap and `.entrance-hero`/`.label-hero` clip horizontal overflow, so the height is identical before and after the swap. CLS 0.000 on all four pages afterwards.
+- **§5.7:** `/dev/ui` (server page, 404 in production) shows the hero with three labels, the Drop, occasion tiles, every tile badge and both colour summaries, the mobile tab bar, the size selector with sold out and low stock, swatches with and without hex, sheets, the flagged `MadeToMeasurePanel` and `GroupOrderSection` (`TODO_CONFIRM` copy), plus the existing gallery. `/dev/type` unchanged. New stack smoke test: both return 404 in production.
+- **§6:** the tile's second image is `loading="lazy"` but sits in the viewport at opacity 0 on desktop, so it downloaded under Data Saver. The pre-paint script now sets `html[data-save-data]` (saveData or 2g/3g, the same rule as `prefersReducedData`) and CSS gives the image `display: none`, which Chrome does not fetch; `prefers-reduced-data` is honoured too. Every transition uses the motion tokens.
+- **§8 tests:** `e2e/entrance.spec.ts` (hero switch by pointer and keyboard: `data-label` and the CTA href; tab bar navigates and hides while typing; label category rail and `aria-current`; Data Saver on emulated 3G and off without it; gallery sections and axe at 360/1280; flagged modules absent from the storefront) and a checkout happy-path regression (bag → details → delivery → payment start with the `checkout.paystack.com` redirect answered by a stub → return → confirmation → empty bag). The mock's cart completion is idempotent, as Medusa's is: React's dev double effect sends two completion requests. The Lookbook toggle test asserts it stays hidden, because no campaign can be `active` (ADR-014).
+- Overflow found by the gallery at 390 px: unbreakable flag names in gallery headings, the `Gallery` component's carousel stretching a grid cell (now `min-width: 0`), and the accordion chevron poking 4 px past its summary.
+- **Screenshots:** `docs/evidence/phase-2/after/` (home, label, shop, PDP, bag with two lines, checkout at 360/390/768/1280/1440) and `docs/evidence/phase-2/compare/` (canvas beside implementation for home, label and PDP at 1440 and 390). The canvases render statically: `support.js` is not in the repo, so sample holes such as `{{bagCount}}` show literally, and their Google Fonts link is blocked (§3), so they render in system fonts. Proportions, hierarchy and type scale are comparable; the deliberate differences are the hidden modules listed in `OPEN_ITEMS.md` and the house-name hero (the test database has no Payload headline).
+- **§9 docs:** ADR-016 (Entrance design system), ADR-017 (Phase 2 before Phase 1), ADR-018 (proposed follow-ups: `campaigns.products`, an `occasions` collection, splitting `@lopaworld/ui`); `OPEN_ITEMS.md` Phase 2 table of hidden modules and gates; `ENGINEERING-HANDOFF.md` design-system and CI sections; `packages/ui/fonts/README.md`.
+
+### Final checks (this session, after all Phase 2 changes)
+
+Environment: Linux cloud container, Node 22.23.4, pnpm 11.19.0, local PostgreSQL 16 (Docker Hub rate-limited; CI uses PostgreSQL 17), fictional mock Store API.
+
+| Command | Result | Key output |
+|---|---|---|
+| `pnpm install --frozen-lockfile` | **pass** | |
+| `pnpm typecheck` | **pass** | 5 projects |
+| `pnpm lint` | **pass** | `12 problems (0 errors, 12 warnings)`, all `@next/next/no-img-element` (Phase 1.3) |
+| `pnpm test` | **pass** | 56 + 67 |
+| `pnpm tokens:check` | **pass** | 7 label themes, 6 palette pairs |
+| `python3 packages/ui/scripts/check-font-glyphs.py` | **pass** | Archivo covers every required glyph; Noto Serif covers all 8 missing from a primary face |
+| `pnpm audit:gate` | **pass** | 7 high, all allow-listed and unexpired (production dependencies only) |
+| `pnpm test:e2e --trace off` | **pass** | `27 passed (52.9s)` |
+| `dotenv -e .env -- pnpm build` (fresh database) | **pass** | types, payment-paystack, storefront, medusa `Done` |
+| `pnpm test:lhci` (after the CLS fix) | **pass** | 0 failed assertions |
+
+`pnpm test:lhci`, median of 3:
+
+| Page | Applied: score · LCP · CLS | Simulated: TBT | JS first-load (gzip) |
+|---|---|---|---|
+| `/` | 97 · 1.52 s · 0.000 | 110 ms | 146.3 KB |
+| `/l/trybe` | 98 · 1.50 s · 0.000 | 92 ms | 146.6 KB |
+| `/shop` | 97 · 1.62 s · 0.000 | 100 ms | 146.6 KB |
+| `/p/test-agbada` | 96 · 1.57 s · 0.000 | 132 ms | 149.7 KB |
+
+Caveats: LCP was measured with the mock catalogue's tiny `data:` SVG images, so Phase 1 must re-run `pnpm test:lhci` with real media. Lighthouse CI brings dev-only advisories through its Puppeteer and proxy dependencies (`extract-zip`, `basic-ftp`, `tmp`, `zod`; some high). They run only in CI against our own pages and are outside the production audit gate.

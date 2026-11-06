@@ -554,7 +554,11 @@ html[data-save-data] .product-tile-alt { display: none; }
 .gallery-frame .mobile-tab-bar { position: static; display: grid; }
 .gallery-field-wide { max-width: 520px; }
 
-/* Long words (a CMS headline, a flag name) must wrap rather than widen the page. */
-.entrance-hero-headline, .label-hero-name, .gallery-section h2 { overflow-wrap: anywhere; }
+/* Long words must never widen the page. Gallery labels wrap. The hero and label names do not:
+   wrapping in the fallback face (Arial ignores font-stretch: 62%) and unwrapping when Archivo
+   arrives shifts everything below (measured CLS 0.048 on /). They clip at the section edge, so
+   the line count, and so the height, is the same before and after the font swap. */
+.gallery-section h2 { overflow-wrap: anywhere; }
+.entrance-hero, .label-hero { overflow-x: clip; }
 .gallery-section > h2, .gallery-section h3 { font-family: var(--font-interface), Arial, sans-serif; font-size: 0.8125rem; font-weight: 700; letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .gallery-section > h2 { margin: 0 0 var(--space-4); color: var(--muted); }

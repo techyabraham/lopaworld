@@ -141,3 +141,28 @@
   2. Keep external CSS and treat the budget as missed until Phase 1 (`next/image`, real media) changes the picture. LCP stays 2.20–2.37 s applied, 2.56–2.64 s simulated.
   3. Keep the simulated method as the gate and relax LCP to ≤ 3.0 s (or accept the miss). No code change.
 - Follow-up in any case: split `@lopaworld/ui` into per-component modules. It is one `'use client'` file, so every page ships the whole library (9.2 KB gzip), which is most of the PDP's JS headroom.
+
+## ADR-016 — Entrance design system
+
+- Status: Accepted (owner brief `docs/design/APPLY-ENTRANCE-DESIGN.md`, 5 November 2026; implemented in Phase 2)
+- Decision: the storefront uses the "Entrance" system from the owner's design canvas (`docs/design/entrance/*.dc.html`).
+- **Tokens** (`packages/ui/tokens/tokens.css`): ink `#0F0E0D` on paper `#F7F6F3` (17.8:1), hairline rule `#DAD6D0`, muted `#5E5A55` (6.33:1), `--surface-2` `#ECEAE5` for information strips, `--success-fill` `#E3ECE4`; on ink, `--muted-on-ink` `#C9C4BD` (11.1:1) and `--quiet-on-ink` `#9A948C` (6.42:1). Square corners, no card shadows, hairline separation, Entrance type scale, container and gutter tokens. Motion is limited to the hero tone (600 ms), the tile cross-fade and sheet slide (220 ms), all 0 under `prefers-reduced-motion`.
+- **Single accent, split for contrast:** the canvas red `#D93A1E` fails AA as body text on paper (4.25:1). It is `--signal`, used **only as a fill** behind white text (4.59:1) or for type ≥ 24 px (the bag count, the "Only N left" badge). Any red text at body size uses `--signal-text` `#B8301A` (5.59:1): errors, form messages. The canvas `a:hover { color: #D93A1E }` is not copied.
+- **Label-tone model:** each label has `--label-tone` (ground), `--label-photo` (image placeholder) and `--label-fg` (text on the tone), set by `[data-label]`. The canvas values are used with `TODO_CONFIRM` (D2). `pnpm tokens:check` enforces label fg on tone ≥ 4.5:1 for all seven and the six fixed pairs above. `--accent` is an alias of `--ink`: label colour is a ground, never a link or text accent.
+- **Type:** Archivo variable (`wght` 100–900, `wdth` 62–100) for interface and the condensed display style (`.lw-display`: 900, `font-stretch: 62%`, uppercase); Instrument Serif italic for the voice line (`.lw-voice`) and regular for editorial titles; Noto Serif only as a glyph fallback for ₦ and Yoruba dot-below letters, which Instrument Serif lacks. All self-hosted (OFL 1.1, `packages/ui/fonts`); two files preloaded, 141 KB total (§7 limit 160 KB). Bodoni Moda and DM Sans are removed.
+- **Components:** square ink buttons (48 px, buy 56 px), 44 px minimum targets, 2 px ink focus ring (paper on ink grounds), size grid with sold-out and low-stock labels, swatches with a text-pill fallback when no `swatch_hex` exists, bottom/right sheets, 4:5 + 3:4 gallery with a phone carousel. New: `EntranceHero`, `MobileTabBar`, `ProductTile` with `lib/product-badges` (one computed badge), `MadeToMeasurePanel` and `GroupOrderSection` (flagged, `/dev/ui` only).
+- Consequence: label tones, campaign lines and label one-liners stay owner decisions (D2); modules without real data do not render.
+
+## ADR-017 — Phase 2 (Entrance design) before Phase 1
+
+- Status: Accepted (owner request in `docs/design/APPLY-ENTRANCE-DESIGN.md`; branch stacking approved in session: "Start right away")
+- Context: the build brief orders Phase 1 (catalogue, media, listings) before Phase 2 (design). The owner asked for the Entrance design first, after Phase 0.
+- Decision: run Phase 2 now. Phase 0 was not yet merged, so `phase/2-entrance-design` was branched from `phase/0-stabilise` with `master` merged in; when Phase 0 merges, the Phase 2 PR contains only Phase 2 commits.
+- Constraint: **listings logic and images are untouched until Phase 1.** Filters, sort and pagination keep their existing behaviour (only restyled); media stays raw `<img>` (the 12 `no-img-element` lint warnings) until Phase 1.3 adds `images.remotePatterns` and `next/image`. Phase 1 must re-run `pnpm test:lhci` once real media replaces the mock catalogue's `data:` images, because LCP was measured with tiny placeholder images.
+
+## ADR-018 — Proposed follow-ups from Phase 2 (not started; need owner approval)
+
+- Status: Proposed
+- `campaigns.products` relationship (Payload): lets a Lookbook look list its shoppable pieces, as the canvas shows. Today a look renders image, title, `campaignLine`, body and CTA only. A schema change, so expand → migrate → contract after ADR-014 is resolved.
+- `occasions` collection (Payload): the home occasion tiles and the header "Occasions" link currently come from the homepage's `occasionLinks` block. A collection would give each occasion a slug, a tone, a hero and an `/occasions/[slug]` page owned by editorial. Also a schema change.
+- `@lopaworld/ui` split into per-component modules: the package is one `'use client'` file, so every page ships the whole library (9.2 KB gzip); the PDP has 0.3 KB of JS headroom under the 150 KB budget.

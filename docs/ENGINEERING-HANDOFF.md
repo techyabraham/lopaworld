@@ -99,9 +99,14 @@ The diagram represents intended and current boundaries, with dotted integrations
 ### Storefront and design system
 
 - Mobile-first Next.js App Router structure, common site header/footer, label destinations, product listing/detail, cart, checkout, wishlist, tracking, stories, content pages, metadata, and feeds.
-- Self-hosted Bodoni Moda, DM Sans, and Noto Serif. Noto Serif is a fallback for unsupported glyphs; it is not the main body font. License files are kept beside source fonts in `packages/ui/fonts`.
-- Shared CSS tokens are in `packages/ui/tokens/tokens.css`; implementation styles are in `packages/ui/styles/components.css` and storefront CSS.
-- Label accent tokens are provisional until owner approval. Contrast script provides a check for those tokens; passing it does not approve the brand palette.
+- **Entrance design system (Phase 2, ADR-016).** Reference: `docs/design/entrance/*.dc.html` and `docs/design/APPLY-ENTRANCE-DESIGN.md`.
+  - **Fonts:** self-hosted Archivo variable (interface and the condensed `.lw-display`), Instrument Serif italic (`.lw-voice`) and regular (editorial titles), Noto Serif as a glyph fallback for ₦ and Yoruba dot-below letters only. Loaded with `next/font/local` in `apps/storefront/src/app/(site)/layout.tsx`; two files preloaded (141 KB). Sources, OFL licences and the subsetting recipe: `packages/ui/fonts/README.md`; glyph check: `packages/ui/scripts/check-font-glyphs.py`.
+  - **Tokens:** `packages/ui/tokens/tokens.css`. Ink on paper, hairline rules, `--signal` (fills only) vs `--signal-text` (red text), and per-label `--label-tone/-photo/-fg` set by `[data-label]`. Label tones are canvas values pending D2; `pnpm tokens:check` proves contrast, not approval.
+  - **Components:** `packages/ui/src/index.tsx` (one `'use client'` module; splitting it is ADR-018) and `packages/ui/styles/components.css`; storefront layout CSS in `apps/storefront/src/app/(site)/globals.css`, sectioned by brief § (Shell §5.1, Listings §5.4, Label page §5.3, PDP §5.5, §5.6 pages, Data Saver, flagged components).
+  - **New storefront pieces:** `components/storefront/EntranceHero.tsx` (client island; label index with roving tabindex, `lib/hero-state.ts` for the key reducer, headline split and Data Saver test), `components/site/MobileTabBar.tsx` (below 1024 px; hidden while a text field has focus), `components/cart/use-bag-count.ts` (one `/api/cart` request shared by header and tab bar, announced via `aria-live`), `lib/product-badges.ts` (one computed tile badge: Sold out > Only N left > Made to order > New), `lib/product-colours.ts` (swatches only from `swatch_hex`), `lib/product-options.ts` (PDP option, stock and CTA logic), `lib/add-all.ts` ("Complete the Entrance"), `components/flagged/*` (MTM and group orders behind `NEXT_PUBLIC_FEATURE_*`, read via `lib/env.ts`), `components/site/PrivacyChoicesButton.tsx`.
+  - **Pre-paint script** (root layout): marks `html[data-consent-answered]` (the consent prompt is server-rendered and hidden for visitors who already chose) and `html[data-save-data]` (tiles skip their second image).
+  - **CSS is inlined** into each HTML response (`experimental.inlineCss`, ADR-015).
+  - `/dev/ui` and `/dev/type` show every component and state (404 in production).
 
 ### Payload CMS
 
@@ -238,7 +243,9 @@ The visual identity proposal is exploratory, not approved production art directi
 
 ## Checks, CI, and release evidence
 
-GitHub Actions is configured to run frozen install, font-glyph check, typecheck, lint, token contrast, Playwright/axe developer-gallery tests, and production build on PRs, `main`/`master` pushes, and manual dispatch. Confirm the actual Actions run is green before release. The local E2E suite currently covers `/dev/type` and `/dev/ui`; do not infer full checkout coverage from it.
+GitHub Actions runs frozen install, font-glyph check, typecheck, lint, unit tests, token contrast, the dependency audit gate, Playwright/axe end-to-end tests, the production build, and `pnpm test:lhci` (Lighthouse CI: applied throttling gates performance ≥ 90, LCP ≤ 2.0 s and CLS ≤ 0.05; simulated throttling gates TBT ≤ 200 ms; reports uploaded as an artifact) on PRs, `main`/`master`/`phase/**` pushes, and manual dispatch. Confirm the actual Actions run is green before release.
+
+The end-to-end suite (`pnpm test:e2e`) runs `next dev` against `e2e/support/mock-medusa.mjs`, a **fictional** Medusa Store API (16 test products, one flat delivery option, a Paystack stand-in whose `checkout.paystack.com` redirect is intercepted). It covers the design-system galleries, the PDP, bag and checkout pages, the checkout happy path up to the confirmation, the consent prompt, the hero, tab bar, label rail and Data Saver, with axe on each. It proves the storefront against the Store API contract it expects; it does not prove a real Medusa, Paystack or courier integration. The test base URL is `localhost` because of the same-origin defect in `OPEN_ITEMS.md`.
 
 Run only checks appropriate to the change and report the exact command, environment, and result. A successful typecheck is not a successful production image build. A page returning HTTP 200 is not proof that Payload, Medusa, payment, or checkout is healthy. Staging launch evidence is required by the [Phase 7 checklist](PHASE-7-QA-CHECKLIST.md).
 
