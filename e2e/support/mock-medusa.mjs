@@ -77,6 +77,10 @@ const products = [
   })),
 ];
 
+// One flat-rate delivery option and a Paystack provider stand-in. The payment session returns a
+// checkout.paystack.com URL that tests intercept; completion always succeeds (fictional).
+const shippingOption = { id: 'so_test_flat', name: 'Test delivery (fictional)', price_type: 'flat', amount: 5000, calculated_price: { calculated_amount: 5000, currency_code: 'ngn' } };
+const orders = new Map();
 const carts = new Map();
 let cartSeq = 0;
 
@@ -88,7 +92,14 @@ function cartView(cart) {
     return { id: item.id, title: owner.title, quantity: item.quantity, unit_price: unit, subtotal: unit * item.quantity, total: unit * item.quantity, thumbnail: owner.images[0]?.url ?? null, metadata: item.metadata ?? null, product: { title: owner.title, handle: owner.handle, thumbnail: owner.images[0]?.url ?? null, metadata: owner.metadata }, variant: { id: v.id, title: v.title, manage_inventory: v.manage_inventory, allow_backorder: v.allow_backorder, inventory_quantity: v.inventory_quantity, options: v.options } };
   });
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-  return { id: cart.id, region_id: region.id, currency_code: 'ngn', completed_at: null, items, subtotal, shipping_total: 0, tax_total: 0, total: subtotal, email: cart.email ?? null, shipping_methods: [] };
+  const shipping = cart.shipping_method ? shippingOption.amount : 0;
+  return {
+    id: cart.id, region_id: region.id, currency_code: 'ngn', completed_at: cart.completed_at ?? null, items, subtotal,
+    shipping_total: shipping, tax_total: 0, total: subtotal + shipping, email: cart.email ?? null,
+    shipping_address: cart.shipping_address ?? null, billing_address: cart.billing_address ?? null,
+    shipping_methods: cart.shipping_method ? [{ shipping_option_id: shippingOption.id, name: shippingOption.name, amount: shipping, total: shipping }] : [],
+    payment_collection: cart.payment_collection ?? null,
+  };
 }
 
 function svg(name) {
@@ -125,25 +136,59 @@ createServer(async (req, res) => {
     carts.set(cart.id, cart);
     return json(res, 200, { cart: cartView(cart) });
   }
-  const cartMatch = path.match(/^\/store\/carts\/([^/]+)(\/line-items)?(?:\/([^/]+))?$/);
+  const cartMatch = path.match(/^\/store\/carts\/([^/]+)(?:\/([a-z-]+))?(?:\/([^/]+))?$/);
   if (cartMatch) {
     const cart = carts.get(decodeURIComponent(cartMatch[1]));
     if (!cart) return json(res, 404, { message: 'Cart not found' });
-    if (cartMatch[2] && req.method === 'POST') {
+    const [, , action, itemId] = cartMatch;
+    if (action === 'line-items' && !itemId && req.method === 'POST') {
       const body = await readBody(req);
       const existing = cart.items.find((item) => item.variant_id === body.variant_id);
       if (existing) existing.quantity += body.quantity; else cart.items.push({ id: `item_${cart.id}_${cart.items.length + 1}`, variant_id: body.variant_id, quantity: body.quantity, metadata: body.metadata });
-    } else if (cartMatch[2] && cartMatch[3] && req.method === 'DELETE') {
-      cart.items = cart.items.filter((item) => item.id !== cartMatch[3]);
-    } else if (cartMatch[2] && cartMatch[3] && req.method === 'POST') {
+    } else if (action === 'line-items' && itemId && req.method === 'DELETE') {
+      cart.items = cart.items.filter((item) => item.id !== itemId);
+    } else if (action === 'line-items' && itemId && req.method === 'POST') {
       const body = await readBody(req);
-      const item = cart.items.find(({ id }) => id === cartMatch[3]);
+      const item = cart.items.find(({ id }) => id === itemId);
       if (item) item.quantity = body.quantity;
-    } else if (!cartMatch[2] && req.method === 'POST') {
-      Object.assign(cart, await readBody(req));
+    } else if (action === 'shipping-methods' && req.method === 'POST') {
+      const body = await readBody(req);
+      if (body.option_id !== shippingOption.id) return json(res, 400, { message: 'Unknown shipping option' });
+      cart.shipping_method = true;
+    } else if (action === 'complete' && req.method === 'POST') {
+      // Idempotent, like Medusa: completing an already-completed cart returns the same order.
+      if (orders.has(cart.id)) return json(res, 200, { type: 'order', order: orders.get(cart.id) });
+      if (!cart.payment_collection?.payment_sessions?.length) return json(res, 200, { type: 'cart', error: { type: 'payment_authorization_error' }, cart: cartView(cart) });
+      const order = { id: `order_test_${orders.size + 1}`, display_id: orders.size + 1 };
+      orders.set(cart.id, order);
+      cart.completed_at = new Date().toISOString();
+      return json(res, 200, { type: 'order', order });
+    } else if (!action && req.method === 'POST') {
+      const body = await readBody(req);
+      for (const key of ['email', 'shipping_address', 'billing_address']) if (key in body) cart[key] = body[key];
     }
     return json(res, 200, { cart: cartView(cart) });
   }
-  if (path === '/store/shipping-options') return json(res, 200, { shipping_options: [] });
+  if (path === '/store/shipping-options') return json(res, 200, { shipping_options: carts.has(url.searchParams.get('cart_id')) ? [shippingOption] : [] });
+  if (path === '/store/payment-providers') return json(res, 200, { payment_providers: [{ id: 'pp_paystack_paystack' }] });
+  if (path === '/store/payment-collections' && req.method === 'POST') {
+    const body = await readBody(req);
+    const cart = carts.get(body.cart_id);
+    if (!cart) return json(res, 404, { message: 'Cart not found' });
+    cart.payment_collection = { id: `paycol_${cart.id}`, payment_sessions: [] };
+    return json(res, 200, { payment_collection: cart.payment_collection });
+  }
+  const sessionMatch = path.match(/^\/store\/payment-collections\/([^/]+)\/payment-sessions$/);
+  if (sessionMatch && req.method === 'POST') {
+    const body = await readBody(req);
+    const cart = [...carts.values()].find((candidate) => candidate.payment_collection?.id === sessionMatch[1]);
+    if (!cart) return json(res, 404, { message: 'Payment collection not found' });
+    cart.payment_collection.payment_sessions = [{ provider_id: body.provider_id, data: { authorization_url: `https://checkout.paystack.com/mock-${cart.id}` } }];
+    return json(res, 200, { payment_collection: cart.payment_collection });
+  }
+  if (path === '/store/checkout/orders/lookup' && req.method === 'POST') {
+    const body = await readBody(req);
+    return json(res, 200, { orderId: orders.get(body.cart_id)?.id ?? null });
+  }
   json(res, 404, { message: `Mock Medusa has no route for ${req.method} ${path}` });
 }).listen(port, '127.0.0.1', () => console.log(`mock medusa on ${base} (${products.length} fictional products)`));
