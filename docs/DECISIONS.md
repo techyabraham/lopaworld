@@ -119,7 +119,8 @@
 
 ## ADR-015 — How the §7 LCP budget is measured, and whether to inline CSS (needs owner decision)
 
-- Status: **Proposed — awaiting owner decision** (design brief §10 stop condition: a §7 budget is not met as shipped)
+- Status: **Accepted — option 1** (owner, 6 November 2026: "Option 1")
+- Result: `experimental.inlineCss: true` in `apps/storefront/next.config.ts`; `pnpm test:lhci` (Lighthouse CI 0.15.1 / Lighthouse 12.6.1, `lighthouse/lighthouserc.applied.cjs` then `lighthouserc.simulated.cjs`, served by `scripts/lhci-server.mjs`) runs in CI after the build. First run, median of 3, applied throttling: `/` 97 · LCP 1.52 s, `/l/trybe` 98 · 1.49 s, `/shop` 97 · 1.63 s, `/p/test-agbada` 96 · 1.53 s, CLS 0.000; simulated TBT 126 / 81 / 138 / 138 ms. 0 failed assertions.
 - Date: 2026-11-06
 - Measured (production standalone build, fictional 16-product mock catalogue, Lighthouse 12.8.2 mobile = Moto G Power, slow 4G, median of 3; evidence in `docs/evidence/phase-2.md` §7):
 

@@ -51,6 +51,9 @@ jobs:
       COOKIE_SECRET: ci-only-not-a-deployment-secret
       PAYLOAD_SECRET: ci-only-not-a-deployment-secret
       PREVIEW_SECRET: ci-only-not-a-deployment-preview-secret
+      # Not a credential: lets the build talk to the fictional Store API in e2e/support/mock-medusa.mjs
+      # (inlined at build time; a "replace-…" placeholder would make the catalogue "unavailable").
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_ci_mock_not_a_key
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -87,6 +90,17 @@ jobs:
         run: |
           set -o pipefail
           pnpm build 2>&1 | tee build.log
+      # §7 budgets (ADR-015): applied throttling gates score, LCP and CLS; simulated gates TBT.
+      # Serves the standalone build against the migrated CI database and the mock catalogue.
+      - name: Lighthouse budgets
+        run: pnpm test:lhci
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          if-no-files-found: ignore
       - name: Surface build error
         if: failure()
         run: |
