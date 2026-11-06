@@ -182,7 +182,8 @@ Use `.env.example` as the exact local variable inventory. The roles are:
 | `MEDUSA_BACKEND_URL` | Storefront server | Internal URL in Compose; local default is the developer's Medusa endpoint. |
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | Storefront build and runtime | Public key, scoped to the storefront sales channel. Required for catalog/cart calls; it is not a secret. Production changes require rebuilding the image. |
 | `MEDUSA_REGION_ID` | Storefront server | Optional; if omitted, storefront searches for an NGN region. |
-| `NEXT_PUBLIC_SITE_URL` | Storefront build/runtime metadata | Canonical HTTPS origin. Required in Coolify Compose; build-time value means changing it requires image rebuild. |
+| `NEXT_PUBLIC_SITE_URL` | Storefront build/runtime metadata, same-origin check | Canonical HTTPS origin. Required in Coolify Compose; build-time value means changing it requires image rebuild. Cart and checkout writes accept only this origin (audit N11). |
+| `TRUST_PROXY_HEADERS` | Storefront server (runtime) | Optional, default off. `true` also accepts the `X-Forwarded-Host`/`X-Forwarded-Proto` origin for cart and checkout writes. Set only behind a proxy that overwrites client-supplied forwarded headers. |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Storefront client | Optional; only used after analytics consent. |
 | `PAYSTACK_SECRET_KEY`, `PAYSTACK_CALLBACK_URL`, `PAYSTACK_CHANNELS` | Medusa payment module | All required to register provider. Do not enable until account, channels, legal entity, callback and test sign-off are confirmed. |
 | `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET` | Intended local object store | Not a completed app media-storage integration. MinIO is only the local service at present. |

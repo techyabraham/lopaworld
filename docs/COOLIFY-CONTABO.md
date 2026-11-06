@@ -87,7 +87,7 @@ Create fresh random values in Coolify's Environment Variables. Use 32-byte hex v
 | `PREVIEW_SECRET` | A different fresh 64-character hexadecimal secret |
 | `JWT_SECRET` | Fresh 64-character hexadecimal secret |
 | `COOKIE_SECRET` | A different fresh 64-character hexadecimal secret |
-| `NEXT_PUBLIC_SITE_URL` | `https://www.example.com` |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.example.com` (also the only origin cart and checkout writes accept; build arg, so set it before the first build) |
 | `STORE_CORS` | `https://www.example.com` (include apex too if it serves the shop) |
 | `ADMIN_CORS` | `https://api.example.com` |
 | `AUTH_CORS` | Comma-separated storefront and API origins, e.g. `https://www.example.com,https://api.example.com` |
