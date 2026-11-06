@@ -65,6 +65,6 @@ test('tabs switch with arrow keys and selectors expose their selected state', as
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Care' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('tabpanel')).toContainText('Care information.');
-  await expect(page.getByRole('button', { name: 'M', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Size M', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Forest' })).toHaveAttribute('aria-pressed', 'true');
 });

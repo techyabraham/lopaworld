@@ -36,3 +36,46 @@ Environment: Windows 10 Pro 10.0.19045, Node 24.15.0, pnpm 11.19.0, Docker 29.8.
 | `/checkout` | `before/checkout-390.png` | `before/checkout-1440.png` |
 
 **Limitation:** no Medusa catalogue runs locally, so there is no real product handle. The PDP capture shows the not-found state, and `/shop` and `/l/trybe` show the "catalogue unavailable" state. The "before" homepage also shows customer-facing placeholder copy that Phase 2 must remove: the hard-coded hero ("One house. Seven labels." / crochet line), the Instagram "Featured pieces" section (rights unverified), and the footer line "Customer support details will be published here once confirmed."
+
+## §5.5 PDP — 6 November 2026 (cloud session)
+
+Environment: Linux cloud container, Node 22.23.4, pnpm 11.19.0. The session moved from the desktop app; the desktop's uncommitted change (`.claude/launch.json`, local launch presets only) was unstaged and is not committed. §2–§5.4 were committed in the desktop session; their checks are described in those commit messages and were **not** re-recorded here.
+
+**Database:** Docker Hub returned `429 Too Many Requests` for `postgres:17-alpine`, so `pnpm db:verify:up` could not run. A throwaway local **PostgreSQL 16** cluster on 127.0.0.1:5433 (same `verify` credentials) was used instead and recreated before each production build: a `next dev` run schema-pushes the database, and a later production build then hangs prerendering `/dev/type`, `/dev/ui` and `/preview/homepage` (> 60 s × 3, build failed) because Payload's migration meets a dev-pushed schema. On a fresh database the build passes. Phase 0's PG 17 proof stands; PG 16 here is a local-only deviation.
+
+**Catalogue:** no Medusa runs in this container. `e2e/support/mock-medusa.mjs` (new) serves a fictional Store API (16 test products, NGN test region, in-memory carts, `data:` SVG images because the CSP allows only `https:`/`data:` images). It is started by `playwright.config.ts` for e2e and was used for the screenshots below. None of its data is Lopaworld data.
+
+### What changed
+- **Layout:** gallery `flex: 999 1 560px`, buy panel `flex: 1 1 400px; max-width: 520px`, sticky under the header from 1024 px. `Breadcrumb` (Home / label / category or Shop / product); BreadcrumbList JSON-LD now includes the label and category.
+- **Buy panel order:** label eyebrow link → title (`.lw-display`, 56 px) → `subtitle` (`.lw-voice`, 24 px) only if set → price (`aria-live`, "From …" until every option is chosen, no conversions) → colour via `ColourSwatch` (text pills without `swatch_hex`), legend "Colour — value" → size via `SizeSelector` with `lowStock` (1–3 left, stock-tracked only), legend shows "· last one" / "· N left", "Size guide (cm / in)" only when a size guide exists → made-to-order note + notes field (existing) → `QuantityStepper` → 56 px ink CTA: "Choose a size" / "Add to bag — size 44" / "Sold out" / "Adding…" → `--success-fill` status strip "Added to bag — <title>, <colour>, size N. View bag" → "Save for later" (`WishlistButton`, full width; WhatsApp cell waits for D5).
+- **Size is never pre-selected** when a piece has more than one size (colour still is), so nobody adds a size by accident.
+- **Hidden / removed:** RTW/MTM mode tabs (not rendered; `productHasMadeToMeasure` helper ready for Phase 3), delivery estimator (D4), payment-channel line, the placeholder Returns text (Returns shows only when a published Payload page `returns` exists, linking to `/pages/returns`), the WhatsApp paragraph (D5), "Product imagery is being prepared." (now a blank label-tone block), "Price unavailable".
+- **Accordions:** Details, Fit, Fabric, Care, Delivery, each only if present.
+- **Sticky phone bar:** ink, price left, CTA right, sits above the tab bar, hidden while the notes field has focus. With a size still open its button reads "Choose a size" and scrolls to and focuses the first available size instead of being a dead disabled button.
+- **Complete the Entrance:** only when `metadata.complete_the_look` is an array of handles (deduplicated, self excluded, max 4), each fetched from Medusa; unresolved handles are dropped. "Add all · ₦total" only when every handle resolved **and** each piece has exactly one purchasable, priced variant (otherwise the customer must pick a size on that piece's page). Posts sequentially to `/api/cart/items`, reports partial failures by name, never shows server error text, updates the bag count. `complete_the_look?: string[]` added to `ProductEditorialMetadata`.
+- **Related pieces:** existing product tiles under an Entrance heading.
+- **Size guide sheet:** hairline table, sticky first column, scrollable region with a label.
+- **Shell fix found while testing:** the floating "Privacy choices" button covered the phone tab bar's Search and Bag targets. It now lives in the footer's Service column (`PrivacyChoicesButton` reopens the prompt via an event); the consent panel sits above the tab bar on phones.
+- **Test fix:** `e2e/design-system.spec.ts` looked for a size button named "M"; since §4 it is "Size M" (that test was failing on this branch).
+- New pure modules: `lib/product-options.ts` (option kinds, availability, low stock, selection, CTA text) and `lib/add-all.ts`; `variantIsAvailable` now has one definition (re-exported by `lib/store.ts`).
+
+### Checks (this session)
+
+| Command | Result | Key output |
+|---|---|---|
+| `pnpm install --frozen-lockfile` | **pass** | |
+| `pnpm typecheck` | **pass** | 5 projects |
+| `pnpm lint` | **pass** | `12 problems (0 errors, 12 warnings)`, all `@next/next/no-img-element` (B6; Phase 1.3 moves media to `next/image`) |
+| `pnpm test` | **pass** | `payment-paystack 56 passed`, `storefront 67 passed` (new: `product-options.test.ts`, `add-all.test.ts`, which covers sequential posting and partial failures) |
+| `pnpm tokens:check` | **pass** | `Contrast check passed for 7 label themes and 6 palette pairs.` |
+| `dotenv -e .env -- pnpm build` (fresh PG 16 database) | **pass** | types, payment-paystack, storefront, medusa `Done` |
+| `pnpm test:e2e --trace off` | **pass** | `11 passed (20.6s)`: 5 design-system + 6 new PDP tests (size → CTA text, sold-out disabled, add to bag → success strip + bag count, Complete the Entrance "Add all" → bag count 3, unconfirmed modules absent, phone sticky bar → focuses size, axe WCAG 2.2 AA at 390 and 1440 px with zero violations) |
+| Production standalone server + Playwright, `/p/test-agbada` | **pass** | 200; hydrated; no console errors at 390 or 1440 px; select 42 → "Add to bag — size 42", legend "Size — 42 · last one"; add → "Added to bag — Test agbada, Forest, size 42. View bag", header "Bag 1"; Add all → "Added all 3 pieces to your bag.", header "Bag 4"; no horizontal overflow at 390 px |
+
+Screenshots (production build, mock catalogue): `docs/evidence/phase-2/pdp/pdp-390.png`, `pdp-1440.png`.
+
+### New finding — same-origin check rejects writes off `localhost` (not fixed here)
+`lib/request-security.ts` compares `Origin` with `new URL(request.url).origin`. Next (dev and the production standalone server) reports `request.url` as `http://localhost:<port>` regardless of `Host`, `X-Forwarded-Proto` or `HOSTNAME`. Observed against the standalone server, `POST /api/cart/items`: `Origin: http://localhost:3000` → 200; `Origin: http://127.0.0.1:3000` → 403; `Host: shop.example` + `X-Forwarded-Proto: https` + `Origin: https://shop.example` → 403. Behind Coolify's proxy every cart and checkout write would likely be rejected. **Launch-blocking**, Phase 0 security code, so it is not changed in the design PR; queued as a separate task. Meanwhile `playwright.config.ts` uses `http://localhost:3017` as its base URL, with a comment pointing here.
+
+### Phase 2 not yet done
+§5.6 (bag, checkout, confirmation, track order, wishlist, search, stories, pages; the wishlist and `content.tsx` still show "Image pending"), §5.7 dev gallery, §6 Data Saver hover-preload check, §7 budgets (JS first-load and Lighthouse, not measured yet), remaining §8 e2e (hero, tab bar, label page) and "after" screenshots, §9 docs.

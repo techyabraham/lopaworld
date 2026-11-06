@@ -136,10 +136,7 @@ export function productLabel(product: StoreProduct): string | null {
   return typeof label === 'string' ? label : null;
 }
 
-export function variantIsAvailable(variant: StoreVariant, madeToOrder = false): boolean {
-  if (madeToOrder || variant.allow_backorder || variant.manage_inventory === false) return true;
-  return (variant.inventory_quantity ?? 0) > 0;
-}
+export { variantIsAvailable } from './product-options';
 
 export function productPrice(product: StoreProduct): number | null {
   const amounts = (product.variants ?? []).map(({ calculated_price }) => calculated_price?.calculated_amount).filter((amount): amount is number => typeof amount === 'number' && Number.isFinite(amount));

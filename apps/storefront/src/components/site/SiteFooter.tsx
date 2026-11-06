@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PrivacyChoicesButton } from './PrivacyChoicesButton';
 import { LABELS } from '@lopaworld/types';
 
 type FooterPage = { title?: string; slug?: string };
@@ -16,7 +17,7 @@ export function SiteFooter({ pages = [], organizationName }: { pages?: FooterPag
       </div>
       <div className="footer-columns">
         <nav aria-label="Labels"><h2 className="lw-eyebrow">Labels</h2><ul>{LABELS.filter(({ slug }) => slug !== 'lopaworld').map(({ slug, name }) => <li key={slug}><Link href={`/l/${slug}`}>{name}</Link></li>)}</ul></nav>
-        <nav aria-label="Service"><h2 className="lw-eyebrow">Service</h2><ul><li><Link href="/track-order">Track an order</Link></li>{service.map((page) => <li key={page.slug}><Link href={`/pages/${page.slug}`}>{page.title ?? page.slug}</Link></li>)}</ul></nav>
+        <nav aria-label="Service"><h2 className="lw-eyebrow">Service</h2><ul><li><Link href="/track-order">Track an order</Link></li><li><PrivacyChoicesButton /></li>{service.map((page) => <li key={page.slug}><Link href={`/pages/${page.slug}`}>{page.title ?? page.slug}</Link></li>)}</ul></nav>
       </div>
     </div>
     <div className="footer-bottom">

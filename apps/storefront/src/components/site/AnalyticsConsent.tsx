@@ -7,6 +7,8 @@ import { useLocalStorageValue } from '../../lib/use-local-storage-value';
 
 const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const CHANGE_EVENT = 'lopaworld-consent-change';
+/** Dispatched by PrivacyChoicesButton (footer) to reopen the prompt. */
+export const OPEN_EVENT = 'lopaworld-consent-open';
 type Choice = 'accepted' | 'rejected' | null;
 
 function activateMeasurement() {
@@ -31,6 +33,12 @@ export function AnalyticsConsent() {
     if (choice === 'accepted') activateMeasurement();
   }, [choice]);
 
+  useEffect(() => {
+    const reopen = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, reopen);
+    return () => window.removeEventListener(OPEN_EVENT, reopen);
+  }, []);
+
   function decide(next: Exclude<Choice, null>) {
     window.localStorage.setItem(CONSENT_KEY, next);
     window.dispatchEvent(new Event(CHANGE_EVENT));
@@ -50,6 +58,6 @@ export function AnalyticsConsent() {
         <button type="button" onClick={() => decide('rejected')}>Reject optional</button>
         <button type="button" onClick={() => decide('accepted')}>Allow analytics</button>
       </div>
-    </aside> : ready && <button className="consent-settings" type="button" onClick={() => setOpen(true)}>Privacy choices</button>}
+    </aside> : null}
   </>;
 }
