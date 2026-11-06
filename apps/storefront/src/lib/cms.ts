@@ -5,7 +5,7 @@ import { logServerError } from './server-log';
 
 export type CMSRecord = Record<string, unknown> & { id: string; name?: string; title?: string; slug?: string };
 
-export async function findPublishedRecords(collection: 'labels' | 'pages' | 'size-guides' | 'stories', where: Record<string, unknown> = {}, limit = 100) {
+export async function findPublishedRecords(collection: 'labels' | 'pages' | 'size-guides' | 'stories' | 'campaigns', where: Record<string, unknown> = {}, limit = 100) {
   const payload = await getPayload({ config });
   const result = await payload.find({
     collection,
@@ -18,7 +18,7 @@ export async function findPublishedRecords(collection: 'labels' | 'pages' | 'siz
   return result.docs as unknown as CMSRecord[];
 }
 
-export async function findPublishedRecordsSafely(collection: 'labels' | 'pages' | 'size-guides' | 'stories', where: Record<string, unknown> = {}, limit = 100) {
+export async function findPublishedRecordsSafely(collection: 'labels' | 'pages' | 'size-guides' | 'stories' | 'campaigns', where: Record<string, unknown> = {}, limit = 100) {
   try {
     return { records: await findPublishedRecords(collection, where, limit), error: null as string | null };
   } catch (error) {
