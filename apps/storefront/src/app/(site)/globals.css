@@ -56,7 +56,7 @@ button { color: inherit; font: inherit; }
 .specimen-grid, .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1rem; }
 .token-swatch { display: inline-flex; align-items: center; justify-content: center; min-height: 5rem; margin: .25rem; padding: 1rem; color: var(--accent-contrast); background: var(--accent); }
 .gallery-section { padding-block: 1.5rem; border-bottom: 1px solid var(--color-line); }
-.gallery-section h2 { font-size: var(--type-h2); }
+.gallery-section > h2 { font-size: var(--type-h2); }
 .gallery-row { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
 .gallery-field { width: min(100%, 22rem); }
 .gallery-label { font-weight: 600; }
@@ -516,3 +516,45 @@ a.cart-line-title:hover { text-decoration: underline; }
 }
 
 html[data-consent-answered] .consent-panel[data-pending] { display: none; }
+
+/* Data Saver (§6): the pre-paint script in the root layout sets html[data-save-data] when
+   navigator.connection reports saveData or a 2g/3g effectiveType. A display:none lazy image is not
+   fetched, so the tile's second (hover) image is never downloaded. */
+html[data-save-data] .product-tile-alt { display: none; }
+@media (prefers-reduced-data: reduce) { .product-tile-alt { display: none; } }
+
+/* Flagged components (Phase 3 / Phase 4; shown in /dev/ui only while the flags are off) */
+.mtm { display: grid; gap: var(--space-4); }
+.mtm-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--ink); }
+.mtm-tab { display: grid; gap: 2px; min-height: 56px; padding: 10px 16px; border: 0; color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.mtm-tab[aria-selected="true"] { color: var(--paper); background: var(--ink); }
+.mtm-tab-title { font-size: 0.875rem; font-weight: 700; }
+.mtm-tab-note { font-size: 0.75rem; opacity: 0.85; }
+.mtm-panel { display: grid; gap: 14px; padding: 20px; border: 1px solid var(--ink); }
+.mtm-panel[hidden], .mtm-panel-rtw[hidden] { display: none; }
+.mtm-panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); align-items: baseline; }
+.mtm-panel-title { font-weight: 700; }
+.mtm-panel-badge { padding: 3px 8px; color: var(--paper); background: var(--ink); font-size: 0.75rem; }
+.mtm-measures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin: 0; }
+.mtm-measures dt { color: var(--muted); font-size: 0.75rem; }
+.mtm-measures dd { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.mtm-note, .mtm-ready { margin: 0; font-size: var(--type-small); }
+.mtm-ready { padding-top: var(--space-3); border-top: 1px solid var(--rule); }
+.group-order { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; padding-block: var(--space-10); }
+.group-order-media { flex: 1 1 520px; min-width: 0; aspect-ratio: 4 / 3; background: var(--label-photo); }
+.group-order-copy { flex: 1 1 440px; min-width: 0; }
+.group-order-eyebrow { color: var(--muted); }
+.group-order-title { margin: var(--space-2) 0 0; font-size: clamp(2.75rem, 6vw, 4.5rem); line-height: 0.88; }
+.group-order-body { max-width: 460px; margin: 20px 0 0; color: #3D3A36; }
+.group-order-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); margin: 28px 0 0; padding-top: 20px; border-top: 1px solid var(--ink); }
+.group-order-facts dt { font-family: var(--font-interface), Arial, sans-serif; font-stretch: 62%; font-size: 2.25rem; font-weight: 900; }
+.group-order-facts dd { margin: 0; color: var(--muted); font-size: 0.8125rem; }
+.group-order-cta { margin-top: 28px; }
+.gallery-frame { max-width: 420px; border: 1px dashed var(--rule); }
+.gallery-frame .mobile-tab-bar { position: static; display: grid; }
+.gallery-field-wide { max-width: 520px; }
+
+/* Long words (a CMS headline, a flag name) must wrap rather than widen the page. */
+.entrance-hero-headline, .label-hero-name, .gallery-section h2 { overflow-wrap: anywhere; }
+.gallery-section > h2, .gallery-section h3 { font-family: var(--font-interface), Arial, sans-serif; font-size: 0.8125rem; font-weight: 700; letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.gallery-section > h2 { margin: 0 0 var(--space-4); color: var(--muted); }

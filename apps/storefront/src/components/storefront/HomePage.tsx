@@ -91,7 +91,7 @@ function SplitHeading({ heading, className = '' }: { heading: string; className?
   return <h2 className={`lw-display section-display ${className}`}>{heading}</h2>;
 }
 
-function DropSection({ id, heading, products, viewAll }: { id: string; heading: string | null; products: StoreProduct[]; viewAll: string | null }) {
+export function DropSection({ id, heading, products, viewAll }: { id: string; heading: string | null; products: StoreProduct[]; viewAll: string | null }) {
   if (!products.length) return null;
   const present = LABEL_ORDER.filter(({ slug }) => products.some((product) => productLabel(product) === slug));
   return <section id={id} className="drop-section" aria-labelledby={`${id}-heading`}>
@@ -108,7 +108,7 @@ function DropSection({ id, heading, products, viewAll }: { id: string; heading: 
   </section>;
 }
 
-function OccasionTiles({ heading, links }: { heading: string | null; links: unknown[] }) {
+export function OccasionTiles({ heading, links }: { heading: string | null; links: unknown[] }) {
   const items = links.map(record).map((item) => ({ label: text(item?.label), href: safeHref(item?.url) })).filter((item): item is { label: string; href: string } => Boolean(item.label && item.href));
   if (!items.length) return null;
   return <section id="occasions" className="occasions-section" aria-label={heading ?? 'Occasions'}>

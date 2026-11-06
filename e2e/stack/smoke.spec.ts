@@ -41,3 +41,9 @@ test('both admin applications load', async ({ page, request }) => {
   const medusa = await request.get(`${medusaBaseUrl}/app`);
   expect(medusa.status()).toBe(200);
 });
+
+test('the development galleries are not served in production', async ({ request }) => {
+  for (const path of ['/dev/ui', '/dev/type']) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
+});

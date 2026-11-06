@@ -10,8 +10,11 @@ import { canonical, jsonLd, publicSiteUrl } from '../../lib/seo';
 // preloaded (§7: two files, 141 KB). Instrument Serif lacks the Naira sign and the Yoruba dot-below
 // letters; those glyphs fall back to Noto Serif through --font-glyph-fallback.
 // Runs before first paint: marks <html> when an analytics choice is stored, so the server-rendered
-// consent prompt stays hidden for visitors who already answered (see AnalyticsConsent).
-const consentPrePaint = `try{var v=localStorage.getItem(${JSON.stringify(CONSENT_KEY)});if(v==='accepted'||v==='rejected')document.documentElement.setAttribute('data-consent-answered','')}catch(e){}`;
+// consent prompt stays hidden for visitors who already answered (see AnalyticsConsent), and when
+// the connection asks for reduced data, so tiles skip their second (hover) image.
+const consentPrePaint = `try{var v=localStorage.getItem(${JSON.stringify(CONSENT_KEY)});if(v==='accepted'||v==='rejected')document.documentElement.setAttribute('data-consent-answered','')}catch(e){}`
+  // Data Saver (§6): same rule as prefersReducedData in lib/hero-state.ts.
+  + `try{var c=navigator.connection;if(c&&(c.saveData||/2g|3g/.test(c.effectiveType||'')))document.documentElement.setAttribute('data-save-data','')}catch(e){}`;
 
 const interfaceFont = localFont({
   src: '../../../public/fonts/archivo.woff2',
