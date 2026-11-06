@@ -40,5 +40,5 @@ export function PaymentReturn() {
     return () => { stopped = true; if (timer) window.clearTimeout(timer); };
   }, []);
 
-  return <section className="checkout-return" aria-live="polite"><p className="eyebrow">Payment return</p><h1>{failed ? 'Payment not confirmed' : 'Confirming your order'}</h1><p>{message}</p>{failed && <Link className="lw-button" href="/bag">Return to your bag</Link>}</section>;
+  return <section className="checkout-return" aria-live="polite"><p className="lw-eyebrow">Payment return</p><h1 className="lw-display">{failed ? 'Payment not confirmed' : 'Confirming your order'}</h1><p>{message}</p>{failed && <Link className="lw-button" href="/bag">Return to your bag</Link>}</section>;
 }
