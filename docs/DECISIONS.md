@@ -116,3 +116,27 @@
   2. Rename the field (for example `campaignStatus`) with expand → migrate → contract: add a column, copy, switch code, drop later. More churn and an API change for no extra benefit.
   3. Drop the custom `status` field and rely on drafts plus `startsAt`/`endsAt` for scheduling. Changes the editorial model, so it is an owner content decision.
 - Consequence of waiting: the Lookbook toggle (§5.3) never appears. The rest of Phase 2 is unaffected.
+
+## ADR-015 — How the §7 LCP budget is measured, and whether to inline CSS (needs owner decision)
+
+- Status: **Proposed — awaiting owner decision** (design brief §10 stop condition: a §7 budget is not met as shipped)
+- Date: 2026-11-06
+- Measured (production standalone build, fictional 16-product mock catalogue, Lighthouse 12.8.2 mobile = Moto G Power, slow 4G, median of 3; evidence in `docs/evidence/phase-2.md` §7):
+
+  | Build | Throttling | `/` | `/l/trybe` | `/shop` | `/p/test-agbada` |
+  |---|---|---|---|---|---|
+  | Before (external CSS, consent prompt after hydration) | simulated (Lighthouse default) | 96 · LCP 2.56 s | 94 · 3.02 s | 94 · 3.01 s | 91 · 3.16 s |
+  | **Committed** (external CSS, server-rendered prompt) | simulated | 96 · 2.57 s | 96 · 2.56 s | 96 · 2.57 s | 95 · 2.64 s |
+  | **Committed** | applied (`devtools`) | 94 · 2.21 s | 94 · 2.20 s | 93 · 2.37 s | 92 · 2.31 s |
+  | E3: prompt suppressed, `font-display: optional` (not kept) | applied | 93 · 2.32 s | 92 · 2.30 s | 92 · 2.48 s | 91 · 2.36 s |
+  | **E5: inline CSS + server-rendered consent prompt** | **applied** | **98 · 1.51 s** | **96 · 1.51 s** | **97 · 1.63 s** | **96 · 1.58 s** |
+  | E5 | simulated | 95 · 2.72 s | 95 · 2.71 s | 96 · 2.72 s | 94 · 2.83 s |
+
+  CLS is 0.000–0.004 everywhere. TBT is 100–146 ms simulated, 203–255 ms applied (4× CPU on a shared container; noisy). JS first-load: 146.3 / 146.6 / 146.6 / 149.7 KB gzip, under the 150 KB budget but with 0.3 KB headroom on the PDP.
+- Why: LCP equals first paint on every page (the display headline, or the first product image on `/shop`). With external CSS, first paint needs a third round trip for the 13.5 KB stylesheet, which also shares the slow link with the two preloaded fonts (140 KB) and the scripts. Inlining removes that round trip. The PDP was also held back by the analytics consent prompt, which painted only after hydration; it is now in the server HTML (kept: no trade-off, returning visitors never see it).
+- Simulated LCP barely moves (2.7–2.8 s) whatever changes: Lighthouse's model charges the fonts and scripts that finish before the unthrottled LCP to the LCP. Getting simulated LCP ≤ 2.0 s would mean cutting the React/Next runtime (~115 KB gzip, fixed) or not preloading Archivo, which drops the display face on first paint (a signature element).
+- Options:
+  1. **Recommended — inline CSS and measure LCP with applied throttling.** Set `experimental.inlineCss: true` in `apps/storefront/next.config.ts`; `pnpm test:lhci` runs Lighthouse CI with `throttlingMethod: 'devtools'`, asserting performance ≥ 90, LCP ≤ 2.0 s and CLS ≤ 0.05, and TBT ≤ 200 ms on the simulated run (applied CPU throttling in CI is too noisy to gate on). Cost: HTML grows from ~9 KB to ~32 KB gzip per page (CSS is not cached separately and is duplicated in the RSC payload); the flag is experimental in Next 16.4.5. Returning visitors lose the cached stylesheet.
+  2. Keep external CSS and treat the budget as missed until Phase 1 (`next/image`, real media) changes the picture. LCP stays 2.20–2.37 s applied, 2.56–2.64 s simulated.
+  3. Keep the simulated method as the gate and relax LCP to ≤ 3.0 s (or accept the miss). No code change.
+- Follow-up in any case: split `@lopaworld/ui` into per-component modules. It is one `'use client'` file, so every page ships the whole library (9.2 KB gzip), which is most of the PDP's JS headroom.

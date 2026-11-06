@@ -79,3 +79,57 @@ Screenshots (production build, mock catalogue): `docs/evidence/phase-2/pdp/pdp-3
 
 ### Phase 2 not yet done
 §5.6 (bag, checkout, confirmation, track order, wishlist, search, stories, pages; the wishlist and `content.tsx` still show "Image pending"), §5.7 dev gallery, §6 Data Saver hover-preload check, §7 budgets (JS first-load and Lighthouse, not measured yet), remaining §8 e2e (hero, tab bar, label page) and "after" screenshots, §9 docs.
+
+## §5.6 Bag, checkout, customer and editorial pages — 6 November 2026 (cloud session, continued)
+
+Restyle only; the checkout flow, its requests and the API routes are unchanged (commit `c1f9692`).
+
+- `.store-page` / `.page-shell` had **no side padding on phones** (only a ≥ 768 px width rule). They now use the Entrance container and gutter at every width.
+- Bag: hairline lines, compact stepper, ink totals rule, 56 px "Continue to checkout"; summary column beside the lines from 768 px. Checkout: 48 px hairline inputs with a 2 px ink focus border, labels above with "(optional)" inline, hairline delivery rows, the order summary as a table (caption "Order summary"), errors in `--signal-text` wired with `aria-describedby`. Track order: `aria-invalid` only when the lookup rejects the details (400/404), not for a 503. Stories: Instrument Serif titles, 68ch bodies, `Breadcrumb`. Empty and error states use `EmptyState` / `ErrorState`.
+- Customer-facing placeholder or internal copy removed: "Image pending" (wishlist, `CMSImage`), "Price unavailable", "Calculated by Medusa", "Medusa confirmed your checkout", "Guest order tracking and transaction emails will be added…", "Delivery zones and fees are being confirmed", "…payment account and approved channels still need to be configured", "Courier tracking details are not available here yet", "Account syncing will be added…", "Stories will appear here when they are published". The payment-failure line "Contact Lopaworld with your checkout email…" is unchanged (payment wording outranks looks), but it names no contact route until D5 is decided.
+- The confirmation page does **not** link to Track an order: it shows Medusa's order ID, while the lookup needs the numeric order number, which the page never shows. Recorded as a follow-up.
+- Checked against the production build with the mock catalogue at 390 and 1440 px: bag (empty and two lines), checkout, wishlist, track order (with an error), stories (empty), confirmation (unavailable). No horizontal overflow; no console errors except the expected 503 from the mock's missing order-lookup route.
+- `e2e/bag-checkout.spec.ts` (new, 4 tests): empty bag, bag lines and totals, checkout labels and summary table, no placeholder copy, no overflow, axe WCAG 2.2 AA at 390/1440 on bag and checkout, and on wishlist, track order, stories and confirmation.
+
+## §7 Performance budgets — 6 November 2026
+
+**Not met as committed: LCP.** Stopped and asked (§10); options in **ADR-015** (`docs/DECISIONS.md`).
+
+Method: production standalone build (`next build`, fresh PG 16 database), mock catalogue (16 fictional products, ≥ 12 required), Lighthouse 12.8.2 installed in a scratch directory (not a repo dependency), mobile defaults (Moto G Power, slow 4G), `--only-categories=performance`, median of 3 runs; a run that failed with Lighthouse's `NO_NAVSTART` trace error is excluded and counted. JS first-load: every same-origin script a fresh Moto G4 context loads, gzipped at level 6 (Next 16 Turbopack no longer prints per-route sizes).
+
+| Page | JS first-load (gzip) | Simulated: score · LCP · TBT | Applied (`devtools`): score · LCP · TBT | CLS |
+|---|---|---|---|---|
+| `/` | 146.3 KB | 96 · 2.57 s · 105 ms | 94 · 2.21 s · 180 ms | 0.000 |
+| `/l/trybe` | 146.6 KB | 96 · 2.56 s · 90 ms | 94 · 2.20 s · 147 ms | 0.000 |
+| `/shop` | 146.6 KB | 96 · 2.57 s · 96 ms | 93 · 2.37 s · 231 ms | 0.000 |
+| `/p/test-agbada` | 149.7 KB | 95 · 2.64 s · 151 ms | 92 · 2.31 s · 204 ms | 0.000 |
+
+Budgets: JS ≤ 150 KB **pass** (PDP 0.3 KB under); score ≥ 90 **pass**; CLS ≤ 0.05 **pass**; TBT ≤ 200 ms **pass** simulated, 147–231 ms applied; **LCP ≤ 2.0 s fails** with both methods. Fonts: 2 preloaded files, 140 KB total (≤ 160 KB) **pass**.
+
+Diagnosis: LCP equals first paint on every page (the display headline; the first product image on `/shop`). With applied throttling the document arrives at 1.2 s, then the 13.5 KB render-blocking stylesheet needs a further round trip while it shares the link with the preloaded fonts and the scripts (lands at 2.17 s). Before this change the PDP's LCP was the analytics prompt, painted only after hydration (simulated 3.16 s).
+
+Experiments (each a separate production build; only E5's consent part is kept):
+
+| | Change | Simulated LCP | Applied LCP |
+|---|---|---|---|
+| E1 | Archivo instanced to `wght` 400–900 | — | — (file only 112 → 109 KB; 83 KB if Latin Extended-A/B also dropped) |
+| E2+E3 | Archivo `font-display: optional` + prompt suppressed | 2.71–3.01 s | 2.30–2.48 s |
+| E4 | `experimental.inlineCss` only | 2.71–3.30 s | 1.50–1.65 s, PDP 3.80 s (prompt) |
+| E5 | inline CSS + server-rendered prompt | 2.71–2.83 s | **1.51–1.63 s**, score 94–98, TBT 203–255 ms |
+
+Kept: the **consent prompt is now server-rendered**. A pre-paint inline script in the root layout sets `html[data-consent-answered]` when a choice is stored, and CSS hides the server copy, so visitors who have answered never see it (checked before and after hydration with production chunks delayed). `CONSENT_KEY` moved to `lib/consent-key.ts` so the server layout can read it (`lib/analytics.ts` is a client module). `e2e/consent.spec.ts` (new, 4 tests) covers the server HTML and the three stored states with the app's scripts aborted, asserting React has not run.
+
+Not kept, pending ADR-015: `experimental.inlineCss`. `pnpm test:lhci` is not added yet because its throttling method is the open decision.
+
+### Checks (this session, after §5.6 and the consent change)
+
+| Command | Result | Key output |
+|---|---|---|
+| `pnpm typecheck` | **pass** | 5 projects |
+| `pnpm lint` | **pass** | `12 problems (0 errors, 12 warnings)`, all `no-img-element` |
+| `pnpm test` | **pass** | 56 + 67 |
+| `pnpm tokens:check` | **pass** | 7 label themes, 6 pairs |
+| `dotenv -e .env -- pnpm --filter @lopaworld/storefront build` (fresh database) | **pass** | |
+| `pnpm test:e2e --trace off` | **pass** | `19 passed (36.7s)` |
+
+Environment note: the container restarted mid-session (Postgres crash recovery in its log); the throwaway cluster was restarted and every build after that used a fresh database. Starting the standalone server **without** `HOSTNAME` made cart writes from `localhost` fail with 403 too, which is more evidence for the same-origin finding above.
