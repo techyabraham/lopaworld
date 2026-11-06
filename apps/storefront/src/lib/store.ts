@@ -12,12 +12,15 @@ export type StoreVariant = {
   inventory_quantity?: number;
   options?: StoreVariantOption[];
   calculated_price?: { calculated_amount?: number; original_amount?: number; currency_code?: string } | null;
+  metadata?: Record<string, unknown> | null;
 };
 export type StoreProduct = {
   id: string;
   title: string;
+  subtitle?: string | null;
   handle: string;
   description?: string | null;
+  created_at?: string | null;
   thumbnail?: string | null;
   images?: StoreImage[];
   options?: StoreOption[];
@@ -88,7 +91,7 @@ export function getStoreRegion(): Promise<StoreRegion | null> {
   return regionRequest;
 }
 
-const productFields = '*variants.calculated_price,*variants.options,+variants.inventory_quantity,*images,*categories,*type,metadata';
+const productFields = '*variants.calculated_price,*variants.options,+variants.inventory_quantity,+variants.metadata,*images,*categories,*type,metadata,+created_at,+subtitle';
 
 export async function listStoreProducts(input: {
   query?: string;
