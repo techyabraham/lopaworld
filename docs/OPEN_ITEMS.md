@@ -37,7 +37,7 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 - `TODO_CONFIRM:` Approve, revise or reject the proposed shared palette and each label accent; supply Bridal's treatment. Check contrast for final text and control uses.
 - `TODO_CONFIRM:` Supply current official vector logos and brand guidelines; approve whether the proposed LOPA/WORLD wordmark family and L monogram should be developed alongside existing brand assets.
 - `TODO_CONFIRM:` Supply campaign, label and product imagery/video with confirmed web, advertising and model usage rights. The proposal gives art direction but contains no embedded images or logo files.
-- `TODO_CONFIRM:` Confirm typography and logo production rules if they differ from the already-selected Bodoni Moda and DM Sans web system.
+- `TODO_CONFIRM:` Confirm typography and logo production rules if they differ from the Entrance web system (Archivo + Instrument Serif since Phase 2; Bodoni Moda and DM Sans are removed). The `LOPA`/`WORLD` header wordmark is set in Archivo text, not official logo artwork.
 
 ### Delivery and customer policies
 
@@ -92,6 +92,34 @@ The master build brief fixes seven destinations and explicitly includes Lopa Bri
 - `TODO_CONFIRM:` Complete staging acceptance, smoke checks, load/accessibility/performance checks and backup restore evidence before production deployment.
 - `TODO_CONFIRM:` Approve a maximum amount and timing for a real low-value production order, payment verification, refund and reconciliation. No real charge or refund has been initiated.
 - `TODO_CONFIRM:` Populate the first-30-day backlog in `docs/LAUNCH-PLAN.md` with live search terms, abandoned checkout, exits, support contacts, errors and Core Web Vitals after launch.
+
+### Phase 2 (Entrance design): hidden modules and open items
+
+The Entrance design (ADR-016) shipped with these modules **hidden** until their gate or phase is decided. None renders placeholder copy; each appears only in `/dev/ui` or behind a flag.
+
+| Module (canvas) | Status | Needs |
+|---|---|---|
+| Label tones (`--label-tone/-photo/-fg` per label) | Canvas values in use, contrast-checked | `TODO_CONFIRM:` D2 approval of each tone, and Bridal's |
+| Campaign lines ("Look important. / Be important.") and label one-liners ("Tradition, in motion.", …) | Render **only** from Payload (`campaignHero.headline`/`supportingCopy`, `campaigns.campaignLine`, `labels.introSummary`); otherwise the label name alone | `TODO_CONFIRM:` D2 copy approval |
+| Instagram "Featured pieces" on home and label pages | **Removed** from production pages | `TODO_CONFIRM:` written usage rights for each image |
+| Made-to-measure tabs, Fit Profile, "Book a fitting" | `MadeToMeasurePanel`, flag `NEXT_PUBLIC_FEATURE_MTM` (off) | Phase 3 |
+| Aso-ebi "Dress the whole party" group orders | `GroupOrderSection`, flag `NEXT_PUBLIC_FEATURE_GROUP_ORDERS` (off) | Phase 4 |
+| "Ask a tailor on WhatsApp", WhatsApp links | Not rendered; the PDP's Save button spans both columns | `TODO_CONFIRM:` D5 number and policy |
+| Delivery estimator, "Ships in 48h", "Lagos same-day", cut-offs, fees | Not rendered | `TODO_CONFIRM:` D4 delivery table |
+| Payment-channel line ("card, bank transfer or USSD") | Not rendered | `TODO_CONFIRM:` approved Paystack channels |
+| NGN/USD/GBP switcher, "≈ $ · £ — duties at checkout" | Not rendered; NGN only | `TODO_CONFIRM:` D9 |
+| Fit-match sentence | Never rendered | Phase 3.6 (data-backed version) |
+| Newsletter sign-up | Hidden | D8 |
+| Footer "Talk to us" contacts | Hidden (no confirmed contacts in Payload) | `TODO_CONFIRM:` published contact details |
+| Returns accordion on the PDP | Shown only when a published Payload page `returns` exists | `TODO_CONFIRM:` returns policy (see above) |
+| Label page Lookbook toggle | Hidden: no campaign can be `active` (ADR-014) | Owner decision on ADR-014 |
+
+Also open from Phase 2:
+
+- `TODO_CONFIRM:` Font licensing confirmation for production use. Archivo and Instrument Serif are SIL OFL 1.1 (licences in `packages/ui/fonts`), which permits self-hosting and subsetting; the owner should confirm no separate brand licence is required.
+- **Launch-blocking defect (found 6 November 2026, not fixed in Phase 2):** the cart and checkout routes' same-origin check compares `Origin` with the URL Next reports (`http://localhost:<port>`), so behind the production proxy every cart and checkout write is likely rejected with 403. Evidence in `docs/evidence/phase-2.md`; queued as a separate fix.
+- The order confirmation shows Medusa's order ID, but Track an order needs the numeric order number, which no customer-facing page shows yet.
+- The payment-failure message says "Contact Lopaworld with your checkout email…" but no contact route is published until D5.
 
 ## Public research is not business approval
 

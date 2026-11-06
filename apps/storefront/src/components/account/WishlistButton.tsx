@@ -25,5 +25,5 @@ export function WishlistButton({ item }: { item: SavedItem }) {
     window.dispatchEvent(new Event(CHANGE_EVENT));
   }
 
-  return <button className="wishlist-toggle" type="button" aria-pressed={saved} onClick={toggle}>{saved ? 'Saved to wishlist' : 'Save to wishlist'}</button>;
+  return <button className="wishlist-toggle" type="button" aria-pressed={saved} onClick={toggle}>{saved ? 'Saved for later' : 'Save for later'}</button>;
 }

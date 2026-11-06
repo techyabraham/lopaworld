@@ -17,3 +17,4 @@ apps/storefront/.next/
 apps/storefront/src/payload-types.ts
 *.log
 *.tsbuildinfo
+.lighthouseci/

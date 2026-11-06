@@ -27,7 +27,8 @@ export function CMSImage({ value, alt, className }: { value: unknown; alt?: unkn
   const media = record(value);
   const url = text(media?.url);
   const description = text(alt) ?? text(media?.alt) ?? '';
-  if (!url) return <div className="media-placeholder" aria-label="Approved image not yet supplied">Image pending</div>;
+  // No approved image: render nothing rather than placeholder copy (brief rule: hide, never placeholder).
+  if (!url) return null;
   return <img className={className ?? 'content-image'} src={url} alt={description} width={typeof media?.width === 'number' ? media.width : 1200} height={typeof media?.height === 'number' ? media.height : 1500} loading="lazy" />;
 }
 

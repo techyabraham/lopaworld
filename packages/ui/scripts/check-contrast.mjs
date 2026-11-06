@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 
+// Entrance token model: seven label tones (label fg on label tone) plus fixed palette pairs.
 const css = readFileSync(new URL('../tokens/tokens.css', import.meta.url), 'utf8');
-const themes = [...css.matchAll(/\[data-label="([^"]+)"\]\s*\{\s*--accent:\s*(#[\da-fA-F]{6});\s*--accent-contrast:\s*(#[\da-fA-F]{6});/g)];
+const themes = [...css.matchAll(/\[data-label="([^"]+)"\]\s*\{\s*--label-tone:\s*(#[\da-fA-F]{6});\s*--label-photo:\s*(#[\da-fA-F]{6});\s*--label-fg:\s*(#[\da-fA-F]{6});/g)];
+const token = (name) => {
+  const match = css.match(new RegExp(`--${name}:\\s*(#[\\da-fA-F]{6})`));
+  if (!match) throw new Error(`Token --${name} is missing or not a hex colour.`);
+  return match[1];
+};
 
 function luminance(hex) {
   const channels = hex.slice(1).match(/../g).map((channel) => parseInt(channel, 16) / 255)
@@ -14,20 +20,28 @@ function contrast(first, second) {
   return (values[0] + 0.05) / (values[1] + 0.05);
 }
 
-function mixWithWhite(hex, amount) {
-  const channels = hex.slice(1).match(/../g).map((channel) => parseInt(channel, 16));
-  return `#${channels.map((channel) => Math.round(channel * amount + 255 * (1 - amount)).toString(16).padStart(2, '0')).join('')}`;
-}
-
 if (themes.length !== 7) throw new Error(`Expected seven label themes; found ${themes.length}.`);
 const failures = [];
-for (const [, name, accent, accentText] of themes) {
-  const textRatio = contrast(accent, '#f8f6f1');
-  const buttonRatio = contrast(accent, accentText);
-  const badgeRatio = contrast(accent, mixWithWhite(accent, 0.1));
-  if (textRatio < 4.5) failures.push(`${name}: accent text contrast ${textRatio.toFixed(2)}:1 (needs 4.5:1)`);
-  if (buttonRatio < 4.5) failures.push(`${name}: accent button contrast ${buttonRatio.toFixed(2)}:1 (needs 4.5:1)`);
-  if (badgeRatio < 4.5) failures.push(`${name}: accent badge contrast ${badgeRatio.toFixed(2)}:1 (needs 4.5:1)`);
+const report = [];
+for (const [, name, tone, , fg] of themes) {
+  const ratio = contrast(fg, tone);
+  report.push(`${name} fg/tone ${ratio.toFixed(2)}`);
+  if (ratio < 4.5) failures.push(`${name}: --label-fg on --label-tone ${ratio.toFixed(2)}:1 (needs 4.5:1)`);
 }
+
+const pairs = [
+  ['ink on paper', token('ink'), token('paper')],
+  ['muted on paper', token('muted'), token('paper')],
+  ['signal-text on paper', token('signal-text'), token('paper')],
+  ['white on signal', '#FFFFFF', token('signal')],
+  ['muted-on-ink on ink', token('muted-on-ink'), token('ink')],
+  ['quiet-on-ink on ink', token('quiet-on-ink'), token('ink')],
+];
+for (const [name, fg, bg] of pairs) {
+  const ratio = contrast(fg, bg);
+  report.push(`${name} ${ratio.toFixed(2)}`);
+  if (ratio < 4.5) failures.push(`${name}: ${ratio.toFixed(2)}:1 (needs 4.5:1)`);
+}
+
 if (failures.length) throw new Error(failures.join('\n'));
-process.stdout.write(`Contrast check passed for ${themes.length} label themes.\n`);
+process.stdout.write(`Contrast check passed for ${themes.length} label themes and ${pairs.length} palette pairs.\n${report.join('\n')}\n`);

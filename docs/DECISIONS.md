@@ -104,3 +104,65 @@
 - Context: Brief 0.11 requires CI to fail on high/critical findings. After 0.6, seven high findings remain that cannot be fixed safely inside Phase 0. Two are in Payload's rich-text stack (`happy-dom`; the fix is a major version, or a 20.x release that does not exist yet). Five are pinned inside Medusa 2.21.2 (`zod`, `tmp`: fixed by Medusa 2.22.2; `lodash`, `@graphql-tools/utils` ×2: still pinned in 2.22.2 via `@graphql-codegen/core@^4`). A plain gate would keep CI permanently red; ignoring them silently would hide the risk.
 - Options considered: (a) plain gate, CI red until upstream fixes (blocks every PR); (b) `pnpm audit --ignore` / `auditConfig.ignoreGhsas` (no expiry, easy to forget); (c) **expiring allow-list (chosen)**; (d) forcing major-version overrides (`happy-dom` 21, `@graphql-tools/utils` 12) inside Payload and Medusa (risk of runtime breakage that tests do not cover).
 - Consequences: CI turns red on 2026-12-05 unless each entry is fixed or deliberately renewed. Upgrading Medusa to 2.22.2 should remove the `zod` and `tmp` entries. The gate prints a warning when an entry is no longer reported, so it can be removed.
+
+## ADR-014 — Fix the `campaigns.status` enum collision (schema change, needs owner approval)
+
+- Status: **Proposed — awaiting owner decision** (design brief §10 stop condition: needs a Payload schema migration)
+- Date: 2026-11-06
+- Problem (observed): `Campaigns` has its own select field `status` (`draft`, `scheduled`, `active`, `ended`) and also uses Payload drafts, which add `_status` (`draft`, `published`). Payload names enums `enum_<collection>_<field>`, so both become `enum_campaigns_status`. The baseline migration `20261105_144453_initial_schema` created that type as `('draft', 'published')` and uses it for both `campaigns.status` and `campaigns._status` (and likewise `enum__campaigns_v_version_status` for the versions table). On the dev database, `select … where status = 'active'` fails with `invalid input value for enum payload.enum_campaigns_status: "active"`. **Editors cannot save a campaign as scheduled, active or ended.** Found while building the label Lookbook (§5.3), which needs `status = active`. No other collection has a drafts + `status` field combination.
+- Interim (done): the label page filters campaigns by `status` in code instead of SQL, so no query errors. Lookbook stays hidden because no campaign can be `active` yet.
+- Options:
+  1. **Recommended — give the field its own enum name.** Add `enumName: 'enum_campaigns_campaign_status'` (and the versions equivalent) to the `status` select. A new reviewed migration then (a) creates the new enum types with all four values, and (b) alters `campaigns.status` and `_campaigns_v.version_status` to the new types (`USING status::text::<new type>`; only `draft` can exist today, so the cast is lossless). The drafts `_status` columns keep the existing types. Field name, API shape and admin UI are unchanged. Backward compatible: an older image still reads and writes `draft`.
+  2. Rename the field (for example `campaignStatus`) with expand → migrate → contract: add a column, copy, switch code, drop later. More churn and an API change for no extra benefit.
+  3. Drop the custom `status` field and rely on drafts plus `startsAt`/`endsAt` for scheduling. Changes the editorial model, so it is an owner content decision.
+- Consequence of waiting: the Lookbook toggle (§5.3) never appears. The rest of Phase 2 is unaffected.
+
+## ADR-015 — How the §7 LCP budget is measured, and whether to inline CSS (needs owner decision)
+
+- Status: **Accepted — option 1** (owner, 6 November 2026: "Option 1")
+- Result: `experimental.inlineCss: true` in `apps/storefront/next.config.ts`; `pnpm test:lhci` (Lighthouse CI 0.15.1 / Lighthouse 12.6.1, `lighthouse/lighthouserc.applied.cjs` then `lighthouserc.simulated.cjs`, served by `scripts/lhci-server.mjs`) runs in CI after the build. First run, median of 3, applied throttling: `/` 97 · LCP 1.52 s, `/l/trybe` 98 · 1.49 s, `/shop` 97 · 1.63 s, `/p/test-agbada` 96 · 1.53 s, CLS 0.000; simulated TBT 126 / 81 / 138 / 138 ms. 0 failed assertions.
+- Date: 2026-11-06
+- Measured (production standalone build, fictional 16-product mock catalogue, Lighthouse 12.8.2 mobile = Moto G Power, slow 4G, median of 3; evidence in `docs/evidence/phase-2.md` §7):
+
+  | Build | Throttling | `/` | `/l/trybe` | `/shop` | `/p/test-agbada` |
+  |---|---|---|---|---|---|
+  | Before (external CSS, consent prompt after hydration) | simulated (Lighthouse default) | 96 · LCP 2.56 s | 94 · 3.02 s | 94 · 3.01 s | 91 · 3.16 s |
+  | **Committed** (external CSS, server-rendered prompt) | simulated | 96 · 2.57 s | 96 · 2.56 s | 96 · 2.57 s | 95 · 2.64 s |
+  | **Committed** | applied (`devtools`) | 94 · 2.21 s | 94 · 2.20 s | 93 · 2.37 s | 92 · 2.31 s |
+  | E3: prompt suppressed, `font-display: optional` (not kept) | applied | 93 · 2.32 s | 92 · 2.30 s | 92 · 2.48 s | 91 · 2.36 s |
+  | **E5: inline CSS + server-rendered consent prompt** | **applied** | **98 · 1.51 s** | **96 · 1.51 s** | **97 · 1.63 s** | **96 · 1.58 s** |
+  | E5 | simulated | 95 · 2.72 s | 95 · 2.71 s | 96 · 2.72 s | 94 · 2.83 s |
+
+  CLS is 0.000–0.004 everywhere. TBT is 100–146 ms simulated, 203–255 ms applied (4× CPU on a shared container; noisy). JS first-load: 146.3 / 146.6 / 146.6 / 149.7 KB gzip, under the 150 KB budget but with 0.3 KB headroom on the PDP.
+- Why: LCP equals first paint on every page (the display headline, or the first product image on `/shop`). With external CSS, first paint needs a third round trip for the 13.5 KB stylesheet, which also shares the slow link with the two preloaded fonts (140 KB) and the scripts. Inlining removes that round trip. The PDP was also held back by the analytics consent prompt, which painted only after hydration; it is now in the server HTML (kept: no trade-off, returning visitors never see it).
+- Simulated LCP barely moves (2.7–2.8 s) whatever changes: Lighthouse's model charges the fonts and scripts that finish before the unthrottled LCP to the LCP. Getting simulated LCP ≤ 2.0 s would mean cutting the React/Next runtime (~115 KB gzip, fixed) or not preloading Archivo, which drops the display face on first paint (a signature element).
+- Options:
+  1. **Recommended — inline CSS and measure LCP with applied throttling.** Set `experimental.inlineCss: true` in `apps/storefront/next.config.ts`; `pnpm test:lhci` runs Lighthouse CI with `throttlingMethod: 'devtools'`, asserting performance ≥ 90, LCP ≤ 2.0 s and CLS ≤ 0.05, and TBT ≤ 200 ms on the simulated run (applied CPU throttling in CI is too noisy to gate on). Cost: HTML grows from ~9 KB to ~32 KB gzip per page (CSS is not cached separately and is duplicated in the RSC payload); the flag is experimental in Next 16.4.5. Returning visitors lose the cached stylesheet.
+  2. Keep external CSS and treat the budget as missed until Phase 1 (`next/image`, real media) changes the picture. LCP stays 2.20–2.37 s applied, 2.56–2.64 s simulated.
+  3. Keep the simulated method as the gate and relax LCP to ≤ 3.0 s (or accept the miss). No code change.
+- Follow-up in any case: split `@lopaworld/ui` into per-component modules. It is one `'use client'` file, so every page ships the whole library (9.2 KB gzip), which is most of the PDP's JS headroom.
+
+## ADR-016 — Entrance design system
+
+- Status: Accepted (owner brief `docs/design/APPLY-ENTRANCE-DESIGN.md`, 5 November 2026; implemented in Phase 2)
+- Decision: the storefront uses the "Entrance" system from the owner's design canvas (`docs/design/entrance/*.dc.html`).
+- **Tokens** (`packages/ui/tokens/tokens.css`): ink `#0F0E0D` on paper `#F7F6F3` (17.8:1), hairline rule `#DAD6D0`, muted `#5E5A55` (6.33:1), `--surface-2` `#ECEAE5` for information strips, `--success-fill` `#E3ECE4`; on ink, `--muted-on-ink` `#C9C4BD` (11.1:1) and `--quiet-on-ink` `#9A948C` (6.42:1). Square corners, no card shadows, hairline separation, Entrance type scale, container and gutter tokens. Motion is limited to the hero tone (600 ms), the tile cross-fade and sheet slide (220 ms), all 0 under `prefers-reduced-motion`.
+- **Single accent, split for contrast:** the canvas red `#D93A1E` fails AA as body text on paper (4.25:1). It is `--signal`, used **only as a fill** behind white text (4.59:1) or for type ≥ 24 px (the bag count, the "Only N left" badge). Any red text at body size uses `--signal-text` `#B8301A` (5.59:1): errors, form messages. The canvas `a:hover { color: #D93A1E }` is not copied.
+- **Label-tone model:** each label has `--label-tone` (ground), `--label-photo` (image placeholder) and `--label-fg` (text on the tone), set by `[data-label]`. The canvas values are used with `TODO_CONFIRM` (D2). `pnpm tokens:check` enforces label fg on tone ≥ 4.5:1 for all seven and the six fixed pairs above. `--accent` is an alias of `--ink`: label colour is a ground, never a link or text accent.
+- **Type:** Archivo variable (`wght` 100–900, `wdth` 62–100) for interface and the condensed display style (`.lw-display`: 900, `font-stretch: 62%`, uppercase); Instrument Serif italic for the voice line (`.lw-voice`) and regular for editorial titles; Noto Serif only as a glyph fallback for ₦ and Yoruba dot-below letters, which Instrument Serif lacks. All self-hosted (OFL 1.1, `packages/ui/fonts`); two files preloaded, 141 KB total (§7 limit 160 KB). Bodoni Moda and DM Sans are removed.
+- **Components:** square ink buttons (48 px, buy 56 px), 44 px minimum targets, 2 px ink focus ring (paper on ink grounds), size grid with sold-out and low-stock labels, swatches with a text-pill fallback when no `swatch_hex` exists, bottom/right sheets, 4:5 + 3:4 gallery with a phone carousel. New: `EntranceHero`, `MobileTabBar`, `ProductTile` with `lib/product-badges` (one computed badge), `MadeToMeasurePanel` and `GroupOrderSection` (flagged, `/dev/ui` only).
+- Consequence: label tones, campaign lines and label one-liners stay owner decisions (D2); modules without real data do not render.
+
+## ADR-017 — Phase 2 (Entrance design) before Phase 1
+
+- Status: Accepted (owner request in `docs/design/APPLY-ENTRANCE-DESIGN.md`; branch stacking approved in session: "Start right away")
+- Context: the build brief orders Phase 1 (catalogue, media, listings) before Phase 2 (design). The owner asked for the Entrance design first, after Phase 0.
+- Decision: run Phase 2 now. Phase 0 was not yet merged, so `phase/2-entrance-design` was branched from `phase/0-stabilise` with `master` merged in; when Phase 0 merges, the Phase 2 PR contains only Phase 2 commits.
+- Constraint: **listings logic and images are untouched until Phase 1.** Filters, sort and pagination keep their existing behaviour (only restyled); media stays raw `<img>` (the 12 `no-img-element` lint warnings) until Phase 1.3 adds `images.remotePatterns` and `next/image`. Phase 1 must re-run `pnpm test:lhci` once real media replaces the mock catalogue's `data:` images, because LCP was measured with tiny placeholder images.
+
+## ADR-018 — Proposed follow-ups from Phase 2 (not started; need owner approval)
+
+- Status: Proposed
+- `campaigns.products` relationship (Payload): lets a Lookbook look list its shoppable pieces, as the canvas shows. Today a look renders image, title, `campaignLine`, body and CTA only. A schema change, so expand → migrate → contract after ADR-014 is resolved.
+- `occasions` collection (Payload): the home occasion tiles and the header "Occasions" link currently come from the homepage's `occasionLinks` block. A collection would give each occasion a slug, a tone, a hero and an `/occasions/[slug]` page owned by editorial. Also a schema change.
+- `@lopaworld/ui` split into per-component modules: the package is one `'use client'` file, so every page ships the whole library (9.2 KB gzip); the PDP has 0.3 KB of JS headroom under the 150 KB budget.

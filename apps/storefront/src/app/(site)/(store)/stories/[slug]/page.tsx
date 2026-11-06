@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Breadcrumb, ErrorState } from '@lopaworld/ui';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { findPublishedRecordsSafely } from '../../../../../lib/cms';
@@ -25,10 +26,10 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const { records, error } = await findPublishedRecordsSafely('stories', { slug: { equals: slug } }, 1);
   const story = records[0];
   if (!story && !error) notFound();
-  if (!story) return <main className="store-page"><h1>Story details are temporarily unavailable</h1><p>Please try again shortly.</p></main>;
+  if (!story) return <main className="store-page"><ErrorState title="This story is temporarily unavailable" description="Please try again shortly." /></main>;
   return <main className="store-page story-page">
-    <nav className="breadcrumbs" aria-label="Breadcrumb"><Link href="/stories">Stories</Link><span aria-hidden="true">/</span><span aria-current="page">{text(story.title) ?? 'Story'}</span></nav>
-    <article><header className="story-header"><p className="eyebrow">The Lopaworld journal</p><h1>{text(story.title) ?? 'Story'}</h1>{text(story.excerpt) && <p className="story-excerpt">{text(story.excerpt)}</p>}{text(story.publishedAt) && <time dateTime={String(story.publishedAt)}>{new Intl.DateTimeFormat('en-GB', { dateStyle: 'long' }).format(new Date(String(story.publishedAt)))}</time>}</header>
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Stories', href: '/stories' }, { label: text(story.title) ?? 'Story' }]} />
+    <article><header className="story-header"><p className="lw-eyebrow">The journal</p><h1 className="story-title">{text(story.title) ?? 'Story'}</h1>{text(story.excerpt) && <p className="story-excerpt">{text(story.excerpt)}</p>}{text(story.publishedAt) && <time dateTime={String(story.publishedAt)}>{new Intl.DateTimeFormat('en-GB', { dateStyle: 'long' }).format(new Date(String(story.publishedAt)))}</time>}</header>
       {Boolean(story.heroMedia) && <CMSImage value={story.heroMedia} alt={story.heroAlt ?? record(story.heroMedia)?.alt} className="story-hero-image" />}
       <RichContent value={story.content} />
     </article>

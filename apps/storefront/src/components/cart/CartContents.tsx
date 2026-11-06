@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { QuantityStepper } from '@lopaworld/ui';
+import { EmptyState, QuantityStepper } from '@lopaworld/ui';
 import type { StoreCart, StoreCartItem } from '../../lib/cart-types';
 
 const money = (amount: number | undefined, currency: string | undefined) => typeof amount === 'number'
   ? new Intl.NumberFormat('en-NG', { style: 'currency', currency: currency?.toUpperCase() ?? 'NGN', maximumFractionDigits: 0 }).format(amount)
-  : 'Price unavailable';
+  : null;
 
 export function CartContents({ active = true, onCountChange, showReviewLink = true, showCheckoutLink = false }: { active?: boolean; onCountChange?: (count: number) => void; showReviewLink?: boolean; showCheckoutLink?: boolean }) {
   const [cart, setCart] = useState<StoreCart | null>(null);
@@ -51,15 +51,17 @@ export function CartContents({ active = true, onCountChange, showReviewLink = tr
   }
 
   if (error && !cart) return <p className="cart-message" role="alert">{error}</p>;
-  if (!cart?.items?.length) return <div className="cart-empty"><h3>Your bag is empty</h3><p>When you find a piece you love, it will be here.</p><Link className="lw-button" href="/shop">Explore the collection</Link></div>;
+  if (!cart?.items?.length) return <div className="cart-empty"><EmptyState title="Your bag is empty" description="When you find a piece you love, it will be here." /><Link className="lw-button" href="/shop">Explore the collection</Link></div>;
 
   return <div className="cart-contents">
     {error && <p className="cart-message" role="alert">{error}</p>}
     <ul className="cart-list">{cart.items.map((item) => <CartLine key={item.id} item={item} currency={cart.currency_code} busy={busy === item.id} onChange={(quantity) => void mutate('/api/cart/items', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ itemId: item.id, quantity }) }, item.id)} onRemove={() => void mutate(`/api/cart/items?itemId=${encodeURIComponent(item.id)}`, { method: 'DELETE' }, item.id)} />)}</ul>
-    <div className="cart-totals"><span>Subtotal</span><strong>{money(cart.subtotal ?? cart.total, cart.currency_code)}</strong></div>
+    {money(cart.subtotal ?? cart.total, cart.currency_code) && <div className="cart-totals"><span>Subtotal</span><strong>{money(cart.subtotal ?? cart.total, cart.currency_code)}</strong></div>}
     <p className="cart-note">Delivery and any applicable taxes are calculated at checkout. Items are not reserved in your bag.</p>
-    {showReviewLink && <Link className="lw-button" href="/bag">View full bag</Link>}
-    {showCheckoutLink && <Link className="lw-button" href="/checkout">Continue to checkout</Link>}
+    <div className="cart-actions">
+      {showCheckoutLink && <Link className="lw-button lw-button-buy" href="/checkout">Continue to checkout</Link>}
+      {showReviewLink && <Link className="lw-button" data-variant="secondary" href="/bag">View full bag</Link>}
+    </div>
   </div>;
 }
 
@@ -68,15 +70,15 @@ function CartLine({ item, currency, busy, onChange, onRemove }: { item: StoreCar
   const options = (item.variant?.options ?? []).map(({ option, value }) => option?.title ? `${option.title}: ${value}` : value).filter(Boolean);
   const madeToOrderNote = item.metadata?.made_to_order_notes;
   return <li className="cart-line">
-    {item.thumbnail && <img src={item.thumbnail} alt="" width="96" height="120" loading="lazy" />}
+    {item.thumbnail ? <img src={item.thumbnail} alt="" width="96" height="120" loading="lazy" /> : <span className="cart-line-blank" aria-hidden="true" />}
     <div className="cart-line-details">
-      {item.product?.handle ? <Link href={`/p/${item.product.handle}`}><strong>{title}</strong></Link> : <strong>{title}</strong>}
+      {item.product?.handle ? <Link className="cart-line-title" href={`/p/${item.product.handle}`}>{title}</Link> : <span className="cart-line-title">{title}</span>}
       {options.length > 0 && <p>{options.join(' · ')}</p>}
       {typeof madeToOrderNote === 'string' && madeToOrderNote && <p>Made-to-order note: {madeToOrderNote}</p>}
-      <p>{money(item.unit_price, currency)}</p>
+      {money(item.unit_price, currency) && <p>{money(item.unit_price, currency)} each</p>}
       <QuantityStepper value={item.quantity} max={20} onChange={onChange} />
       <button className="text-button" type="button" disabled={busy} onClick={onRemove}>Remove</button>
     </div>
-    <strong>{money(item.total, currency)}</strong>
+    <strong className="cart-line-total">{money(item.total, currency)}</strong>
   </li>;
 }

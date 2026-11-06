@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LabelLandingPage } from '../../../../../components/storefront/LabelLandingPage';
+import type { SearchValues } from '../../../../../components/storefront/CatalogPage';
 import { text } from '../../../../../components/storefront/content';
 import { findPublishedRecordsSafely } from '../../../../../lib/cms';
 import { canonical } from '../../../../../lib/seo';
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ label: st
   return { title, description, alternates: { canonical: canonical(path) }, openGraph: { type: 'website', title, description, url: canonical(path), images: image ? [{ url: image }] : [] }, twitter: { card: 'summary_large_image', title, description, images: image ? [image] : [] } };
 }
 
-export default async function LabelPage({ params }: { params: Promise<{ label: string }> }) {
+export default async function LabelPage({ params, searchParams }: { params: Promise<{ label: string }>; searchParams: Promise<SearchValues> }) {
   const { label } = await params;
-  return <LabelLandingPage slug={label} />;
+  return <LabelLandingPage slug={label} searchParams={searchParams} />;
 }

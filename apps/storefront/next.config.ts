@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   transpilePackages: ['@lopaworld/ui', '@lopaworld/types'],
+  // ADR-015: inline the CSS so first paint does not wait for a stylesheet round trip (LCP budget).
+  // Experimental in Next 16; costs ~23 KB gzip per HTML response and separate CSS caching.
+  experimental: { inlineCss: true },
   async redirects() {
     return redirects;
   },
