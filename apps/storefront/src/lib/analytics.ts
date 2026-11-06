@@ -2,7 +2,7 @@
 
 import type { StoreAnalyticsEvent } from '@lopaworld/types';
 
-const CONSENT_KEY = 'lopaworld-analytics-consent';
+import { CONSENT_KEY } from './consent-key';
 
 declare global {
   interface Window {

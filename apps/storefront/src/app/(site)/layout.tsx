@@ -2,12 +2,17 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { AnalyticsConsent } from '../../components/site/AnalyticsConsent';
+import { CONSENT_KEY } from '../../lib/consent-key';
 import { findSEODefaultsSafely } from '../../lib/cms';
 import { canonical, jsonLd, publicSiteUrl } from '../../lib/seo';
 
 // Entrance type (ADR "Entrance design system"). Only Archivo and the Instrument Serif italic are
 // preloaded (§7: two files, 141 KB). Instrument Serif lacks the Naira sign and the Yoruba dot-below
 // letters; those glyphs fall back to Noto Serif through --font-glyph-fallback.
+// Runs before first paint: marks <html> when an analytics choice is stored, so the server-rendered
+// consent prompt stays hidden for visitors who already answered (see AnalyticsConsent).
+const consentPrePaint = `try{var v=localStorage.getItem(${JSON.stringify(CONSENT_KEY)});if(v==='accepted'||v==='rejected')document.documentElement.setAttribute('data-consent-answered','')}catch(e){}`;
+
 const interfaceFont = localFont({
   src: '../../../public/fonts/archivo.woff2',
   variable: '--font-interface',
@@ -70,5 +75,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     { '@context': 'https://schema.org', '@type': 'Organization', name: organizationName, url: origin.toString() },
     { '@context': 'https://schema.org', '@type': 'WebSite', name: organizationName, url: origin.toString(), potentialAction: { '@type': 'SearchAction', target: `${origin}search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } },
   ] : [];
-  return <html lang="en"><body className={`${interfaceFont.variable} ${voiceFont.variable} ${editorialFont.variable} ${glyphFallbackFont.variable}`}><div data-label="lopaworld" className="site-shell">{children}</div><AnalyticsConsent />{structuredData.map((entry) => <script key={entry['@type']} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(entry) }} />)}</body></html>;
+  return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: consentPrePaint }} /></head><body className={`${interfaceFont.variable} ${voiceFont.variable} ${editorialFont.variable} ${glyphFallbackFont.variable}`}><div data-label="lopaworld" className="site-shell">{children}</div><AnalyticsConsent />{structuredData.map((entry) => <script key={entry['@type']} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(entry) }} />)}</body></html>;
 }

@@ -514,3 +514,5 @@ a.cart-line-title:hover { text-decoration: underline; }
 @media (min-width: 1024px) {
   .checkout-summary { position: sticky; top: calc(80px + var(--space-4)); }
 }
+
+html[data-consent-answered] .consent-panel[data-pending] { display: none; }
