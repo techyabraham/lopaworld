@@ -9,9 +9,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    // localhost, not 127.0.0.1: Next reports request.url as http://localhost:<port>, and the cart
-    // routes' same-origin check compares Origin with it, so writes from 127.0.0.1 get 403. That
-    // check is wrong behind a proxy too; it is tracked separately (see docs/evidence/phase-2.md).
+    // localhost, not 127.0.0.1: with NEXT_PUBLIC_SITE_URL unset (as in .env.example), the cart
+    // routes' same-origin check falls back to request.url, which Next reports as
+    // http://localhost:<port>, so writes from 127.0.0.1 get 403 (audit N11).
     baseURL: 'http://localhost:3017',
     trace: 'retain-on-failure',
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
