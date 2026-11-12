@@ -74,7 +74,7 @@ Environment: Linux cloud container, Node 22.23.4, pnpm 11.19.0. The session move
 
 Screenshots (production build, mock catalogue): `docs/evidence/phase-2/pdp/pdp-390.png`, `pdp-1440.png`.
 
-### New finding — same-origin check rejects writes off `localhost` (not fixed here)
+### New finding — same-origin check rejects writes off `localhost` (fixed later as audit N11, see §N11 below)
 `lib/request-security.ts` compares `Origin` with `new URL(request.url).origin`. Next (dev and the production standalone server) reports `request.url` as `http://localhost:<port>` regardless of `Host`, `X-Forwarded-Proto` or `HOSTNAME`. Observed against the standalone server, `POST /api/cart/items`: `Origin: http://localhost:3000` → 200; `Origin: http://127.0.0.1:3000` → 403; `Host: shop.example` + `X-Forwarded-Proto: https` + `Origin: https://shop.example` → 403. Behind Coolify's proxy every cart and checkout write would likely be rejected. **Launch-blocking**, Phase 0 security code, so it is not changed in the design PR; queued as a separate task. Meanwhile `playwright.config.ts` uses `http://localhost:3017` as its base URL, with a comment pointing here.
 
 ### Phase 2 not yet done
@@ -174,3 +174,42 @@ Environment: Linux cloud container, Node 22.23.4, pnpm 11.19.0, local PostgreSQL
 | `/p/test-agbada` | 96 · 1.57 s · 0.000 | 132 ms | 149.7 KB |
 
 Caveats: LCP was measured with the mock catalogue's tiny `data:` SVG images, so Phase 1 must re-run `pnpm test:lhci` with real media. Lighthouse CI brings dev-only advisories through its Puppeteer and proxy dependencies (`extract-zip`, `basic-ftp`, `tmp`, `zod`; some high). They run only in CI against our own pages and are outside the production audit gate.
+
+## §N11 Same-origin check behind a proxy — 6 November 2026 (cloud session)
+
+Fixes the finding above (audit **N11**, launch-blocking). Branch `claude/exciting-hamilton-ip3pr6`, stacked on `phase/2-entrance-design-gsv1of` because the standalone build, Vitest and `lib/env.ts` exist only there.
+
+### What changed
+- `lib/request-security.ts`: allowed origins are (1) `NEXT_PUBLIC_SITE_URL`'s origin, via `configuredSiteOrigin()` in `lib/env.ts`; (2) the `X-Forwarded-Host` (else `Host`) + `X-Forwarded-Proto` origin, **only** when `TRUST_PROXY_HEADERS=true` (runtime, off by default; first value of a comma list; plain `host[:port]` only); (3) `request.url`'s origin only when neither yields an origin (local dev and CI, where `.env.example` leaves the site URL empty). `Origin` → `Referer` → `Sec-Fetch-Site: same-origin` order is unchanged.
+- Once a site URL is configured, `request.url`'s `http://localhost:3000` is **no longer** accepted.
+- `lib/request-security.test.ts` (new, 16 tests): configured origin match; mismatch (other host, http vs https, subdomain, `null`, malformed); `request.url` = `http://localhost:3000` with configured `https://example.com`; Referer-only; Origin wins over Referer; Sec-Fetch-Site; forged forwarded headers ignored without the flag; trusted-proxy chain/Host fallback/malformed host/missing proto; dev fallback.
+
+### Checks (this session)
+
+| Command | Env | Result | Key output |
+|---|---|---|---|
+| `pnpm --filter @lopaworld/storefront test` | Linux container, Node 22 | **pass** | `11 passed (11)`, `83 passed (83)` |
+| New test file against the **old** `request-security.ts` | same | **fails as expected** | `7 failed \| 9 passed (16)` |
+| `pnpm --filter @lopaworld/storefront typecheck` | same | **pass** | |
+| `pnpm --filter @lopaworld/storefront lint` | same | **pass** | `12 problems (0 errors, 12 warnings)`, all pre-existing `no-img-element` |
+| `dotenv -e .env -- pnpm --filter @lopaworld/storefront build` with `NEXT_PUBLIC_SITE_URL=https://shop.example` | fresh throwaway PG 16 on 5433 | **pass** | `▲ Next.js 16.4.5 (Turbopack)` |
+| `pnpm test:e2e --trace off` (next dev on 127.0.0.1:3017, mock Medusa, site URL empty) | fresh throwaway PG 16, `PLAYWRIGHT_CHROMIUM_EXECUTABLE` = pre-installed Chromium 1243 | **pass** | `27 passed (46.0s)` |
+
+### Standalone proof
+`node apps/storefront/.next/standalone/apps/storefront/server.js` with `NODE_ENV=production HOSTNAME=127.0.0.1 PORT=3000`, mock Medusa (`e2e/support/mock-medusa.mjs 9100`), image built with `NEXT_PUBLIC_SITE_URL=https://shop.example`. The server is reached at `127.0.0.1:3000`, so `request.url` is `http://localhost:3000` (observed earlier in this file). `POST /api/cart/items` with `{"handle":"test-agbada","variantId":"prod_test_agbada_var_1","quantity":1}`:
+
+| Request headers | Before (observed earlier) | After |
+|---|---|---|
+| `Origin: https://shop.example` | 403 (any non-localhost origin) | **200** (cart returned) |
+| `Host: shop.example`, `X-Forwarded-Host: shop.example`, `X-Forwarded-Proto: https`, `Origin: https://shop.example` | 403 | **200** |
+| `Referer: https://shop.example/p/test-agbada` only | 403 | **200** |
+| `Sec-Fetch-Site: same-origin` only | 200 | **200** |
+| `Origin: https://evil.example` | 403 | **403** |
+| `Origin: http://localhost:3000` | 200 | **403** (no longer trusted once a site URL is set) |
+| `X-Forwarded-Host: evil.example`, `X-Forwarded-Proto: https`, `Origin: https://evil.example` (flag off) | 403 | **403** |
+| none of Origin / Referer / Sec-Fetch-Site | 403 | **403** |
+
+Second server on port 3001 with `TRUST_PROXY_HEADERS=true`, `X-Forwarded-Host: staging.example`, `X-Forwarded-Proto: https`: `Origin: https://staging.example` → **200**; `Origin: https://shop.example` → **200**; `Origin: https://evil.example` → **403**.
+
+### Operational note
+`NEXT_PUBLIC_SITE_URL` is inlined at build time, so the production image must be built with the real origin (Coolify compose already requires it as a build arg). A local `.env` that sets it to another origin than the one you browse (e.g. `http://localhost:3000` while e2e uses `:3017`) makes cart writes 403 by design. Not verified behind the real Coolify/Traefik proxy: no deployment exists yet.
