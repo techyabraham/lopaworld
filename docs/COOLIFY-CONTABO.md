@@ -90,6 +90,7 @@ Create fresh random values in Coolify's Environment Variables. Use 32-byte hex v
 | `NEXT_PUBLIC_SITE_URL` | `https://www.example.com` (also the only origin cart and checkout writes accept; build arg, so set it before the first build) |
 | `STORE_CORS` | `https://www.example.com` (include apex too if it serves the shop) |
 | `ADMIN_CORS` | `https://api.example.com` |
+| `MEDUSA_PUBLIC_URL` | `https://api.example.com` (public Medusa origin; used in uploaded image URLs) |
 | `AUTH_CORS` | Comma-separated storefront and API origins, e.g. `https://www.example.com,https://api.example.com` |
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | Leave empty for first bootstrap; fill after creating the Medusa key in step 7 |
 
