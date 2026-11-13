@@ -43,11 +43,14 @@ services:
       AUTH_CORS: ${AUTH_CORS:?Set AUTH_CORS in Coolify}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in Coolify}
       COOKIE_SECRET: ${COOKIE_SECRET:?Set COOKIE_SECRET in Coolify}
+      # Public API origin, e.g. https://api.example.com; used in uploaded image URLs.
+      MEDUSA_PUBLIC_URL: ${MEDUSA_PUBLIC_URL:?Set MEDUSA_PUBLIC_URL in Coolify}
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
       PAYSTACK_CALLBACK_URL: ${PAYSTACK_CALLBACK_URL:-}
       PAYSTACK_CHANNELS: ${PAYSTACK_CHANNELS:-}
     volumes:
-      - medusa_uploads:/app/uploads
+      # Medusa writes uploads to /app/static and serves them at /static; keep them across redeploys.
+      - medusa_uploads:/app/static
     depends_on:
       postgres:
         condition: service_healthy

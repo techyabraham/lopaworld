@@ -8,11 +8,21 @@ const required = (name: string): string => {
   return value;
 };
 
+// Uploaded files are written to <app>/static and served by Medusa at /static. Their stored URLs must
+// use the public API origin, or browsers get http://localhost:9000/static/... links.
+const publicUrl = (process.env.MEDUSA_PUBLIC_URL ?? 'http://localhost:9000').replace(/\/$/, '');
+
 export default defineConfig({
-  modules: paystackOptions() ? [{
-    resolve: '@medusajs/medusa/payment',
-    options: { providers: [{ resolve: '@lopaworld/payment-paystack', id: 'paystack', options: paystackOptions() }] },
-  }] : [],
+  modules: [
+    {
+      resolve: '@medusajs/medusa/file',
+      options: { providers: [{ resolve: '@medusajs/medusa/file-local', id: 'local', options: { backend_url: `${publicUrl}/static` } }] },
+    },
+    ...(paystackOptions() ? [{
+      resolve: '@medusajs/medusa/payment',
+      options: { providers: [{ resolve: '@lopaworld/payment-paystack', id: 'paystack', options: paystackOptions() }] },
+    }] : []),
+  ],
   projectConfig: {
     databaseUrl: required('DATABASE_URL'),
     redisUrl: process.env.REDIS_URL,
