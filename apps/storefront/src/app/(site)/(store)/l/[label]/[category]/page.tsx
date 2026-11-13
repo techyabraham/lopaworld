@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { CatalogPage, type SearchValues } from '../../../../../../components/storefront/CatalogPage';
+import type { SearchValues } from '../../../../../../components/storefront/CatalogPage';
+import { LabelLandingPage } from '../../../../../../components/storefront/LabelLandingPage';
 import { LABELS } from '@lopaworld/types';
 import { notFound } from 'next/navigation';
 import { canonical } from '../../../../../../lib/seo';
@@ -18,5 +19,5 @@ export default async function LabelCategoryPage({ params, searchParams }: { para
   const { label, category } = await params;
   const canonical = LABELS.find((entry) => entry.slug === label);
   if (!canonical) notFound();
-  return <CatalogPage title={category.replace(/[-_]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase())} eyebrow={canonical.name} pathname={`/l/${label}/${category}`} searchParams={searchParams} lockedLabel={label} categoryHandle={category} />;
+  return <LabelLandingPage slug={label} categoryHandle={category} searchParams={searchParams} />;
 }

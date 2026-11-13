@@ -5,6 +5,15 @@ import { listStoreCategories, listStoreProductsSafely, productsForCollectionHand
 export type SearchValues = Record<string, string | string[] | undefined>;
 const one = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
 
+export function parseCatalogFilters(params: SearchValues): CatalogFilters {
+  return {
+    q: one(params.q), label: one(params.label), category: one(params.category), size: one(params.size),
+    colour: one(params.colour), minPrice: one(params.minPrice), maxPrice: one(params.maxPrice),
+    available: one(params.available), sort: one(params.sort), page: one(params.page), collection: one(params.collection),
+    view: one(params.view),
+  };
+}
+
 export async function CatalogPage({
   title, pathname, searchParams, lockedLabel, categoryHandle, occasion, newArrivals = false, eyebrow,
 }: {
@@ -18,11 +27,8 @@ export async function CatalogPage({
   eyebrow?: string;
 }) {
   const params = await searchParams;
-  const filters: CatalogFilters = {
-    q: one(params.q), label: one(params.label), category: one(params.category), size: one(params.size),
-    colour: one(params.colour), minPrice: one(params.minPrice), maxPrice: one(params.maxPrice),
-    available: one(params.available), sort: one(params.sort), page: one(params.page), collection: one(params.collection),
-  };
+  const filters = parseCatalogFilters(params);
+  delete filters.view; // only the label page has a view toggle
   let categories: StoreCategory[] = [];
   let categoriesError: string | null = null;
   try { categories = await listStoreCategories(); } catch { categoriesError = 'Category filters are temporarily unavailable.'; }

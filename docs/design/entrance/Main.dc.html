@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LopaWorld — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0;background:#F7F6F3}
+a{color:#0F0E0D}a:hover{color:#D93A1E}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 100%; background: #F7F6F3; color: #0F0E0D; font-family: 'Archivo', system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+  <!-- Utility strip -->
+  <div style="background: #0F0E0D; color: #F7F6F3; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 10px 40px; display: flex; flex-wrap: wrap; gap: 8px 32px; justify-content: space-between; align-items: center">
+      <span>Same-day delivery in Lagos — order by [CUT-OFF]</span>
+      <span>Ships worldwide · duties shown at checkout</span>
+      <div style="display: flex; gap: 4px; align-items: center">
+        <span style="opacity: 0.7; margin-right: 6px">Shop in</span>
+        <button style="background: #F7F6F3; color: #0F0E0D; border: 0; padding: 4px 10px; font-size: 12px; font-weight: 600">₦ NGN</button>
+        <button style="background: transparent; color: #F7F6F3; border: 1px solid #5E5A55; padding: 4px 10px; font-size: 12px">$ USD</button>
+        <button style="background: transparent; color: #F7F6F3; border: 1px solid #5E5A55; padding: 4px 10px; font-size: 12px">£ GBP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header style="border-bottom: 1px solid #DAD6D0; background: #F7F6F3">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 18px 40px; display: flex; flex-wrap: wrap; gap: 16px 40px; align-items: center; justify-content: space-between">
+      <a href="#" style="text-decoration: none; display: flex; align-items: baseline; gap: 8px; color: #0F0E0D">
+        <span style="font-weight: 900; font-stretch: 62%; font-size: 34px; letter-spacing: 0.02em; line-height: 1">LOPA</span>
+        <span style="font-size: 11px; letter-spacing: 0.42em; font-weight: 500">WORLD</span>
+      </a>
+      <nav aria-label="Primary" style="display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 14px; font-weight: 500">
+        <a href="#" style="text-decoration: none">New in</a>
+        <a href="Label.dc.html" style="text-decoration: none">Labels</a>
+        <a href="#occasions" style="text-decoration: none">Occasions</a>
+        <a href="#mtm" style="text-decoration: none">Made to measure</a>
+        <a href="#asoebi" style="text-decoration: none">Aso-ebi orders</a>
+        <a href="#journal" style="text-decoration: none">Journal</a>
+      </nav>
+      <div style="display: flex; gap: 4px; align-items: center">
+        <button aria-label="Search" style="width: 44px; height: 44px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+        </button>
+        <button aria-label="Account" style="width: 44px; height: 44px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>
+        </button>
+        <a href="#" style="height: 44px; padding: 0 16px; background: #0F0E0D; color: #F7F6F3; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600">Bag <span style="background: #D93A1E; color: #FFFFFF; font-size: 11px; padding: 1px 7px">2</span></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO: The Entrance — label switcher re-casts the whole hero -->
+  <section aria-label="Campaign" style="background: {{hero.tone}}; color: {{hero.fg}}; transition: background 0.6s ease">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 56px 40px 0; display: flex; flex-wrap: wrap; gap: 40px; align-items: stretch">
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; padding-bottom: 48px">
+        <div style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.75">The Entrance · Season [AW26] · {{hero.kicker}}</div>
+        <div>
+          <h1 style="margin: 0; font-weight: 900; font-stretch: 62%; font-size: clamp(72px, 11vw, 176px); line-height: 0.86; letter-spacing: -0.01em; text-transform: uppercase">Look<br>important.</h1>
+          <p style="margin: 12px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: clamp(36px, 4.4vw, 64px); line-height: 1">Be important.</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end">
+          <div style="max-width: 360px">
+            <div style="font-weight: 800; font-stretch: 75%; font-size: 28px; text-transform: uppercase; letter-spacing: 0.02em">{{hero.name}}</div>
+            <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1.2; margin-top: 4px">{{hero.line}}</div>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap">
+            <a href="Label.dc.html" style="background: {{hero.fg}}; color: {{hero.tone}}; text-decoration: none; padding: 16px 28px; font-weight: 700; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase">Enter {{hero.name}}</a>
+            <a href="#drop" style="border: 1px solid {{hero.fg}}; color: {{hero.fg}}; text-decoration: none; padding: 15px 28px; font-weight: 600; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase">Shop the drop</a>
+          </div>
+        </div>
+      </div>
+      <figure style="flex: 1 1 420px; min-width: 0; margin: 0; min-height: 560px; background: {{hero.photo}}; position: relative; display: flex; align-items: flex-end">
+        <figcaption style="padding: 20px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8">[Campaign film · 8s muted loop, poster frame first] — {{hero.name}}</figcaption>
+        <div style="position: absolute; top: 20px; right: 20px; background: #F7F6F3; color: #0F0E0D; padding: 10px 14px; font-size: 12px; font-weight: 600; display: flex; gap: 8px; align-items: center">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #D93A1E"></span>Shop this look · 3 pieces
+        </div>
+      </figure>
+    </div>
+    <!-- Label index -->
+    <div style="border-top: 1px solid {{hero.rule}}">
+      <div role="tablist" aria-label="Labels" style="max-width: 1440px; margin: 0 auto; padding: 0 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))">
+        <sc-for list="{{labels}}" as="l" hint-placeholder-count="6">
+          <button role="tab" aria-selected="{{l.active}}" onClick="{{l.pick}}" style="background: transparent; color: {{hero.fg}}; border: 0; border-top: 3px solid {{l.bar}}; margin-top: -2px; padding: 18px 0 22px; text-align: left; opacity: {{l.op}}; min-height: 44px">
+            <span style="display: block; font-size: 11px; letter-spacing: 0.14em">{{l.num}}</span>
+            <span style="display: block; font-weight: 800; font-stretch: 75%; font-size: 20px; text-transform: uppercase; letter-spacing: 0.02em">{{l.name}}</span>
+            <span style="display: block; font-size: 12px; opacity: 0.8">{{l.short}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- Occasions -->
+  <section id="occasions" style="max-width: 1440px; margin: 0 auto; padding: 96px 40px 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; margin-bottom: 32px">
+      <h2 style="margin: 0; font-weight: 900; font-stretch: 62%; font-size: 64px; line-height: 0.9; text-transform: uppercase">Where are you<br><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; text-transform: none; font-size: 60px">walking in?</span></h2>
+      <p style="margin: 0; max-width: 380px; color: #5E5A55">Shop by the room, not the rail. Each occasion pulls from every label — agbada next to tuxedo next to gown.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+      <sc-for list="{{occasions}}" as="o" hint-placeholder-count="6">
+        <a href="Label.dc.html" style="text-decoration: none; color: #F7F6F3; background: {{o.tone}}; aspect-ratio: 3 / 4; padding: 20px; display: flex; flex-direction: column; justify-content: space-between">
+          <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8">{{o.from}}</span>
+          <span>
+            <span style="display: block; font-weight: 800; font-stretch: 70%; font-size: 30px; line-height: 1; text-transform: uppercase">{{o.name}}</span>
+            <span style="display: block; font-size: 13px; margin-top: 8px; opacity: 0.85">{{o.desc}}</span>
+          </span>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- The Drop -->
+  <section id="drop" style="max-width: 1440px; margin: 0 auto; padding: 72px 40px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; border-bottom: 1px solid #0F0E0D; padding-bottom: 16px">
+      <div>
+        <div style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #D93A1E; font-weight: 700">● Live now</div>
+        <h2 style="margin: 4px 0 0; font-weight: 900; font-stretch: 62%; font-size: 64px; line-height: 0.9; text-transform: uppercase">The Drop — Week 45</h2>
+      </div>
+      <div role="tablist" aria-label="Filter by label" style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{chips}}" as="c" hint-placeholder-count="6">
+          <button role="tab" aria-selected="{{c.active}}" onClick="{{c.pick}}" style="min-height: 44px; padding: 0 18px; border: 1px solid #0F0E0D; background: {{c.bg}}; color: {{c.fg}}; font-size: 13px; font-weight: 600">{{c.name}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 32px 16px">
+      <sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+        <a href="Product.dc.html" style="text-decoration: none; color: #0F0E0D; display: flex; flex-direction: column; gap: 12px">
+          <div style="aspect-ratio: 3 / 4; background: {{p.tone}}; position: relative; display: flex; align-items: center; justify-content: center; color: #F7F6F3; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase">
+            [On-model photo · hover reveals detail]
+            <span style="position: absolute; left: 12px; top: 12px; background: #F7F6F3; color: #0F0E0D; font-size: 11px; font-weight: 600; padding: 4px 8px; letter-spacing: 0.04em; text-transform: none">{{p.badge}}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; gap: 12px">
+            <div>
+              <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #5E5A55">{{p.label}}</div>
+              <div style="font-size: 16px; font-weight: 600; line-height: 1.3">{{p.name}}</div>
+            </div>
+            <div style="font-size: 15px; font-weight: 600; white-space: nowrap">₦ [PRICE]</div>
+          </div>
+          <div style="font-size: 12px; color: #5E5A55">{{p.sizes}}</div>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- Made to measure -->
+  <section id="mtm" style="background: #0F0E0D; color: #F7F6F3">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 96px 40px; display: flex; flex-wrap: wrap; gap: 56px">
+      <div style="flex: 1 1 420px; min-width: 0">
+        <div style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7">Lopa Prime · Lopa Trybe · Lopa Bridal</div>
+        <h2 style="margin: 12px 0 0; font-weight: 900; font-stretch: 62%; font-size: 88px; line-height: 0.86; text-transform: uppercase">Measured<br>once.</h2>
+        <p style="margin: 8px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 48px; line-height: 1">Fitted forever.</p>
+        <p style="margin: 28px 0 0; max-width: 440px; color: #C9C4BD">Your Lopa Fit Profile stores your measurements against your account. Every bespoke piece — suit, agbada or gown — is cut from it, and every fitting refines it.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px">
+          <a href="Product.dc.html" style="background: #F7F6F3; color: #0F0E0D; text-decoration: none; padding: 16px 28px; font-weight: 700; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase">Book a fitting</a>
+          <a href="#" style="border: 1px solid #F7F6F3; color: #F7F6F3; text-decoration: none; padding: 15px 28px; font-weight: 600; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase">Measure at home</a>
+        </div>
+      </div>
+      <ol style="flex: 1 1 480px; min-width: 0; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+        <li style="border-top: 1px solid #3A3733; padding: 24px 0; display: flex; gap: 24px">
+          <span style="font-weight: 900; font-stretch: 62%; font-size: 40px; line-height: 1; color: #D93A1E">01</span>
+          <div><div style="font-weight: 700; font-size: 18px">Choose your way in</div><div style="color: #C9C4BD; margin-top: 4px">Studio fitting in Lagos, a video fitting with a Lopa tailor, or a guided self-measure with photo checks.</div></div>
+        </li>
+        <li style="border-top: 1px solid #3A3733; padding: 24px 0; display: flex; gap: 24px">
+          <span style="font-weight: 900; font-stretch: 62%; font-size: 40px; line-height: 1; color: #D93A1E">02</span>
+          <div><div style="font-weight: 700; font-size: 18px">Pick fabric, cut and details</div><div style="color: #C9C4BD; margin-top: 4px">Lapel, lining, embroidery and fabric shown on the actual garment — with the delivery date before you pay.</div></div>
+        </li>
+        <li style="border-top: 1px solid #3A3733; padding: 24px 0; display: flex; gap: 24px">
+          <span style="font-weight: 900; font-stretch: 62%; font-size: 40px; line-height: 1; color: #D93A1E">03</span>
+          <div><div style="font-weight: 700; font-size: 18px">Follow it on the cutting table</div><div style="color: #C9C4BD; margin-top: 4px">Status updates by WhatsApp: cut, sewn, finishing, fitting, dispatched.</div></div>
+        </li>
+        <li style="border-top: 1px solid #3A3733; border-bottom: 1px solid #3A3733; padding: 24px 0; display: flex; gap: 24px">
+          <span style="font-weight: 900; font-stretch: 62%; font-size: 40px; line-height: 1; color: #D93A1E">04</span>
+          <div><div style="font-weight: 700; font-size: 18px">Re-order in one tap</div><div style="color: #C9C4BD; margin-top: 4px">Your next suit is already in your size.</div></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Aso-ebi group orders -->
+  <section id="asoebi" style="max-width: 1440px; margin: 0 auto; padding: 96px 40px; display: flex; flex-wrap: wrap; gap: 48px; align-items: center">
+    <div style="flex: 1 1 520px; min-width: 0; aspect-ratio: 4 / 3; background: #2B3A2F; color: #F7F6F3; display: flex; align-items: flex-end; padding: 24px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase">[Family in matching aso-oke — wedding party]</div>
+    <div style="flex: 1 1 440px; min-width: 0">
+      <div style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #5E5A55">Group orders</div>
+      <h2 style="margin: 8px 0 0; font-weight: 900; font-stretch: 62%; font-size: 72px; line-height: 0.88; text-transform: uppercase">Dress the<br>whole party.</h2>
+      <p style="margin: 20px 0 0; max-width: 460px; color: #3D3A36">Choose one fabric and style, then share a single link on WhatsApp. Each guest adds their own size or measurements and pays for themselves — you see who's in, who's paid and when it all ships.</p>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 28px; border-top: 1px solid #0F0E0D; padding-top: 20px">
+        <div><div style="font-weight: 900; font-stretch: 62%; font-size: 36px">1 link</div><div style="font-size: 13px; color: #5E5A55">for every guest</div></div>
+        <div><div style="font-weight: 900; font-stretch: 62%; font-size: 36px">Split</div><div style="font-size: 13px; color: #5E5A55">or one payer</div></div>
+        <div><div style="font-weight: 900; font-stretch: 62%; font-size: 36px">Live</div><div style="font-size: 13px; color: #5E5A55">roster for the host</div></div>
+      </div>
+      <a href="#" style="display: inline-block; margin-top: 28px; background: #0F0E0D; color: #F7F6F3; text-decoration: none; padding: 16px 28px; font-weight: 700; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase">Start a group order</a>
+    </div>
+  </section>
+
+  <!-- Journal -->
+  <section id="journal" style="border-top: 1px solid #DAD6D0">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 80px 40px">
+      <h2 style="margin: 0 0 32px; font-weight: 900; font-stretch: 62%; font-size: 64px; line-height: 0.9; text-transform: uppercase">Journal</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px">
+        <a href="#" style="text-decoration: none; color: #0F0E0D">
+          <div style="aspect-ratio: 4 / 3; background: #161B26"></div>
+          <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #5E5A55; margin-top: 14px">Craft · Lopa Prime</div>
+          <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 30px; line-height: 1.1; margin-top: 4px">Forty hours inside one double-breasted jacket</div>
+        </a>
+        <a href="#" style="text-decoration: none; color: #0F0E0D">
+          <div style="aspect-ratio: 4 / 3; background: #1F2B22"></div>
+          <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #5E5A55; margin-top: 14px">Culture · Lopa Trybe</div>
+          <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 30px; line-height: 1.1; margin-top: 4px">How to wear agbada in a city that never sits still</div>
+        </a>
+        <a href="#" style="text-decoration: none; color: #0F0E0D">
+          <div style="aspect-ratio: 4 / 3; background: #3B1D24"></div>
+          <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #5E5A55; margin-top: 14px">Styled by you</div>
+          <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 30px; line-height: 1.1; margin-top: 4px">#LookImportant — this month's entrances</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background: #0F0E0D; color: #F7F6F3">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 72px 40px 32px">
+      <div style="display: flex; flex-wrap: wrap; gap: 48px; justify-content: space-between">
+        <div style="flex: 1 1 360px">
+          <div style="font-weight: 900; font-stretch: 62%; font-size: 120px; line-height: 0.82">LOPA</div>
+          <div style="font-size: 12px; letter-spacing: 0.5em; margin-top: 6px">WORLD</div>
+          <form style="margin-top: 36px; max-width: 420px">
+            <label for="ft-email" style="display: block; font-size: 13px; color: #C9C4BD; margin-bottom: 8px">First look at every drop — by email or WhatsApp</label>
+            <div style="display: flex; border-bottom: 1px solid #F7F6F3">
+              <input id="ft-email" type="email" placeholder="Email or phone" style="flex: 1; min-width: 0; background: transparent; border: 0; color: #F7F6F3; font-size: 16px; padding: 12px 0; font-family: inherit">
+              <button type="submit" style="background: transparent; color: #F7F6F3; border: 0; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 13px; min-height: 44px">Join</button>
+            </div>
+          </form>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr)); gap: 32px; font-size: 14px">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #9A948C">Labels</div>
+            <a href="#" style="color: #F7F6F3; text-decoration: none">Lopa Next</a><a href="#" style="color: #F7F6F3; text-decoration: none">Lopa Trybe</a><a href="#" style="color: #F7F6F3; text-decoration: none">Lopa Prime</a><a href="#" style="color: #F7F6F3; text-decoration: none">Lopa Men</a><a href="#" style="color: #F7F6F3; text-decoration: none">Lopa Fashion</a>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #9A948C">Service</div>
+            <a href="#" style="color: #F7F6F3; text-decoration: none">Track an order</a><a href="#" style="color: #F7F6F3; text-decoration: none">Size &amp; fit</a><a href="#" style="color: #F7F6F3; text-decoration: none">Delivery &amp; duties</a><a href="#" style="color: #F7F6F3; text-decoration: none">Returns</a><a href="#" style="color: #F7F6F3; text-decoration: none">Visit the studio</a>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #9A948C">Talk to us</div>
+            <a href="#" style="color: #F7F6F3; text-decoration: none">WhatsApp [NUMBER]</a><a href="#" style="color: #F7F6F3; text-decoration: none">Instagram</a><a href="#" style="color: #F7F6F3; text-decoration: none">[EMAIL]</a>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 64px; padding-top: 20px; border-top: 1px solid #3A3733; display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; font-size: 12px; color: #9A948C">
+        <span>© [LEGAL ENTITY NAME]. Lagos, Nigeria.</span>
+        <span>Privacy (NDPA) · Terms · Cookie choices</span>
+      </div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { label: 0, drop: 'All' };
+  }
+  renderVals() {
+    var L = [
+      { num: '01', name: 'Lopa Next', short: 'Couture', kicker: 'Couture · Occasionwear', line: 'A moment of your own.', tone: '#2E151B', photo: '#4A2530', fg: '#F7F6F3', rule: 'rgba(247,246,243,0.22)' },
+      { num: '02', name: 'Lopa Trybe', short: 'Modern nativewear', kicker: 'Agbada · Senator · Kaftan', line: 'Tradition, in motion.', tone: '#18241C', photo: '#2B3A2F', fg: '#F7F6F3', rule: 'rgba(247,246,243,0.22)' },
+      { num: '03', name: 'Lopa Prime', short: 'Bespoke suiting', kicker: 'Suits · Tuxedos · Womenswear', line: 'Cut for the arrival.', tone: '#11151E', photo: '#222A3A', fg: '#F7F6F3', rule: 'rgba(247,246,243,0.22)' },
+      { num: '04', name: 'Lopa Men', short: 'Modern menswear', kicker: 'Two-pieces · Denim · Footwear', line: 'The everyday entrance.', tone: '#2A1F1A', photo: '#46342B', fg: '#F7F6F3', rule: 'rgba(247,246,243,0.22)' },
+      { num: '05', name: 'Lopa Fashion', short: "Women's ready-to-wear", kicker: "Women's ready-to-wear", line: 'Wear the room.', tone: '#231A27', photo: '#3A2C40', fg: '#F7F6F3', rule: 'rgba(247,246,243,0.22)' },
+      { num: '06', name: 'Lopa Bridal', short: 'Gowns [confirm]', kicker: 'Ball · Mermaid · Wedding', line: 'The day, in your own shape.', tone: '#E8E3DB', photo: '#D3CBBF', fg: '#0F0E0D', rule: 'rgba(15,14,13,0.18)' }
+    ];
+    var self = this;
+    var cur = L[this.state.label];
+    var labels = L.map(function (l, i) {
+      var on = i === self.state.label;
+      return { num: l.num, name: l.name, short: l.short, active: on ? 'true' : 'false', bar: on ? cur.fg : 'transparent', op: on ? 1 : 0.62, pick: function () { self.setState({ label: i }); } };
+    });
+    var P = [
+      { label: 'Lopa Trybe', name: 'Aso Oke agbada, three-piece', tone: '#2B3A2F', badge: 'Made to measure', sizes: 'Ready-to-wear 36–48 · or your Fit Profile' },
+      { label: 'Lopa Prime', name: 'Double-breasted suit', tone: '#222A3A', badge: 'Made to measure', sizes: '46–58 · tailoring included' },
+      { label: 'Lopa Men', name: 'Denim-on-denim set', tone: '#46342B', badge: 'Lagos same-day', sizes: 'S · M · L · XL · XXL' },
+      { label: 'Lopa Fashion', name: 'The Velour Set', tone: '#3A2C40', badge: 'Only 3 left', sizes: 'UK 8–18' },
+      { label: 'Lopa Next', name: 'Draped evening dress', tone: '#4A2530', badge: 'New', sizes: 'UK 6–16 · or made to measure' },
+      { label: 'Lopa Trybe', name: 'Senator, Roots cut', tone: '#33463A', badge: 'Lagos same-day', sizes: 'S–XXXL' },
+      { label: 'Lopa Prime', name: "Women's pant suit", tone: '#2C3548', badge: 'New', sizes: 'UK 6–18' },
+      { label: 'Lopa Men', name: 'Kwame two-piece', tone: '#57423A', badge: 'New', sizes: 'S · M · L · XL' }
+    ];
+    var drop = this.state.drop;
+    var products = drop === 'All' ? P : P.filter(function (p) { return p.label === drop; });
+    var chips = ['All', 'Lopa Next', 'Lopa Trybe', 'Lopa Prime', 'Lopa Men', 'Lopa Fashion'].map(function (c) {
+      var on = c === drop;
+      return { name: c.replace('Lopa ', ''), active: on ? 'true' : 'false', bg: on ? '#0F0E0D' : 'transparent', fg: on ? '#F7F6F3' : '#0F0E0D', pick: function () { self.setState({ drop: c }); } };
+    });
+    var occasions = [
+      { name: 'Owambe', desc: 'Statement agbada, gele-ready gowns', from: 'Trybe · Next', tone: '#5A2A1E' },
+      { name: 'The wedding', desc: 'Groom, groomsmen, bride, guests', from: 'Prime · Bridal · Trybe', tone: '#2E151B' },
+      { name: 'Sallah & Eid', desc: 'Kaftan, jalamia, danshiki', from: 'Trybe', tone: '#18241C' },
+      { name: 'The boardroom', desc: 'Suiting for him and her', from: 'Prime', tone: '#11151E' },
+      { name: 'Friday out', desc: 'Two-pieces, denim, slides', from: 'Men · Fashion', tone: '#2A1F1A' },
+      { name: 'December home', desc: 'Detty December, sorted', from: 'Every label', tone: '#231A27' }
+    ];
+    return { hero: cur, labels: labels, products: products, chips: chips, occasions: occasions };
+  }
+}
+</script>
+</body>
+</html>

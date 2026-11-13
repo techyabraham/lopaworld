@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Royal agbada — Product</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+body{margin:0;background:#F7F6F3}
+a{color:#0F0E0D}a:hover{color:#D93A1E}
+button{font-family:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed}
+</style>
+</helmet>
+<div style="width: 100%; background: #F7F6F3; color: #0F0E0D; font-family: 'Archivo', system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+  <header style="border-bottom: 1px solid #DAD6D0">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 18px 40px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between">
+      <a href="Main.dc.html" style="text-decoration: none; display: flex; align-items: baseline; gap: 8px; color: #0F0E0D">
+        <span style="font-weight: 900; font-stretch: 62%; font-size: 34px; line-height: 1">LOPA</span>
+        <span style="font-size: 11px; letter-spacing: 0.42em; font-weight: 500">WORLD</span>
+      </a>
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #5E5A55; display: flex; gap: 8px; flex-wrap: wrap">
+        <a href="Main.dc.html" style="color: #5E5A55">Home</a><span>/</span><a href="Label.dc.html" style="color: #5E5A55">Lopa Trybe</a><span>/</span><span>Agbada</span>
+      </nav>
+      <a href="#" style="height: 44px; padding: 0 16px; background: #0F0E0D; color: #F7F6F3; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600">Bag <span style="background: #D93A1E; color: #FFFFFF; font-size: 11px; padding: 1px 7px">{{bagCount}}</span></a>
+    </div>
+  </header>
+
+  <main style="max-width: 1440px; margin: 0 auto; padding: 32px 40px 80px; display: flex; flex-wrap: wrap; gap: 48px">
+
+    <!-- Gallery -->
+    <div style="flex: 999 1 560px; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <div style="grid-column: span 2; aspect-ratio: 4 / 5; background: {{colour.tone}}; color: #F7F6F3; display: flex; align-items: flex-end; justify-content: space-between; padding: 20px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase">
+        <span>[On model · walking · {{colour.name}}]</span>
+        <span style="background: #F7F6F3; color: #0F0E0D; padding: 6px 10px; letter-spacing: 0.04em; text-transform: none; font-weight: 600">▶ 6s movement clip</span>
+      </div>
+      <div style="aspect-ratio: 3 / 4; background: #2B3A2F; color: #F7F6F3; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Back view]</div>
+      <div style="aspect-ratio: 3 / 4; background: #3D5244; color: #F7F6F3; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Embroidery macro]</div>
+      <div style="aspect-ratio: 3 / 4; background: #4A5A4C; color: #F7F6F3; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Inner lining + label]</div>
+      <div style="aspect-ratio: 3 / 4; background: #24302A; color: #F7F6F3; display: flex; align-items: flex-end; padding: 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">[Model is 1.88m, wears 44]</div>
+    </div>
+
+    <!-- Buy panel -->
+    <div style="flex: 1 1 400px; min-width: 0; max-width: 520px; display: flex; flex-direction: column; gap: 24px">
+      <div>
+        <a href="Label.dc.html" style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; color: #2B3A2F; font-weight: 700">Lopa Trybe</a>
+        <h1 style="margin: 6px 0 0; font-weight: 900; font-stretch: 62%; font-size: 56px; line-height: 0.92; text-transform: uppercase">Royal agbada</h1>
+        <p style="margin: 6px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 24px">Three-piece, hand-embroidered</p>
+        <div style="margin-top: 16px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap">
+          <span style="font-size: 24px; font-weight: 700">₦ [PRICE]</span>
+          <span style="font-size: 13px; color: #5E5A55">≈ $ [USD] · £ [GBP] — duties shown at checkout</span>
+        </div>
+      </div>
+
+      <!-- Mode switch -->
+      <div role="tablist" aria-label="How do you want it?" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #0F0E0D">
+        <button role="tab" aria-selected="{{rtwOn}}" onClick="{{toRtw}}" style="min-height: 56px; border: 0; background: {{rtwBg}}; color: {{rtwFg}}; text-align: left; padding: 10px 16px">
+          <span style="display: block; font-weight: 700; font-size: 14px">Ready to wear</span>
+          <span style="display: block; font-size: 12px; opacity: 0.8">Ships in 48h</span>
+        </button>
+        <button role="tab" aria-selected="{{mtmOn}}" onClick="{{toMtm}}" style="min-height: 56px; border: 0; background: {{mtmBg}}; color: {{mtmFg}}; text-align: left; padding: 10px 16px">
+          <span style="display: block; font-weight: 700; font-size: 14px">Made to measure</span>
+          <span style="display: block; font-size: 12px; opacity: 0.8">Cut to your Fit Profile</span>
+        </button>
+      </div>
+
+      <!-- Colour -->
+      <div>
+        <div style="font-size: 13px; margin-bottom: 10px"><span style="font-weight: 700">Colour</span> — {{colour.name}}</div>
+        <div style="display: flex; gap: 10px">
+          <sc-for list="{{colours}}" as="c" hint-placeholder-count="3">
+            <button onClick="{{c.pick}}" aria-label="{{c.name}}" aria-pressed="{{c.active}}" style="width: 44px; height: 44px; padding: 3px; background: transparent; border: 2px solid {{c.ring}}">
+              <span style="display: block; width: 100%; height: 100%; background: {{c.tone}}"></span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- Ready to wear: sizes -->
+      <sc-if value="{{rtw}}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px">
+            <span><span style="font-weight: 700">Size</span> — {{sizeText}}</span>
+            <a href="#" style="font-weight: 600">Size guide (cm / in)</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{sizes}}" as="s" hint-placeholder-count="6">
+              <button onClick="{{s.pick}}" disabled="{{s.out}}" aria-pressed="{{s.active}}" aria-label="{{s.aria}}" style="min-height: 48px; border: 1px solid {{s.border}}; background: {{s.bg}}; color: {{s.fg}}; font-size: 14px; font-weight: 600; text-decoration: {{s.strike}}">{{s.n}}</button>
+            </sc-for>
+          </div>
+          <div style="margin-top: 12px; background: #ECEAE5; padding: 12px 14px; font-size: 13px; display: flex; gap: 10px">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6" style="flex: none; margin-top: 1px"><path d="M4 12l5 5L20 6"></path></svg>
+            <span><strong>Fit match:</strong> you bought a 44 in Lopa Prime. Customers your height usually take a 44 here — it runs true to size.</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Made to measure -->
+      <sc-if value="{{mtm}}" hint-placeholder-val="{{ false }}">
+        <div style="border: 1px solid #0F0E0D; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline">
+            <span style="font-weight: 700">Your Lopa Fit Profile</span>
+            <span style="font-size: 12px; background: #2B3A2F; color: #F7F6F3; padding: 3px 8px">Saved · 14 measurements</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; font-size: 12px; color: #5E5A55">
+            <div><div style="font-size: 20px; color: #0F0E0D; font-weight: 700">104</div>Chest cm</div>
+            <div><div style="font-size: 20px; color: #0F0E0D; font-weight: 700">88</div>Waist cm</div>
+            <div><div style="font-size: 20px; color: #0F0E0D; font-weight: 700">47</div>Shoulder cm</div>
+            <div><div style="font-size: 20px; color: #0F0E0D; font-weight: 700">152</div>Agbada length</div>
+          </div>
+          <div style="font-size: 13px">Last checked at a studio fitting · <a href="#">Update</a> · <a href="#">Book a video fitting</a></div>
+          <div style="border-top: 1px solid #DAD6D0; padding-top: 12px; font-size: 14px"><strong>Ready by [DATE]</strong> — cut, sewn and fitted in [X] working days. Need it for an event? <a href="#">Set your event date</a></div>
+        </div>
+      </sc-if>
+
+      <!-- Actions -->
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <button onClick="{{add}}" style="min-height: 56px; background: #0F0E0D; color: #F7F6F3; border: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">{{cta}}</button>
+        <sc-if value="{{added}}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="font-size: 13px; background: #E3ECE4; padding: 10px 14px">Added to bag — Royal agbada, {{colour.name}}{{addedNote}}. <a href="#">View bag</a></div>
+        </sc-if>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <a href="#" style="min-height: 48px; border: 1px solid #0F0E0D; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F0E0D" stroke-width="1.6"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"></path></svg>Ask a tailor on WhatsApp
+          </a>
+          <button style="min-height: 48px; border: 1px solid #0F0E0D; background: transparent; font-size: 14px; font-weight: 600">Save for later</button>
+        </div>
+      </div>
+
+      <!-- Delivery estimator -->
+      <div style="border-top: 1px solid #0F0E0D; padding-top: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+        <div style="display: flex; justify-content: space-between"><span style="font-weight: 700">Delivering to Lekki, Lagos</span><a href="#">Change</a></div>
+        <div>{{deliveryLine}}</div>
+        <div style="color: #5E5A55; font-size: 13px">Pay by card, bank transfer or USSD · [Confirm channels] · Returns: [POLICY SUMMARY]</div>
+      </div>
+
+      <!-- Details -->
+      <div style="border-top: 1px solid #DAD6D0">
+        <details style="border-bottom: 1px solid #DAD6D0; padding: 16px 0" open="">
+          <summary style="font-weight: 700; cursor: pointer">Fabric &amp; craft</summary>
+          <p style="margin: 10px 0 0; color: #3D3A36; font-size: 14px">[Fabric composition, weave origin and embroidery technique, hours of handwork.]</p>
+        </details>
+        <details style="border-bottom: 1px solid #DAD6D0; padding: 16px 0">
+          <summary style="font-weight: 700; cursor: pointer">Fit &amp; measurements</summary>
+          <p style="margin: 10px 0 0; color: #3D3A36; font-size: 14px">[Garment measurements per size, in cm and inches.]</p>
+        </details>
+        <details style="border-bottom: 1px solid #DAD6D0; padding: 16px 0">
+          <summary style="font-weight: 700; cursor: pointer">Care</summary>
+          <p style="margin: 10px 0 0; color: #3D3A36; font-size: 14px">[Dry clean only, storage advice.]</p>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <!-- Complete the look -->
+  <section style="background: #18241C; color: #F7F6F3">
+    <div style="max-width: 1440px; margin: 0 auto; padding: 72px 40px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px">
+        <h2 style="margin: 0; font-weight: 900; font-stretch: 62%; font-size: 56px; line-height: 0.9; text-transform: uppercase">Complete<br><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; text-transform: none">the entrance</span></h2>
+        <button style="min-height: 48px; padding: 0 24px; background: #F7F6F3; color: #0F0E0D; border: 0; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase">Add all three · ₦ [TOTAL]</button>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+        <div><div style="aspect-ratio: 1 / 1; background: #2B3A2F"></div><div style="margin-top: 10px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75">Lopa Trybe</div><div style="font-weight: 600">Matching fila</div></div>
+        <div><div style="aspect-ratio: 1 / 1; background: #46342B"></div><div style="margin-top: 10px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75">Lopa Men</div><div style="font-weight: 600">Leather slides</div></div>
+        <div><div style="aspect-ratio: 1 / 1; background: #33463A"></div><div style="margin-top: 10px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75">Lopa Trybe</div><div style="font-weight: 600">Children's matching agbada</div></div>
+        <div><div style="aspect-ratio: 1 / 1; background: #3A2C40"></div><div style="margin-top: 10px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75">Lopa Fashion</div><div style="font-weight: 600">Her look — pair it</div></div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'rtw', colour: 0, size: '44', added: false, bag: 2 };
+  }
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var C = [
+      { name: 'Forest', tone: '#2B3A2F' },
+      { name: 'Ivory gold', tone: '#B9A57E' },
+      { name: 'Midnight', tone: '#1A1F2B' }
+    ];
+    var colours = C.map(function (c, i) {
+      var on = i === st.colour;
+      return { name: c.name, tone: c.tone, active: on ? 'true' : 'false', ring: on ? '#0F0E0D' : 'transparent', pick: function () { self.setState({ colour: i, added: false }); } };
+    });
+    var stock = { '38': 0, '40': 4, '42': 1, '44': 6, '46': 3, '48': 0 };
+    var sizes = Object.keys(stock).map(function (n) {
+      var out = stock[n] === 0;
+      var on = n === st.size;
+      return {
+        n: n, out: out, active: on ? 'true' : 'false',
+        aria: 'Size ' + n + (out ? ', sold out' : (stock[n] === 1 ? ', 1 left' : '')),
+        border: out ? '#DAD6D0' : '#0F0E0D', bg: on ? '#0F0E0D' : 'transparent', fg: on ? '#F7F6F3' : (out ? '#8C877F' : '#0F0E0D'),
+        strike: out ? 'line-through' : 'none',
+        pick: function () { self.setState({ size: n, added: false }); }
+      };
+    });
+    var rtw = st.mode === 'rtw';
+    var left = stock[st.size];
+    return {
+      colours: colours, colour: C[st.colour], sizes: sizes,
+      sizeText: st.size + (left === 1 ? ' · last one' : ' · in stock'),
+      rtw: rtw, mtm: !rtw,
+      rtwOn: rtw ? 'true' : 'false', mtmOn: rtw ? 'false' : 'true',
+      rtwBg: rtw ? '#0F0E0D' : 'transparent', rtwFg: rtw ? '#F7F6F3' : '#0F0E0D',
+      mtmBg: rtw ? 'transparent' : '#0F0E0D', mtmFg: rtw ? '#0F0E0D' : '#F7F6F3',
+      toRtw: function () { self.setState({ mode: 'rtw', added: false }); },
+      toMtm: function () { self.setState({ mode: 'mtm', added: false }); },
+      cta: rtw ? 'Add to bag — size ' + st.size : 'Order made to measure',
+      deliveryLine: rtw ? 'Arrives today if you order by [CUT-OFF] · ₦ [FEE]' : 'Ready by [DATE] · free delivery to your door in Lagos [confirm]',
+      added: st.added, addedNote: rtw ? ', size ' + st.size : ', made to measure',
+      bagCount: st.bag,
+      add: function () { self.setState({ added: true, bag: st.bag + 1 }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

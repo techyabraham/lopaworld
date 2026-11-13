@@ -7,6 +7,8 @@ import { useLocalStorageValue } from '../../lib/use-local-storage-value';
 
 const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const CHANGE_EVENT = 'lopaworld-consent-change';
+/** Dispatched by PrivacyChoicesButton (footer) to reopen the prompt. */
+export const OPEN_EVENT = 'lopaworld-consent-open';
 type Choice = 'accepted' | 'rejected' | null;
 
 function activateMeasurement() {
@@ -31,6 +33,12 @@ export function AnalyticsConsent() {
     if (choice === 'accepted') activateMeasurement();
   }, [choice]);
 
+  useEffect(() => {
+    const reopen = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, reopen);
+    return () => window.removeEventListener(OPEN_EVENT, reopen);
+  }, []);
+
   function decide(next: Exclude<Choice, null>) {
     window.localStorage.setItem(CONSENT_KEY, next);
     window.dispatchEvent(new Event(CHANGE_EVENT));
@@ -41,15 +49,18 @@ export function AnalyticsConsent() {
     if (next === 'accepted') activateMeasurement();
   }
 
-  const showPrompt = ready && (choice === null || open);
+  // Before hydration the prompt is part of the server HTML so a first visit paints it with the page
+  // (it is otherwise a late LCP element). A pre-paint script in the root layout marks <html> when a
+  // choice is already stored, and CSS hides the server-rendered prompt for those visitors.
+  const showPrompt = !ready || choice === null || open;
   return <>
     {measurementId && choice === 'accepted' && <Script src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`} strategy="lazyOnload" />}
-    {showPrompt ? <aside className="consent-panel" aria-label="Analytics preferences">
+    {showPrompt ? <aside className="consent-panel" aria-label="Analytics preferences" data-pending={ready ? undefined : ''}>
       <div><strong>Privacy choices</strong><p>Optional analytics help us understand how the shop is used. They stay off unless you allow them. You can change this choice at any time.</p></div>
       <div className="consent-actions">
         <button type="button" onClick={() => decide('rejected')}>Reject optional</button>
         <button type="button" onClick={() => decide('accepted')}>Allow analytics</button>
       </div>
-    </aside> : ready && <button className="consent-settings" type="button" onClick={() => setOpen(true)}>Privacy choices</button>}
+    </aside> : null}
   </>;
 }

@@ -33,22 +33,26 @@ export function Stepper({ value, onChange, min = 0, max = 99, label = 'Quantity'
 }
 
 export function Toast({ children, role = 'status' }: { children: ReactNode; role?: 'status' | 'alert' }) { return <div className="lw-toast" role={role} aria-live={role === 'alert' ? 'assertive' : 'polite'}>{children}</div>; }
-export function Badge({ children }: { children: ReactNode }) { return <span className="lw-badge">{children}</span>; }
+export function Badge({ children, variant = 'default' }: { children: ReactNode; variant?: 'default' | 'signal' }) { return <span className="lw-badge" data-variant={variant}>{children}</span>; }
 export const Tag = Badge;
 export function Chip({ children, selected, onClick }: { children: ReactNode; selected?: boolean; onClick?: () => void }) { return <button type="button" className="lw-chip" aria-pressed={selected} onClick={onClick}>{children}</button>; }
 export function Skeleton({ label = 'Loading' }: { label?: string }) { return <span className="lw-skeleton" role="status" aria-label={label} />; }
 export function Accordion({ title, children }: { title: string; children: ReactNode }) { return <details className="lw-accordion"><summary>{title}</summary><div>{children}</div></details>; }
 
-export function Tabs({ tabs }: { tabs: Array<{ id: string; label: string; content: ReactNode }> }) {
-  const [active, setActive] = useState(tabs[0]?.id ?? '');
-  return <><div className="lw-tabs" role="tablist" onKeyDown={(event) => {
+type TabItem = { id: string; label: ReactNode; content?: ReactNode };
+export function Tabs({ tabs, value, onChange, label, className }: { tabs: TabItem[]; value?: string; onChange?: (id: string) => void; label?: string; className?: string }) {
+  const [internal, setInternal] = useState(tabs[0]?.id ?? '');
+  const active = value ?? internal;
+  const select = (id: string) => { if (value === undefined) setInternal(id); onChange?.(id); };
+  const hasPanels = tabs.some((tab) => tab.content !== undefined);
+  return <><div className={['lw-tabs', className].filter(Boolean).join(' ')} role="tablist" aria-label={label} onKeyDown={(event) => {
     if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
     const current = tabs.findIndex((tab) => tab.id === active);
     const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
     const selected = tabs[next];
-    if (selected) { setActive(selected.id); document.getElementById(`tab-${selected.id}`)?.focus(); }
-  }}>{tabs.map((tab) => <button key={tab.id} type="button" className="lw-tab" id={`tab-${tab.id}`} role="tab" tabIndex={active === tab.id ? 0 : -1} aria-selected={active === tab.id} aria-controls={`panel-${tab.id}`} onClick={() => setActive(tab.id)}>{tab.label}</button>)}</div>{tabs.map((tab) => active === tab.id && <div key={tab.id} role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`} tabIndex={0}>{tab.content}</div>)}</>;
+    if (selected) { select(selected.id); document.getElementById(`tab-${selected.id}`)?.focus(); }
+  }}>{tabs.map((tab) => <button key={tab.id} type="button" className="lw-tab" id={`tab-${tab.id}`} role="tab" tabIndex={active === tab.id ? 0 : -1} aria-selected={active === tab.id} aria-controls={hasPanels ? `panel-${tab.id}` : undefined} onClick={() => select(tab.id)}>{tab.label}</button>)}</div>{hasPanels && tabs.map((tab) => active === tab.id && <div key={tab.id} role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`} tabIndex={0}>{tab.content}</div>)}</>;
 }
 
 function useDialogKeyboard(onClose: () => void) {
@@ -110,29 +114,37 @@ export function ProductCard({ title, href, image, alt, amount, compareAt }: { ti
 }
 export function LabelCard({ title, href, image, alt }: { title: string; href: string; image: string; alt: string }) { return <a className="lw-label-card" href={href}><img src={image} alt={alt} loading="lazy" /><span>{title}</span></a>; }
 
-export function SizeSelector({ sizes, value, unavailable = [], onChange }: { sizes: string[]; value?: string; unavailable?: string[]; onChange: (value: string) => void }) {
-  return <div className="lw-size-selector" role="group" aria-label="Choose a size">{sizes.map((size) => <button key={size} type="button" disabled={unavailable.includes(size)} aria-pressed={value === size} onClick={() => onChange(size)}>{size}</button>)}</div>;
+export function sizeAriaLabel(size: string, soldOut: boolean, left?: number) {
+  return `Size ${size}${soldOut ? ', sold out' : left && left > 0 ? `, ${left} left` : ''}`;
 }
-export function ColourSwatch({ colours, value, onChange }: { colours: Array<{ name: string; hex: string }>; value?: string; onChange: (name: string) => void }) {
-  return <div className="lw-swatches" role="group" aria-label="Choose a colour">{colours.map((colour) => <button key={colour.name} type="button" className="lw-swatch" aria-label={colour.name} aria-pressed={value === colour.name} style={{ backgroundColor: colour.hex }} onClick={() => onChange(colour.name)} />)}</div>;
+export function SizeSelector({ sizes, value, unavailable = [], lowStock, onChange, label = 'Choose a size' }: { sizes: string[]; value?: string; unavailable?: string[]; lowStock?: Record<string, number>; onChange: (value: string) => void; label?: string }) {
+  return <div className="lw-size-selector" role="group" aria-label={label}>{sizes.map((size) => {
+    const soldOut = unavailable.includes(size);
+    return <button key={size} type="button" disabled={soldOut} aria-pressed={value === size} aria-label={sizeAriaLabel(size, soldOut, lowStock?.[size])} onClick={() => onChange(size)}>{size}</button>;
+  })}</div>;
+}
+/** A colour without a confirmed hex renders as a text pill; never invent a colour. */
+export function ColourSwatch({ colours, value, onChange, label = 'Choose a colour' }: { colours: Array<{ name: string; hex?: string | null }>; value?: string; onChange: (name: string) => void; label?: string }) {
+  return <div className="lw-swatches" role="group" aria-label={label}>{colours.map((colour) => colour.hex
+    ? <button key={colour.name} type="button" className="lw-swatch" aria-label={colour.name} aria-pressed={value === colour.name} onClick={() => onChange(colour.name)}><span style={{ backgroundColor: colour.hex }} /></button>
+    : <button key={colour.name} type="button" className="lw-swatch" data-kind="text" aria-pressed={value === colour.name} onClick={() => onChange(colour.name)}>{colour.name}</button>)}</div>;
 }
 export function QuantityStepper({ value, onChange, max = 99 }: { value: number; onChange: (value: number) => void; max?: number }) {
   return <div className="lw-quantity" role="group" aria-label="Quantity"><button type="button" aria-label="Decrease quantity" disabled={value <= 1} onClick={() => onChange(Math.max(1, value - 1))}>−</button><output aria-live="polite" aria-label="Quantity">{value}</output><button type="button" aria-label="Increase quantity" disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>+</button></div>;
 }
 export function Gallery({ images }: { images: Array<{ src: string; alt: string }> }) {
-  const [index, setIndex] = useState(0);
-  const [zoomed, setZoomed] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const current = images[index];
-  if (!current) return <EmptyState title="No images yet" description="Product images will appear here." />;
-  const swipe = (end: number) => {
-    if (touchStart === null || Math.abs(end - touchStart) < 40) return;
-    const direction = end < touchStart ? 1 : -1;
-    setIndex((currentIndex) => (currentIndex + direction + images.length) % images.length);
-    setTouchStart(null);
-  };
-  return <div className="lw-gallery"><button type="button" className="lw-gallery-zoom" aria-label="Zoom product image" onClick={() => setZoomed(true)} onTouchStart={(event) => setTouchStart(event.changedTouches[0]?.clientX ?? null)} onTouchEnd={(event) => swipe(event.changedTouches[0]?.clientX ?? 0)}><img className="lw-gallery-main" src={current.src} alt={current.alt} /></button><div className="lw-gallery-thumbs" aria-label="Product images">{images.map((image, i) => <button key={image.src} type="button" aria-label={`View image ${i + 1}`} aria-current={index === i} onClick={() => setIndex(i)}><img src={image.src} alt="" /></button>)}</div>{zoomed && <Modal title="Product image" onClose={() => setZoomed(false)}><img className="lw-gallery-main" src={current.src} alt={current.alt} /></Modal>}</div>;
+  const [zoomIndex, setZoomIndex] = useState<number | null>(null);
+  const [visible, setVisible] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  if (!images.length) return null;
+  const zoomed = zoomIndex === null ? undefined : images[zoomIndex];
+  const onScroll = () => { const track = trackRef.current; if (track?.clientWidth) setVisible(Math.round(track.scrollLeft / track.clientWidth)); };
+  return <div className="lw-gallery" aria-roledescription="carousel" aria-label="Product images">
+    <div ref={trackRef} className="lw-gallery-grid" onScroll={onScroll}>{images.map((image, i) => <button key={image.src} type="button" className="lw-gallery-zoom" aria-roledescription="slide" aria-label={`Enlarge image ${i + 1} of ${images.length}`} onClick={() => setZoomIndex(i)}><img src={image.src} alt={image.alt} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" /></button>)}</div>
+    {images.length > 1 && <div className="lw-gallery-dots" aria-hidden="true">{images.map((image, i) => <span key={image.src} aria-current={visible === i} />)}</div>}
+    {zoomed && <Modal title="Product image" onClose={() => setZoomIndex(null)}><img className="lw-gallery-main" src={zoomed.src} alt={zoomed.alt} /></Modal>}
+  </div>;
 }
 export function FilterChip({ children, onRemove }: { children: ReactNode; onRemove: () => void }) { return <span className="lw-filter-chip">{children}<button type="button" aria-label={`Remove ${String(children)} filter`} onClick={onRemove}>×</button></span>; }
-export function EmptyState({ title, description }: { title: string; description: string }) { return <section className="lw-state" aria-labelledby="lw-empty-title"><h2 id="lw-empty-title">{title}</h2><p>{description}</p></section>; }
+export function EmptyState({ title, description }: { title: string; description: string }) { const id = useId(); return <section className="lw-state" aria-labelledby={id}><h2 id={id} className="lw-display">{title}</h2><p>{description}</p></section>; }
 export function ErrorState({ title, description, action }: { title: string; description: string; action?: ReactNode }) { return <section className="lw-state" data-kind="error" role="alert"><h2>{title}</h2><p>{description}</p>{action}</section>; }

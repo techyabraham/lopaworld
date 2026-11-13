@@ -37,4 +37,6 @@ export type ProductEditorialMetadata = {
   seo_title?: string;
   seo_description?: string;
   seo_image_url?: string;
+  /** Medusa product handles shown in "Complete the Entrance" on the PDP; validated before rendering. */
+  complete_the_look?: string[];
 };

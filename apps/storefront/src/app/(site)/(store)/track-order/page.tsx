@@ -5,8 +5,8 @@ export const metadata: Metadata = { title: 'Track an order', robots: { index: fa
 
 export default function TrackOrderPage() {
   return <main className="page-shell customer-page">
-    <p className="eyebrow">Order support</p>
-    <h1>Track your order</h1>
+    <p className="lw-eyebrow">Order support</p>
+    <h1 className="lw-display">Track your order</h1>
     <p>Enter the order number and the email address used at checkout to see its current store status.</p>
     <GuestOrderLookup />
   </main>;

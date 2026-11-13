@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
+import { EmptyState } from '@lopaworld/ui';
 import type { FormEvent } from 'react';
 import type { StoreCart } from '../../lib/cart-types';
 import { trackStoreEvent } from '../../lib/analytics';
@@ -18,7 +19,7 @@ type CheckoutCart = StoreCart & { email?: string; shipping_address?: CheckoutAdd
 type CheckoutState = { cart?: CheckoutCart; shippingOptions?: ShippingOption[]; paymentEnabled?: boolean; error?: string };
 const money = (amount: number | undefined, currency = 'NGN') => typeof amount === 'number'
   ? new Intl.NumberFormat('en-NG', { style: 'currency', currency: currency.toUpperCase(), maximumFractionDigits: 0 }).format(amount)
-  : 'Calculated by Medusa';
+  : '—';
 
 export function CheckoutForm() {
   const [cart, setCart] = useState<StoreCart | null>(null);
@@ -29,6 +30,8 @@ export function CheckoutForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const errorId = useId();
+  const describedBy = error ? errorId : undefined;
   const [values, setValues] = useState({ email: '', first_name: '', last_name: '', phone: '', address_1: '', address_2: '', city: '', province: '', postal_code: '', country_code: 'NG' });
 
   const refresh = useCallback(async () => {
@@ -128,14 +131,14 @@ export function CheckoutForm() {
   }
 
   if (loading) return <p className="checkout-note" role="status">Loading checkout…</p>;
-  if (!cart?.items?.length) return <div className="cart-empty"><h2>Your bag is empty</h2><Link className="lw-button" href="/shop">Explore the collection</Link></div>;
+  if (!cart?.items?.length) return <div className="cart-empty"><EmptyState title="Your bag is empty" description="Add a piece to your bag to check out." /><Link className="lw-button" href="/shop">Explore the collection</Link></div>;
 
   return <div className="checkout-layout">
     <div className="checkout-main">
       <section className="checkout-section">
-        <p className="eyebrow">1 · Delivery details</p>
+        <p className="lw-eyebrow">1 · Delivery details</p>
         <h2>Where should we send your order?</h2>
-        <form className="checkout-form" onSubmit={saveAddress}>
+        <form className="checkout-form" onSubmit={saveAddress} aria-describedby={describedBy}>
           <label>Email address<input autoComplete="email" type="email" required value={values.email} onChange={(e) => setField('email', e.target.value)} /></label>
           <div className="checkout-fields-two">
             <label>First name<input autoComplete="given-name" required value={values.first_name} onChange={(e) => setField('first_name', e.target.value)} /></label>
@@ -152,27 +155,41 @@ export function CheckoutForm() {
             <label>Postal code <span>(optional)</span><input autoComplete="postal-code" value={values.postal_code} onChange={(e) => setField('postal_code', e.target.value)} /></label>
             <label>Country<input value="Nigeria" readOnly /></label>
           </div>
-          <button className="lw-button" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save delivery details'}</button>
+          <button className="lw-button" type="submit" disabled={busy} aria-describedby={describedBy}>{busy ? 'Saving…' : 'Save delivery details'}</button>
         </form>
       </section>
 
       <section className="checkout-section">
-        <p className="eyebrow">2 · Delivery method</p>
+        <p className="lw-eyebrow">2 · Delivery method</p>
         <h2>Choose delivery</h2>
         {!saved && <p className="checkout-note">Save your address to see delivery options available for it.</p>}
-        {saved && options.length === 0 && <p className="checkout-note">No delivery option is configured for this address yet. Delivery zones and fees are being confirmed.</p>}
+        {saved && options.length === 0 && <p className="checkout-note">No delivery option is available for this address.</p>}
         {saved && options.length > 0 && <fieldset className="checkout-options" disabled={busy}><legend className="sr-only">Delivery options</legend>{options.map((option) => <label className="checkout-option" key={option.id}><input type="radio" name="shipping" value={option.id} checked={selected === option.id} onChange={() => void chooseShipping(option.id)} /><span><strong>{option.name}</strong><small>{money(option.calculated_price?.calculated_amount ?? option.amount, option.calculated_price?.currency_code ?? cart.currency_code)}</small></span></label>)}</fieldset>}
       </section>
 
       <section className="checkout-section">
-        <p className="eyebrow">3 · Payment</p>
+        <p className="lw-eyebrow">3 · Payment</p>
         <h2>Pay securely</h2>
-        {!paymentEnabled && <p className="checkout-note">Secure payment is not available yet. The Lopaworld payment account and approved channels still need to be configured.</p>}
+        {!paymentEnabled && <p className="checkout-note">Online payment is not available at the moment.</p>}
         {paymentEnabled && <p className="checkout-note">You will pay securely in NGN on Paystack.</p>}
-        <button className="lw-button" type="button" disabled={!selected || !paymentEnabled || busy} onClick={() => void pay()}>{busy ? 'Connecting securely…' : 'Continue to secure payment'}</button>
+        <button className="lw-button lw-button-buy" type="button" disabled={!selected || !paymentEnabled || busy} aria-describedby={describedBy} onClick={() => void pay()}>{busy ? 'Connecting securely…' : 'Continue to secure payment'}</button>
       </section>
-      {error && <p className="cart-message" role="alert">{error}</p>}
+      {error && <p className="cart-message" id={errorId} role="alert">{error}</p>}
     </div>
-    <aside className="checkout-summary"><p className="eyebrow">Your order</p><ul>{cart.items.map((item) => <li key={item.id}><span>{item.title ?? item.product?.title ?? 'Product'} × {item.quantity}</span><strong>{money(item.total, cart.currency_code)}</strong></li>)}</ul><div className="checkout-total-row"><span>Items</span><strong>{money(cart.subtotal, cart.currency_code)}</strong></div>{selected && <><div className="checkout-total-row"><span>Delivery</span><strong>{money(cart.shipping_total, cart.currency_code)}</strong></div>{typeof cart.tax_total === 'number' && cart.tax_total > 0 && <div className="checkout-total-row"><span>Tax</span><strong>{money(cart.tax_total, cart.currency_code)}</strong></div>}<div className="cart-totals"><span>Total</span><strong>{money(cart.total, cart.currency_code)}</strong></div></>}<p className="checkout-note">{selected ? 'Final total calculated by Medusa.' : 'Choose a delivery option to see your final total.'}</p><Link href="/bag">Return to bag</Link></aside>
+    <aside className="checkout-summary" aria-labelledby="checkout-summary-heading">
+      <h2 id="checkout-summary-heading" className="lw-eyebrow">Your order</h2>
+      <table className="summary-table">
+        <caption className="sr-only">Order summary</caption>
+        <tbody>{cart.items.map((item) => <tr key={item.id}><th scope="row">{item.title ?? item.product?.title ?? 'Product'} <span className="summary-qty">× {item.quantity}</span></th><td>{money(item.total, cart.currency_code)}</td></tr>)}</tbody>
+        <tfoot>
+          <tr><th scope="row">Items</th><td>{money(cart.subtotal, cart.currency_code)}</td></tr>
+          {selected && <tr><th scope="row">Delivery</th><td>{money(cart.shipping_total, cart.currency_code)}</td></tr>}
+          {selected && typeof cart.tax_total === 'number' && cart.tax_total > 0 && <tr><th scope="row">Tax</th><td>{money(cart.tax_total, cart.currency_code)}</td></tr>}
+          {selected && <tr className="summary-total"><th scope="row">Total</th><td>{money(cart.total, cart.currency_code)}</td></tr>}
+        </tfoot>
+      </table>
+      {!selected && <p className="checkout-note">Choose a delivery option to see your final total.</p>}
+      <Link className="summary-back" href="/bag">Return to bag</Link>
+    </aside>
   </div>;
 }

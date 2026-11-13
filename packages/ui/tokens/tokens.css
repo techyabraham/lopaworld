@@ -1,27 +1,44 @@
 :root {
   color-scheme: light;
-  --color-canvas: #f8f6f1;
-  --color-surface: #ffffff;
-  --color-ink: #211e1b;
-  --color-ink-muted: #615b55;
-  --color-line: #d8d2ca;
-  --color-neutral-50: #f8f6f1;
-  --color-neutral-100: #eeeae4;
-  --color-neutral-200: #d8d2ca;
-  --color-neutral-400: #a59d94;
-  --color-neutral-600: #615b55;
-  --color-neutral-800: #38322e;
-  --color-neutral-950: #211e1b;
-  --color-danger: #a12828;
-  --color-success: #245c3a;
 
-  --type-display: clamp(2.25rem, 1.65rem + 2.7vw, 4.5rem);
-  --type-h1: clamp(2rem, 1.5rem + 2.2vw, 3.5rem);
-  --type-h2: clamp(1.625rem, 1.35rem + 1.2vw, 2.5rem);
-  --type-h3: clamp(1.25rem, 1.1rem + 0.65vw, 1.75rem);
+  /* Entrance palette (ADR "Entrance design system"). Ratios are against --paper unless noted. */
+  --ink: #0F0E0D;          /* text, dark panels, primary buttons (17.8:1) */
+  --paper: #F7F6F3;        /* page ground */
+  --rule: #DAD6D0;         /* hairlines */
+  --muted: #5E5A55;        /* secondary text (6.33:1) */
+  --muted-on-ink: #C9C4BD; /* secondary text on ink (11.1:1) */
+  --quiet-on-ink: #9A948C; /* tertiary text on ink (6.42:1) */
+  --surface-2: #ECEAE5;    /* info strips */
+  --signal: #D93A1E;       /* FILLS ONLY behind white text (4.59:1), or type >= 24px */
+  --signal-text: #B8301A;  /* any red text at body size (5.59:1) */
+  --success-fill: #E3ECE4;
+
+  /* Existing names, re-pointed so current components keep working. */
+  --color-canvas: var(--paper);
+  --color-surface: #FFFFFF;
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--muted);
+  --color-line: var(--rule);
+  --color-neutral-50: var(--paper);
+  --color-neutral-100: var(--surface-2);
+  --color-neutral-200: var(--rule);
+  --color-neutral-400: #9A948C;
+  --color-neutral-600: var(--muted);
+  --color-neutral-800: #3D3A36;
+  --color-neutral-950: var(--ink);
+  --color-danger: var(--signal-text);
+  --color-success: #245C3A;
+
+  --type-display: clamp(4.5rem, 11vw, 11rem);   /* 72-176px, condensed 900 */
+  --type-h1: clamp(3.5rem, 6vw, 5.5rem);
+  --type-h2: clamp(2.25rem, 4vw, 4rem);         /* 36-64px */
+  --type-h3: 1.875rem;                          /* 30px */
   --type-body: 1rem;
-  --type-small: 0.875rem;
-  --type-label: 0.75rem;
+  --type-small: 0.8125rem;
+  --type-label: 0.6875rem;
+  --tracking-label: 0.16em;
+  --tracking-eyebrow: 0.2em;
+  --leading-display: 0.86;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -35,36 +52,49 @@
   --space-16: 4rem;
   --space-20: 5rem;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.875rem;
-  --radius-pill: 999px;
+  --container: 90rem;                    /* 1440 */
+  --gutter: clamp(1rem, 2.8vw, 2.5rem);  /* 16px phone, 40px desktop */
+
+  --radius-sm: 0;                        /* square everywhere */
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-pill: 999px;                  /* story rings and avatars only */
   --border-width: 1px;
-  --shadow-card: 0 0.25rem 1.25rem rgb(33 30 27 / 8%);
-  --shadow-sheet: 0 0.5rem 2rem rgb(33 30 27 / 18%);
+  --shadow-card: none;
+  --shadow-sheet: 0 0 0 1px var(--rule);
+
   --motion-fast: 140ms;
   --motion-base: 220ms;
   --motion-slow: 360ms;
+  --motion-hero: 600ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
-  --accent: #234e42;
-  --accent-contrast: #ffffff;
-  --accent-soft: color-mix(in srgb, var(--accent) 10%, white);
+  /* Single-accent rule: --accent is the ink. Label tones never style UI controls. */
+  --accent: var(--ink);
+  --accent-contrast: var(--paper);
+  --accent-soft: var(--surface-2);
+
+  /* Default label ground (the house). */
+  --label-tone: var(--ink);
+  --label-photo: #2A2724;
+  --label-fg: var(--paper);
 }
 
-/* TODO_CONFIRM: Provisional accessible development accents; replace from the approved brand guide. */
-[data-label="next"] { --accent: #70482f; --accent-contrast: #ffffff; }
-[data-label="trybe"] { --accent: #205c52; --accent-contrast: #ffffff; }
-[data-label="prime"] { --accent: #4a426d; --accent-contrast: #ffffff; }
-[data-label="men"] { --accent: #2c5063; --accent-contrast: #ffffff; }
-[data-label="fashion"] { --accent: #842f45; --accent-contrast: #ffffff; }
-[data-label="bridal"] { --accent: #72516f; --accent-contrast: #ffffff; }
-[data-label="lopaworld"] { --accent: #234e42; --accent-contrast: #ffffff; }
+/* TODO_CONFIRM (gate D2): label tones from the Entrance design canvas, provisional until the owner
+   approves them. They colour hero and section grounds and image placeholders only, never controls. */
+[data-label="next"] { --label-tone: #2E151B; --label-photo: #4A2530; --label-fg: #F7F6F3; }
+[data-label="trybe"] { --label-tone: #18241C; --label-photo: #2B3A2F; --label-fg: #F7F6F3; }
+[data-label="prime"] { --label-tone: #11151E; --label-photo: #222A3A; --label-fg: #F7F6F3; }
+[data-label="men"] { --label-tone: #2A1F1A; --label-photo: #46342B; --label-fg: #F7F6F3; }
+[data-label="fashion"] { --label-tone: #231A27; --label-photo: #3A2C40; --label-fg: #F7F6F3; }
+[data-label="bridal"] { --label-tone: #E8E3DB; --label-photo: #D3CBBF; --label-fg: #0F0E0D; }
+[data-label="lopaworld"] { --label-tone: #0F0E0D; --label-photo: #2A2724; --label-fg: #F7F6F3; }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-fast: 0ms;
     --motion-base: 0ms;
     --motion-slow: 0ms;
+    --motion-hero: 0ms;
   }
 }
