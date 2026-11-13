@@ -1,0 +1,314 @@
+name: Images
+
+# Proves the production images build on clean Linux and boot against fresh dependencies.
+# Images are built and tested only; nothing is pushed to a registry from this workflow.
+on:
+  pull_request:
+  push:
+    branches: ['phase/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  medusa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Medusa image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/medusa.Dockerfile
+          load: true
+          push: false
+          tags: lopaworld-medusa:ci
+          cache-from: type=gha,scope=medusa
+          cache-to: type=gha,mode=max,scope=medusa
+
+      # Re-run the failed build on the same builder (layers are cached) and publish the log tail as an
+      # annotation, which stays readable without signing in to download job logs.
+      - name: Surface build error
+        if: failure() && steps.build.outcome == 'failure'
+        run: |
+          docker buildx build -f docker/medusa.Dockerfile --progress=plain . > build.log 2>&1 || true
+          grep -v -E '^#[0-9]+ (sha256|extracting|resolve)' build.log | tail -60 > tail.log
+          msg=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' tail.log | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=Medusa image build (last 60 lines)::$msg"
+
+      - name: Record image size
+        run: |
+          inspect=$(docker image inspect lopaworld-medusa:ci --format '{{.Size}}')
+          saved=$(docker save lopaworld-medusa:ci | wc -c)
+          awk -v a="$inspect" -v b="$saved" 'BEGIN { printf "Medusa image size: inspect %.0f MB, uncompressed (docker save) %.0f MB (target <= 600 MB)\n", a / 1e6, b / 1e6 }' \
+            | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa image::/"
+          test "$saved" -le 600000000
+
+      # Fresh, empty Postgres 17 and Redis 7. Every value below is a CI-only placeholder; the Paystack
+      # key is deliberately fake so the workspace provider package is loaded without contacting Paystack.
+      - name: Boot against fresh Postgres 17 and Redis 7
+        run: |
+          docker network create lw
+          docker run -d --name pg --network lw -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=medusa postgres:17-alpine
+          docker run -d --name redis --network lw redis:7-alpine
+          until docker exec pg pg_isready -U ci -d medusa >/dev/null 2>&1; do sleep 1; done
+          docker run -d --name medusa --network lw -p 9000:9000 \
+            -e DATABASE_URL='postgres://ci:ci@pg:5432/medusa?sslmode=disable' \
+            -e REDIS_URL=redis://redis:6379 \
+            -e STORE_CORS=http://localhost:3000 \
+            -e ADMIN_CORS=http://localhost:9000 \
+            -e AUTH_CORS=http://localhost:3000,http://localhost:9000 \
+            -e JWT_SECRET=ci-only-not-a-deployment-secret \
+            -e COOKIE_SECRET=ci-only-not-a-deployment-secret \
+            -e PAYSTACK_SECRET_KEY=sk_test_ci_placeholder \
+            -e PAYSTACK_CALLBACK_URL=https://ci.invalid/checkout/return \
+            -e PAYSTACK_CHANNELS=card \
+            lopaworld-medusa:ci
+          for i in $(seq 1 120); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9000/health)" = "200" ]; then
+              echo "GET /health -> 200 after ~$((i * 2))s" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa boot::/"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' medusa)" != "true" ]; then echo "medusa container exited"; exit 1; fi
+            sleep 2
+          done
+          echo "Medusa did not become healthy"; exit 1
+
+      - name: Check admin and Paystack provider
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:9000/app)
+          echo "GET /app (admin) -> $code" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa admin::/"
+          test "$code" = "200"
+          docker logs medusa 2>&1 | grep -i -E "paystack|payment" | head -20 || true
+          tables=$(docker exec pg psql -U ci -d medusa -Atc "select count(*) from information_schema.tables where table_schema='public'")
+          echo "Medusa tables after db:migrate: $tables" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Medusa migrations::/"
+          test "$tables" -gt 0
+          docker exec medusa id -un | sed "s/^/::notice title=Medusa user::runs as /"
+
+      - name: Medusa logs
+        if: always()
+        run: |
+          docker logs medusa > medusa.log 2>&1 || true
+          tail -150 medusa.log
+          if [ "${{ job.status }}" != "success" ] && [ -s medusa.log ]; then
+            msg=$(tail -60 medusa.log | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Medusa container log (last 60 lines)::$msg"
+          fi
+
+  storefront:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build storefront image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/storefront.Dockerfile
+          load: true
+          push: false
+          tags: lopaworld-storefront:ci
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=http://localhost:3000
+          cache-from: type=gha,scope=storefront
+          cache-to: type=gha,mode=max,scope=storefront
+
+      - name: Surface build error
+        if: failure() && steps.build.outcome == 'failure'
+        run: |
+          docker buildx build -f docker/storefront.Dockerfile --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 --progress=plain . > build.log 2>&1 || true
+          grep -v -E '^#[0-9]+ (sha256|extracting|resolve)' build.log | tail -60 > tail.log
+          msg=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' tail.log | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=Storefront image build (last 60 lines)::$msg"
+
+      - name: Record image size
+        run: |
+          inspect=$(docker image inspect lopaworld-storefront:ci --format '{{.Size}}')
+          saved=$(docker save lopaworld-storefront:ci | wc -c)
+          awk -v a="$inspect" -v b="$saved" 'BEGIN { printf "Storefront image size: inspect %.0f MB, uncompressed (docker save) %.0f MB (target <= 400 MB)\n", a / 1e6, b / 1e6 }' \
+            | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront image::/"
+          test "$saved" -le 400000000
+
+      # Fresh, empty Postgres 17; secrets are CI-only placeholders. Medusa is deliberately not running,
+      # so catalogue modules must degrade instead of failing the page.
+      - name: Boot against fresh Postgres 17
+        run: |
+          docker network create lw
+          docker run -d --name pg --network lw -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=lopaworld postgres:17-alpine
+          until docker exec pg pg_isready -U ci -d lopaworld >/dev/null 2>&1; do sleep 1; done
+          docker run -d --name storefront --network lw -p 3000:3000 \
+            -e DATABASE_URL='postgres://ci:ci@pg:5432/lopaworld?sslmode=disable' \
+            -e PAYLOAD_SECRET=ci-only-not-a-deployment-secret-0000 \
+            -e PREVIEW_SECRET=ci-only-not-a-deployment-secret-1111 \
+            -e MEDUSA_BACKEND_URL=http://medusa.invalid:9000 \
+            lopaworld-storefront:ci
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/ || true)
+            if [ "$code" = "200" ]; then
+              echo "GET / -> 200 after ~$((i * 2))s" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront boot::/"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' storefront)" != "true" ]; then echo "storefront container exited"; exit 1; fi
+            sleep 2
+          done
+          echo "Storefront did not answer 200 on /"; exit 1
+
+      - name: Check health and readiness endpoints
+        run: |
+          code=$(curl -s -o health.json -w '%{http_code}' http://localhost:3000/api/health)
+          echo "GET /api/health -> $code $(cat health.json)" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront health::/"
+          test "$code" = "200"
+          code=$(curl -s -o ready.json -w '%{http_code}' --max-time 10 http://localhost:3000/api/ready)
+          echo "GET /api/ready (Medusa down) -> $code $(cat ready.json)" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront ready::/"
+          test "$code" = "503"
+          grep -q '"database":"ok"' ready.json
+          grep -q '"medusa":"unavailable"' ready.json
+
+      - name: Check static assets, admin and Payload migrations
+        run: |
+          css=$(curl -s http://localhost:3000/ | grep -o '/_next/static/[^"]*\.css' | head -1)
+          test -n "$css"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:3000$css")
+          echo "GET $css -> $code" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront static::/"
+          test "$code" = "200"
+          img=$(cd apps/storefront/public/media/instagram && ls | grep -E '\.(jpg|webp|png)$' | head -1)
+          code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:3000/media/instagram/$img")
+          echo "GET /media/instagram/$img -> $code" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront public::/"
+          test "$code" = "200"
+          code=$(curl -s -o admin.html -w '%{http_code}' -L http://localhost:3000/admin)
+          title=$(grep -o '<title>[^<]*</title>' admin.html | head -1)
+          echo "GET /admin -> $code $title" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront admin::/"
+          test "$code" = "200"
+          migrations=$(docker exec pg psql -U ci -d lopaworld -Atc "select string_agg(name, ',') from payload.payload_migrations")
+          tables=$(docker exec pg psql -U ci -d lopaworld -Atc "select count(*) from information_schema.tables where table_schema='payload'")
+          echo "Payload migrations applied in-process: $migrations ($tables tables)" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Storefront migrations::/"
+          test "$tables" -gt 0
+          docker exec storefront id -un | sed "s/^/::notice title=Storefront user::runs as /"
+
+      - name: Storefront logs
+        if: always()
+        run: |
+          docker logs storefront > storefront.log 2>&1 || true
+          tail -150 storefront.log
+          if [ "${{ job.status }}" != "success" ] && [ -s storefront.log ]; then
+            msg=$(tail -60 storefront.log | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Storefront container log (last 60 lines)::$msg"
+          fi
+
+  # Both images together on ONE shared PostgreSQL database, as in production: Medusa owns schema
+  # public and migrates first; Payload then creates and migrates schema "payload" in the same database.
+  stack:
+    needs: [medusa, storefront]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Medusa image (cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/medusa.Dockerfile
+          load: true
+          push: false
+          tags: lopaworld-medusa:ci
+          cache-from: type=gha,scope=medusa
+
+      - name: Build storefront image (cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/storefront.Dockerfile
+          load: true
+          push: false
+          tags: lopaworld-storefront:ci
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=http://localhost:3000
+          cache-from: type=gha,scope=storefront
+
+      - name: Boot Postgres 17, Redis 7, Medusa and storefront
+        run: |
+          db='postgres://ci:ci@pg:5432/lopaworld?sslmode=disable'
+          docker network create lw
+          docker run -d --name pg --network lw -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=lopaworld postgres:17-alpine
+          docker run -d --name redis --network lw redis:7-alpine
+          until docker exec pg pg_isready -U ci -d lopaworld >/dev/null 2>&1; do sleep 1; done
+          docker run -d --name medusa --network lw -p 9000:9000 \
+            -e DATABASE_URL="$db" -e REDIS_URL=redis://redis:6379 \
+            -e STORE_CORS=http://localhost:3000 -e ADMIN_CORS=http://localhost:9000 -e AUTH_CORS=http://localhost:3000,http://localhost:9000 \
+            -e JWT_SECRET=ci-only-not-a-deployment-secret -e COOKIE_SECRET=ci-only-not-a-deployment-secret \
+            lopaworld-medusa:ci
+          for i in $(seq 1 120); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9000/health)" = "200" ] && break
+            [ "$(docker inspect -f '{{.State.Running}}' medusa)" = "true" ] || { echo "medusa exited"; exit 1; }
+            sleep 2
+          done
+          docker run -d --name storefront --network lw -p 3000:3000 \
+            -e DATABASE_URL="$db" \
+            -e PAYLOAD_SECRET=ci-only-not-a-deployment-secret-0000 \
+            -e PREVIEW_SECRET=ci-only-not-a-deployment-secret-1111 \
+            -e MEDUSA_BACKEND_URL=http://medusa:9000 \
+            lopaworld-storefront:ci
+          for i in $(seq 1 60); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/health)" = "200" ] && exit 0
+            [ "$(docker inspect -f '{{.State.Running}}' storefront)" = "true" ] || { echo "storefront exited"; exit 1; }
+            sleep 2
+          done
+          echo "storefront did not become live"; exit 1
+
+      - name: Readiness and shared-database schemas
+        run: |
+          code=000
+          for i in $(seq 1 15); do
+            code=$(curl -s -o ready.json -w '%{http_code}' --max-time 10 http://localhost:3000/api/ready || true)
+            [ "$code" = "200" ] && break
+            sleep 2
+          done
+          echo "GET /api/ready (full stack) -> $code $(cat ready.json)" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Stack ready::/"
+          test "$code" = "200"
+          q() { docker exec pg psql -U ci -d lopaworld -Atc "$1"; }
+          echo "Shared database lopaworld: public tables $(q "select count(*) from information_schema.tables where table_schema='public'"), payload tables $(q "select count(*) from information_schema.tables where table_schema='payload'"), payload migrations $(q "select string_agg(name, ',') from payload.payload_migrations")" \
+            | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Stack schemas::/"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:3000/admin)
+          echo "GET /admin -> $code; GET :9000/app -> $(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:9000/app)" | tee -a "$GITHUB_STEP_SUMMARY" | sed "s/^/::notice title=Stack admins::/"
+          test "$code" = "200"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Playwright smoke tests against the running stack
+        env:
+          STACK_BASE_URL: http://localhost:3000
+          STACK_MEDUSA_URL: http://localhost:9000
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:e2e:stack
+
+      - name: Stack logs
+        if: always()
+        run: |
+          for c in medusa storefront; do
+            docker logs "$c" > "$c.log" 2>&1 || true
+            echo "== $c"; tail -80 "$c.log"
+            if [ "${{ job.status }}" != "success" ] && [ -s "$c.log" ]; then
+              msg=$(tail -40 "$c.log" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+              echo "::error title=Stack $c log (last 40 lines)::$msg"
+            fi
+          done

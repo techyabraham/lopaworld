@@ -12,6 +12,7 @@ import { AnnouncementBar } from './src/globals/AnnouncementBar';
 import { HomepageLayout } from './src/globals/HomepageLayout';
 import { Navigation } from './src/globals/Navigation';
 import { SEODefaults } from './src/globals/SEODefaults';
+import { migrations } from './src/migrations';
 
 const payloadSecret = process.env.PAYLOAD_SECRET;
 if (!payloadSecret) throw new Error('Missing required environment variable: PAYLOAD_SECRET');
@@ -29,6 +30,8 @@ export default buildConfig({
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL ?? '' },
     schemaName: 'payload',
+    // Applied in-process when Payload connects with NODE_ENV=production; replaces `payload migrate` in the container.
+    prodMigrations: migrations,
   }),
   typescript: { outputFile: './src/payload-types.ts' },
 });

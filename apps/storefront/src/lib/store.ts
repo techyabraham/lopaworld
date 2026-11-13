@@ -12,12 +12,15 @@ export type StoreVariant = {
   inventory_quantity?: number;
   options?: StoreVariantOption[];
   calculated_price?: { calculated_amount?: number; original_amount?: number; currency_code?: string } | null;
+  metadata?: Record<string, unknown> | null;
 };
 export type StoreProduct = {
   id: string;
   title: string;
+  subtitle?: string | null;
   handle: string;
   description?: string | null;
+  created_at?: string | null;
   thumbnail?: string | null;
   images?: StoreImage[];
   options?: StoreOption[];
@@ -29,11 +32,20 @@ export type StoreProduct = {
 export type StoreCategory = { id: string; name: string; handle: string; parent_category?: { handle?: string } | null };
 export type StoreRegion = { id: string; currency_code: string; name: string; countries?: Array<{ iso_2: string }> };
 
-const backend = () => (process.env.MEDUSA_BACKEND_URL ?? 'http://localhost:9000').replace(/\/$/, '');
+export const medusaBackendUrl = () => (process.env.MEDUSA_BACKEND_URL ?? 'http://localhost:9000').replace(/\/$/, '');
+const backend = medusaBackendUrl;
 const publishableKey = () => {
   const value = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
   return value && !value.startsWith('replace-') ? value : undefined;
 };
+
+export class MedusaStoreError extends Error {
+  readonly status: number;
+  constructor(status: number) {
+    super(`Medusa Store API returned ${status}.`);
+    this.status = status;
+  }
+}
 
 export async function medusaFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const key = publishableKey();
@@ -47,26 +59,39 @@ export async function medusaFetch<T>(path: string, init: RequestInit = {}): Prom
       ...init.headers,
     },
   });
-  if (!response.ok) throw new Error(`Medusa Store API returned ${response.status}.`);
+  if (!response.ok) throw new MedusaStoreError(response.status);
   return response.json() as Promise<T>;
 }
 
+const regionTtlMs = 5 * 60 * 1000;
+let cachedRegion: { region: StoreRegion; expiresAt: number } | undefined;
 let regionRequest: Promise<StoreRegion | null> | undefined;
+
+async function findStoreRegion() {
+  const { regions = [] } = await medusaFetch<{ regions: StoreRegion[] }>('/store/regions');
+  if (process.env.MEDUSA_REGION_ID) return regions.find(({ id }) => id === process.env.MEDUSA_REGION_ID) ?? null;
+  return regions.find(({ currency_code }) => currency_code.toLowerCase() === 'ngn') ?? null;
+}
+
+/**
+ * Only a found region is cached, for `regionTtlMs`. A missing region or a failed request is
+ * retried on the next call; a failed refresh keeps serving the last region Medusa returned.
+ */
 export function getStoreRegion(): Promise<StoreRegion | null> {
+  if (cachedRegion && cachedRegion.expiresAt > Date.now()) return Promise.resolve(cachedRegion.region);
   if (!regionRequest) {
-    regionRequest = (async () => {
-      if (process.env.MEDUSA_REGION_ID) {
-        const { regions = [] } = await medusaFetch<{ regions: StoreRegion[] }>('/store/regions');
-        return regions.find(({ id }) => id === process.env.MEDUSA_REGION_ID) ?? null;
-      }
-      const { regions = [] } = await medusaFetch<{ regions: StoreRegion[] }>('/store/regions');
-      return regions.find(({ currency_code }) => currency_code.toLowerCase() === 'ngn') ?? null;
-    })().catch(() => null);
+    regionRequest = findStoreRegion()
+      .then((region) => {
+        cachedRegion = region ? { region, expiresAt: Date.now() + regionTtlMs } : undefined;
+        return region;
+      })
+      .catch(() => cachedRegion?.region ?? null)
+      .finally(() => { regionRequest = undefined; });
   }
   return regionRequest;
 }
 
-const productFields = '*variants.calculated_price,*variants.options,+variants.inventory_quantity,*images,*categories,*type,metadata';
+const productFields = '*variants.calculated_price,*variants.options,+variants.inventory_quantity,+variants.metadata,*images,*categories,*type,metadata,+created_at,+subtitle';
 
 export async function listStoreProducts(input: {
   query?: string;
@@ -111,10 +136,7 @@ export function productLabel(product: StoreProduct): string | null {
   return typeof label === 'string' ? label : null;
 }
 
-export function variantIsAvailable(variant: StoreVariant, madeToOrder = false): boolean {
-  if (madeToOrder || variant.allow_backorder || variant.manage_inventory === false) return true;
-  return (variant.inventory_quantity ?? 0) > 0;
-}
+export { variantIsAvailable } from './product-options';
 
 export function productPrice(product: StoreProduct): number | null {
   const amounts = (product.variants ?? []).map(({ calculated_price }) => calculated_price?.calculated_amount).filter((amount): amount is number => typeof amount === 'number' && Number.isFinite(amount));

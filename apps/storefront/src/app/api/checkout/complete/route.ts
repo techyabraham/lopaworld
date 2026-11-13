@@ -1,10 +1,10 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { cartCookie } from '../../../../lib/cart';
+import { orderCookie } from '../../../../lib/order-cookie';
 import { medusaFetch } from '../../../../lib/store';
 import { isSameOriginRequest } from '../../../../lib/request-security';
 
-const orderCookie = 'lw_order_id';
 type CompletedOrder = { id: string };
 
 async function findCompletedOrder(cartId: string) {
@@ -37,10 +37,13 @@ async function completeResponse(orderId: string) {
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) return NextResponse.json({ error: 'This request could not be verified.' }, { status: 403 });
   const cookieJar = await cookies();
-  const savedOrderId = cookieJar.get(orderCookie)?.value;
-  if (savedOrderId) return NextResponse.json({ complete: true, orderId: savedOrderId }, { headers: { 'Cache-Control': 'no-store' } });
   const cartId = cookieJar.get(cartCookie)?.value;
-  if (!cartId) return NextResponse.json({ complete: false, error: 'No checkout is awaiting confirmation.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
+  if (!cartId) {
+    // No cart is awaiting completion, e.g. the return page was reloaded after success.
+    const savedOrderId = cookieJar.get(orderCookie)?.value;
+    if (savedOrderId) return NextResponse.json({ complete: true, orderId: savedOrderId }, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ complete: false, error: 'No checkout is awaiting confirmation.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
+  }
 
   const completedOrder = await findCompletedOrder(cartId);
   if (completedOrder) return completeResponse(completedOrder);

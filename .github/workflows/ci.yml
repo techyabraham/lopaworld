@@ -3,12 +3,44 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, master]
+    branches: [main, master, 'phase/**']
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    # CI-only placeholders. The job env wins over .env (dotenv does not override existing variables).
+    # With the postgres service reachable, `next build` (NODE_ENV=production) applies the Payload
+    # migrations to this throwaway database, which also exercises them on every run.
     env:
       DATABASE_URL: postgres://ci:ci@localhost:5432/ci
       REDIS_URL: redis://localhost:6379
@@ -18,25 +50,75 @@ jobs:
       JWT_SECRET: ci-only-not-a-deployment-secret
       COOKIE_SECRET: ci-only-not-a-deployment-secret
       PAYLOAD_SECRET: ci-only-not-a-deployment-secret
+      PREVIEW_SECRET: ci-only-not-a-deployment-preview-secret
+      # Not a credential: lets the build talk to the fictional Store API in e2e/support/mock-medusa.mjs
+      # (inlined at build time; a "replace-…" placeholder would make the catalogue "unavailable").
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_ci_mock_not_a_key
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11.19.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .node-version
           cache: pnpm
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - run: cp .env.example .env
       - run: pnpm install --frozen-lockfile
-      - run: python -m pip install --disable-pip-version-check fonttools brotli
-      - run: python packages/ui/scripts/check-font-glyphs.py
+      - name: Font glyph coverage
+        run: |
+          python -m pip install --disable-pip-version-check fonttools brotli
+          python packages/ui/scripts/check-font-glyphs.py
       - run: pnpm typecheck
       - run: pnpm lint
+      - name: Unit tests (Vitest)
+        run: pnpm test
       - run: pnpm tokens:check
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
-      - run: pnpm build
+      - name: Dependency audit gate (high/critical, expiring allow-list)
+        run: pnpm audit:gate
+      # `next dev` lets Payload push its schema directly; it must never share a database with the
+      # migration-based build below, or Payload stops at an interactive data-loss prompt. Payload
+      # creates this separate database on first connect.
+      - name: Playwright design-system tests
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci_dev
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:e2e
+      - name: Build all workspaces
+        run: |
+          set -o pipefail
+          pnpm build 2>&1 | tee build.log
+      # §7 budgets (ADR-015): applied throttling gates score, LCP and CLS; simulated gates TBT.
+      # Serves the standalone build against the migrated CI database and the mock catalogue.
+      - name: Lighthouse budgets
+        run: pnpm test:lhci
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          # upload-artifact skips dot-directories unless asked.
+          include-hidden-files: true
+          if-no-files-found: ignore
+      - name: Surface build error
+        if: failure()
+        run: |
+          [ -s build.log ] || exit 0
+          grep -v -E '^\s*$' build.log | tail -60 > tail.log
+          msg=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' tail.log | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=pnpm build (last 60 lines)::$msg"
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan full git history with gitleaks
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.18.4 \
+            detect --source /repo --redact --verbose --exit-code 1

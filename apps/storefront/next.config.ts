@@ -1,9 +1,17 @@
+import { fileURLToPath } from 'node:url';
 import { withPayload } from '@payloadcms/next/withPayload';
 import type { NextConfig } from 'next';
 import redirects from './redirects.json';
 
 const nextConfig: NextConfig = {
+  // Self-contained server for the Docker image; trace from the monorepo root because pnpm keeps
+  // dependencies (and workspace packages) outside apps/storefront.
+  output: 'standalone',
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   transpilePackages: ['@lopaworld/ui', '@lopaworld/types'],
+  // ADR-015: inline the CSS so first paint does not wait for a stylesheet round trip (LCP budget).
+  // Experimental in Next 16; costs ~23 KB gzip per HTML response and separate CSS caching.
+  experimental: { inlineCss: true },
   async redirects() {
     return redirects;
   },

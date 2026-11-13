@@ -23,7 +23,10 @@ The first Medusa boot performs its application initialization/migrations. Create
 - `pnpm dev:storefront` and `pnpm dev:medusa` run one application independently.
 - `pnpm infra:logs` tails local dependency logs.
 - `pnpm infra:down` stops the dependency containers. Named volumes retain local data.
+- If another PostgreSQL already listens on 5432 (on the original workstation, a native Windows PostgreSQL 18 service does), set `POSTGRES_HOST_PORT=5434` in `.env` and use port 5434 in `DATABASE_URL`. Otherwise `pnpm infra:up` cannot bind the port, and connections reach the other server (the source of the earlier `28P01` errors).
+- `pnpm db:verify:up` starts a disposable, empty PostgreSQL 17 on `127.0.0.1:5433` (Compose project `lopaworld-verify`, tmpfs, no volume) for proving migrations; `pnpm db:verify:down` discards it. Example: `DATABASE_URL=postgres://verify:verify@127.0.0.1:5433/lopaworld_verify pnpm payload migrate`.
 - `pnpm typecheck`, `pnpm lint`, and `pnpm build` run workspace quality checks.
+- `pnpm test` runs the Vitest unit tests (storefront: `apps/storefront/src/**/*.test.ts`).
 - `pnpm tokens:check` verifies all seven provisional accent themes against the WCAG AA contrast threshold.
 - `pnpm test:e2e` runs Playwright and axe checks for `/dev/type` and `/dev/ui`; the galleries return 404 in production.
 - `python packages/ui/scripts/check-font-glyphs.py` verifies the variable font axes and that Noto Serif covers sample glyphs missing from Bodoni Moda and DM Sans.
@@ -67,3 +70,14 @@ See `docs/LAUNCH-PLAN.md` for staged deployment, DNS cutover, smoke-test, rollba
 ## Operations
 
 Sentry, uptime checks, structured logging, alerting and deployment procedures are not configured yet. Add provider-specific commands and recovery steps when infrastructure is selected.
+
+## Production images
+
+- `docker/medusa.Dockerfile` builds the Medusa image: workspace packages → `medusa build` → `pnpm deploy --prod --legacy /app` → packed `@lopaworld/*` swapped in → `.medusa/server` overlaid. The build fails if a workspace package would load TypeScript at runtime or if any link points outside `/app`.
+- `.github/workflows/images.yml` builds it on clean Linux on every push to `phase/**` and on PRs, then boots it against fresh Postgres 17 and Redis 7 and checks `/health`, `/app` and migrations. Measurements appear as notice annotations on the run; failures publish the build or container log tail as an error annotation.
+- New Medusa admin or plugin dependencies may need declaring in `apps/medusa/package.json` (dev dependencies) because pnpm's strict layout does not expose undeclared or optional peer packages to the admin build.
+- `docker/storefront.Dockerfile` builds the storefront from Next's standalone output (`output: 'standalone'`, traced from the repo root) and runs `node server.js` in `/app/apps/storefront`. `public/` and `.next/static` are copied beside it. Pass `NEXT_PUBLIC_*` values as build args; they are baked into the client bundle. Never give the build a reachable `DATABASE_URL`: `next build` runs with `NODE_ENV=production`, so Payload would apply migrations during the build.
+- To test a standalone build locally: build, copy `public` and `.next/static` into `.next/standalone/apps/storefront/`, then run `node server.js` there with `NODE_ENV=production` and a `DATABASE_URL` (e.g. the `db:verify` instance).
+- Keep the database used by `pnpm dev` (where Payload pushes schema changes directly) separate from any database that receives migrations (`pnpm payload migrate`, `prodMigrations`, `next build` against a reachable database). Payload detects a dev-pushed database and stops migrations at an interactive data-loss prompt; in CI that hangs the build. CI gives the dev-server tests their own database (`ci_dev`).
+- **Workstation status (5 November 2026):** `.env` uses `POSTGRES_HOST_PORT=5434` and `DATABASE_URL` on port 5434. `docker compose up -d postgres redis` runs Postgres 17 and Redis 7 (volumes `lopaworld_postgres_data`, `lopaworld_redis_data`). This is a **dev-push** database: never run `pnpm payload migrate` against it.
+- **MinIO is currently broken in `docker-compose.yml`:** `minio/minio:latest` no longer pulls from Docker Hub (`pull access denied … repository does not exist`), so a plain `pnpm infra:up` fails. Use `docker compose up -d postgres redis` until Phase 1.2 replaces or pins the S3-compatible local service. Nothing in the app uses MinIO yet.

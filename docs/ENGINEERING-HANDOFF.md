@@ -23,9 +23,9 @@ The implementation includes the storefront route structure, CMS schemas and home
 
 ### Current blockers and limits
 
-- **Local Payload database connection is broken.** A connection attempt to the local PostgreSQL service was rejected with PostgreSQL `28P01` (password authentication failure). The storefront can return HTTP 200, but its homepage displays “Homepage content is temporarily unavailable.” No Payload baseline migration exists; `apps/storefront/src/migrations` currently contains only its README.
-- **Next.js security upgrade is required.** The lockfile-resolved Next.js 16.4.0 displayed a security warning. Its production build stopped with a security-fatal upgrade notice. Development mode continued after displaying the notice, so local preview is not evidence that production builds are healthy. Resolve this before deployment; coordinate any upgrade across `pnpm-lock.yaml`, package versions, and CI.
-- **Medusa image build has not been verified on Linux.** A prior build on the Windows workspace failed in the installed dependency tree (`emittery` could not find `maps.js`). A clean Linux build in Coolify is still required; treat this as an unresolved compatibility issue, not as a proven Coolify failure.
+- **Local Payload database connection is broken.** A connection attempt to the local PostgreSQL service was rejected with PostgreSQL `28P01` (password authentication failure). Cause found on 5 November 2026: port 5432 is held by a native Windows PostgreSQL 18 service, not the Compose Postgres, and Docker Desktop is not installed (see the database section). The storefront can return HTTP 200, but its homepage displays “Homepage content is temporarily unavailable.” No Payload baseline migration exists; `apps/storefront/src/migrations` currently contains only its README.
+- **Next.js security upgrade done on `phase/0-stabilise` (not yet merged).** Next.js 16.4.0 stopped production builds with `SecurityFatalError`. The branch now resolves Next.js 16.4.5 and Payload 3.92.1, and `next build` completes locally (Windows, 5 November 2026). `pnpm audit --prod` still reports 7 high findings (Payload's `happy-dom`, and pins inside Medusa 2.21.2); they are recorded with plans in `docs/evidence/phase-0.md`. See ADR-012 for the release-age and override policy.
+- **Medusa image builds and boots on clean Linux (branch `phase/0-stabilise`, GitHub Actions `Images` workflow, 5 November 2026).** The `emittery` `maps.js` failure was a broken npm publish (0.13.0) and is fixed by 0.13.1. `docker/medusa.Dockerfile` now runs `medusa build`, a production-only `pnpm deploy`, and ships workspace packages as compiled `dist`. The image reported 173 MB and booted against fresh Postgres 17 and Redis 7: `/health` 200, admin 200, 147 tables migrated. Images are built and tested in CI only; nothing is pushed to a registry yet. See `docs/evidence/phase-0.md` (0.8).
 - **Coolify deployment files are preparation only.** `docker/storefront.Dockerfile`, `docker/medusa.Dockerfile`, and `coolify.compose.yaml` exist, but there is no configured Contabo VPS, Coolify project, DNS cutover, staging acceptance, production secret store, backup destination, or successful production deployment.
 - **The Compose stack runs one Medusa service.** It does not yet implement the server/worker separation described as the intended production architecture. Review Medusa worker mode, scaling, and queue behavior before treating this Compose deployment as production-ready.
 - **No production Payload migration, CMS content, approved Medusa catalog, region, shipping options, payment onboarding, transactional email, production media storage, monitoring, or tested backups are present.** See [OPEN_ITEMS.md](OPEN_ITEMS.md).
@@ -73,7 +73,7 @@ The diagram represents intended and current boundaries, with dotted integrations
 | `seed` | Synthetic local demo label data. Never approved production copy; no automatic import. |
 | `docker-compose.yml` | Local PostgreSQL, Redis, and MinIO services with named volumes. |
 | `coolify.compose.yaml` | Draft Coolify production composition: PostgreSQL, Redis, Medusa, storefront and named persistent volumes. |
-| `docker/*.Dockerfile` | Production image build definitions for storefront and Medusa. Validate them on clean Linux before release. |
+| `docker/*.Dockerfile` | Multi-stage production images on `node:24.15.0-bookworm-slim`, running as `node`. Storefront: Next standalone `server.js` (109 MB). Medusa: `.medusa/server` + production-only `pnpm deploy` (173 MB). Built and booted on clean Linux by `.github/workflows/images.yml`; not yet pushed to a registry. `docker/compose.verify.yml` is a disposable Postgres 17 for migration checks. |
 | `docs/` | Architecture, decisions, runbooks, unresolved owner inputs, launch QA, deployment guide, and this handoff. |
 | `e2e/`, `playwright.config.ts` | Playwright/axe checks for developer design galleries. Full storefront commerce E2E coverage is still open work. |
 | `.github/workflows/ci.yml` | GitHub Actions quality workflow for install, font checks, typecheck, lint, token contrast, Playwright/axe, and build. A configured workflow is not proof of a recent green run. |
@@ -91,6 +91,7 @@ The diagram represents intended and current boundaries, with dotted integrations
 
 - Storefront routes proxy cart, checkout, shipping, payment, preview, and order flows. State-changing browser requests use same-origin validation in `src/lib/request-security.ts`.
 - Medusa guest lookup: `POST /store/orders/lookup`; storefront proxy: `POST /api/track-order`.
+- Health: storefront `GET /api/health` (liveness, no dependencies; used by the Compose healthcheck) and `GET /api/ready` (Payload database + Medusa `/health`, 2 s timeouts, 503 naming the failed check); Medusa `GET /health`. CI's `stack` job boots both images on one shared Postgres and expects `/api/ready` 200.
 - Paystack webhook path documented for provider ID `paystack`: `/hooks/payment/paystack_paystack`. Verify actual provider registration and reachability in staging.
 
 ## Features already implemented
@@ -98,9 +99,14 @@ The diagram represents intended and current boundaries, with dotted integrations
 ### Storefront and design system
 
 - Mobile-first Next.js App Router structure, common site header/footer, label destinations, product listing/detail, cart, checkout, wishlist, tracking, stories, content pages, metadata, and feeds.
-- Self-hosted Bodoni Moda, DM Sans, and Noto Serif. Noto Serif is a fallback for unsupported glyphs; it is not the main body font. License files are kept beside source fonts in `packages/ui/fonts`.
-- Shared CSS tokens are in `packages/ui/tokens/tokens.css`; implementation styles are in `packages/ui/styles/components.css` and storefront CSS.
-- Label accent tokens are provisional until owner approval. Contrast script provides a check for those tokens; passing it does not approve the brand palette.
+- **Entrance design system (Phase 2, ADR-016).** Reference: `docs/design/entrance/*.dc.html` and `docs/design/APPLY-ENTRANCE-DESIGN.md`.
+  - **Fonts:** self-hosted Archivo variable (interface and the condensed `.lw-display`), Instrument Serif italic (`.lw-voice`) and regular (editorial titles), Noto Serif as a glyph fallback for ₦ and Yoruba dot-below letters only. Loaded with `next/font/local` in `apps/storefront/src/app/(site)/layout.tsx`; two files preloaded (141 KB). Sources, OFL licences and the subsetting recipe: `packages/ui/fonts/README.md`; glyph check: `packages/ui/scripts/check-font-glyphs.py`.
+  - **Tokens:** `packages/ui/tokens/tokens.css`. Ink on paper, hairline rules, `--signal` (fills only) vs `--signal-text` (red text), and per-label `--label-tone/-photo/-fg` set by `[data-label]`. Label tones are canvas values pending D2; `pnpm tokens:check` proves contrast, not approval.
+  - **Components:** `packages/ui/src/index.tsx` (one `'use client'` module; splitting it is ADR-018) and `packages/ui/styles/components.css`; storefront layout CSS in `apps/storefront/src/app/(site)/globals.css`, sectioned by brief § (Shell §5.1, Listings §5.4, Label page §5.3, PDP §5.5, §5.6 pages, Data Saver, flagged components).
+  - **New storefront pieces:** `components/storefront/EntranceHero.tsx` (client island; label index with roving tabindex, `lib/hero-state.ts` for the key reducer, headline split and Data Saver test), `components/site/MobileTabBar.tsx` (below 1024 px; hidden while a text field has focus), `components/cart/use-bag-count.ts` (one `/api/cart` request shared by header and tab bar, announced via `aria-live`), `lib/product-badges.ts` (one computed tile badge: Sold out > Only N left > Made to order > New), `lib/product-colours.ts` (swatches only from `swatch_hex`), `lib/product-options.ts` (PDP option, stock and CTA logic), `lib/add-all.ts` ("Complete the Entrance"), `components/flagged/*` (MTM and group orders behind `NEXT_PUBLIC_FEATURE_*`, read via `lib/env.ts`), `components/site/PrivacyChoicesButton.tsx`.
+  - **Pre-paint script** (root layout): marks `html[data-consent-answered]` (the consent prompt is server-rendered and hidden for visitors who already chose) and `html[data-save-data]` (tiles skip their second image).
+  - **CSS is inlined** into each HTML response (`experimental.inlineCss`, ADR-015).
+  - `/dev/ui` and `/dev/type` show every component and state (404 in production).
 
 ### Payload CMS
 
@@ -118,10 +124,10 @@ Uploaded CMS media has required alternative text and a `rightsConfirmed` marker.
 
 ### Cart, checkout, and Paystack
 
-- Cart creation requires a Medusa NGN region. Cart and completed-order references use HTTP-only, SameSite=Lax cookies; cookies are Secure in production.
+- Cart creation requires a Medusa NGN region. The storefront caches a found region for 5 minutes and retries on the next request if Medusa was unreachable or had no matching region (audit B2, fixed on `phase/0-stabilise`). Bag, checkout and add-to-bag reads validate the cart cookie: a cart Medusa no longer has, an already completed cart, or one in another region clears the cookie, and add-to-bag starts a new cart; other Medusa errors keep the cookie (audit B3). Cart and completed-order references use HTTP-only, SameSite=Lax cookies; cookies are Secure in production.
 - Checkout validates contact/address fields, requires Nigerian country code `NG`, obtains available shipping options from Medusa, and adds the chosen option before retrieving the final total.
 - Paystack is optional and configuration-gated. It only accepts NGN, initializes a hosted Paystack checkout server-side, verifies the provider transaction against stored reference/amount/currency before authorization, validates webhook signatures, and checks the transaction with Paystack before processing supported events.
-- Completion trusts Medusa's provider verification, not callback query parameters. Return flows can retry lookup for a completed order. Refund behavior exists in the provider, but must not be used without approved live/test credentials and an owner-approved test plan.
+- Completion trusts Medusa's provider verification, not callback query parameters. Return flows can retry lookup for a completed order. The completion route always completes the current cart first; the `lw_order_id` cookie only renders the confirmation page (or answers a reload when no cart is pending) and is cleared whenever a new checkout starts (audit B1, fixed on `phase/0-stabilise` with unit tests). Refund behavior exists in the provider, but must not be used without approved live/test credentials and an owner-approved test plan.
 - No approved Paystack account/channels, delivery table, courier, production callback, or end-to-end checkout sign-off is recorded.
 
 ### Customer engagement, SEO, analytics
@@ -181,7 +187,8 @@ Use `.env.example` as the exact local variable inventory. The roles are:
 | `MEDUSA_BACKEND_URL` | Storefront server | Internal URL in Compose; local default is the developer's Medusa endpoint. |
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | Storefront build and runtime | Public key, scoped to the storefront sales channel. Required for catalog/cart calls; it is not a secret. Production changes require rebuilding the image. |
 | `MEDUSA_REGION_ID` | Storefront server | Optional; if omitted, storefront searches for an NGN region. |
-| `NEXT_PUBLIC_SITE_URL` | Storefront build/runtime metadata | Canonical HTTPS origin. Required in Coolify Compose; build-time value means changing it requires image rebuild. |
+| `NEXT_PUBLIC_SITE_URL` | Storefront build/runtime metadata, same-origin check | Canonical HTTPS origin. Required in Coolify Compose; build-time value means changing it requires image rebuild. Cart and checkout writes accept only this origin (audit N11). |
+| `TRUST_PROXY_HEADERS` | Storefront server (runtime) | Optional, default off. `true` also accepts the `X-Forwarded-Host`/`X-Forwarded-Proto` origin for cart and checkout writes. Set only behind a proxy that overwrites client-supplied forwarded headers. |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Storefront client | Optional; only used after analytics consent. |
 | `PAYSTACK_SECRET_KEY`, `PAYSTACK_CALLBACK_URL`, `PAYSTACK_CHANNELS` | Medusa payment module | All required to register provider. Do not enable until account, channels, legal entity, callback and test sign-off are confirmed. |
 | `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET` | Intended local object store | Not a completed app media-storage integration. MinIO is only the local service at present. |
@@ -193,21 +200,20 @@ Never paste real secrets into issues, docs, shell transcripts, or the client bun
 
 Payload uses `@payloadcms/db-postgres` and the `payload` schema. Local development and production both need a reachable database. A brand-new production database cannot rely on Payload dev push/sync; it needs committed migrations.
 
-Current state: only `apps/storefront/src/migrations/README.md` exists. Initial migration generation is blocked because local `.env` credentials fail authentication (`28P01`). The Payload CLI also needs a compatibility fix in this workspace: the direct package executable was not resolved by pnpm on Windows; invoking the package entry point under Node 24 failed with `ERR_REQUIRE_ASYNC_MODULE` while loading the Lexical editor; the Node 22 fallback path did not load the extensionless TypeScript imports without an additional supported loader. These happened before a migration was written. No database data was changed. Reproduce and solve both the database connection and CLI/config loading problems before generating anything. Do not generate against production and do not erase the existing local database volume to bypass authentication.
+Current state (branch `phase/0-stabilise`, 5 November 2026):
 
-When unblocked:
+- **Baseline migration exists and is proven on a fresh database.** `apps/storefront/src/migrations/20261105_144453_initial_schema.ts` (+ `.json` snapshot, `index.ts`) was generated with Payload 3.92.1 and reviewed: 55 tables and 24 enums, all in schema `payload`, nothing in `public`. On a disposable PostgreSQL 17.11 it applied via the CLI, rolled back and re-applied, and was applied automatically by a `NODE_ENV=production` storefront on first request; Payload admin then loaded (`docs/evidence/phase-0.md`). One reviewed addition: `CREATE SCHEMA IF NOT EXISTS "payload"`, because Payload only creates its schema when it creates the whole database, and production shares Medusa's existing database.
+- **Production applies migrations in-process.** `payload.config.ts` passes `prodMigrations: migrations`; the adapter runs them when Payload first connects with `NODE_ENV=production`. The storefront Dockerfile no longer runs `payload migrate` (audit B8).
+- **Generating migrations.** From the repo root: `pnpm payload migrate:create <name>` (loads `.env`, runs the CLI with `--use-swc`). `migrate:create` does not connect to the database. The default `tsx` loader fails in this workspace: `undici` throws `Illegal constructor` when combined with Payload's Lexical resolve hook. `--disable-transpile` cannot resolve the config's extensionless imports. The storefront package now declares `"type": "module"`, which the swc path requires.
+- **Why local `.env` credentials failed (`28P01`).** A native Windows PostgreSQL 18 service (`postgresql-x64-18`) listens on port 5432, and Docker Desktop was not installed at the time (installed 5 November 2026 after enabling firmware virtualisation). The Compose Postgres was never the server answering; set `POSTGRES_HOST_PORT` (RUNBOOK) to run it beside the native service. The native service was not modified.
 
-1. Ensure the Payload config and collections represent the intended schema.
-2. Use a working isolated development PostgreSQL database with a valid connection in the local environment.
-3. Run Payload's `migrate:create` command from `apps/storefront` with the root `.env` loaded, using the supported CLI/config loader for the pinned Node and Payload versions; inspect generated SQL/TypeScript carefully.
-4. Apply the generated migration to the development database and confirm it completes.
-5. Commit the migration files under `apps/storefront/src/migrations` and deploy those files. Production starts with `payload migrate`; the Dockerfile runs this before starting Next.js.
-6. Back up production before later schema migrations; never edit production schema manually as a substitute.
+Still to do: prove it against the Medusa-shared database in the full local stack (tasks 0.9–0.10). Back up production before later schema migrations; never edit production schema manually as a substitute.
 
-See [Payload migration docs](https://payloadcms.com/docs/database/migrations) and the [deployment guide](COOLIFY-CONTABO.md). Also resolve the CLI's current Node/config import behavior against the supported Payload/Node versions before relying on the generation command.
+See [Payload migration docs](https://payloadcms.com/docs/database/migrations) and the [deployment guide](COOLIFY-CONTABO.md).
 
 ## Security and privacy model
 
+- Storefront API routes return short generic error messages; internal detail is logged server-side (`lib/server-log.ts`, currently JSON lines on stderr) and never sent to the browser (audit B12).
 - Same-origin checks guard state-changing cart/checkout APIs. Do not weaken them to make a cross-origin test pass.
 - Payment totals and authorization are obtained/verified server-side through Medusa and Paystack; browser-supplied amount or return URL is not payment proof.
 - Guest lookup requires order number plus checkout email and exposes a narrow status record. Add shared rate limiting before meaningful public traffic.
@@ -238,7 +244,9 @@ The visual identity proposal is exploratory, not approved production art directi
 
 ## Checks, CI, and release evidence
 
-GitHub Actions is configured to run frozen install, font-glyph check, typecheck, lint, token contrast, Playwright/axe developer-gallery tests, and production build on PRs, `main`/`master` pushes, and manual dispatch. Confirm the actual Actions run is green before release. The local E2E suite currently covers `/dev/type` and `/dev/ui`; do not infer full checkout coverage from it.
+GitHub Actions runs frozen install, font-glyph check, typecheck, lint, unit tests, token contrast, the dependency audit gate, Playwright/axe end-to-end tests, the production build, and `pnpm test:lhci` (Lighthouse CI: applied throttling gates performance ≥ 90, LCP ≤ 2.0 s and CLS ≤ 0.05; simulated throttling gates TBT ≤ 200 ms; reports uploaded as an artifact) on PRs, `main`/`master`/`phase/**` pushes, and manual dispatch. Confirm the actual Actions run is green before release.
+
+The end-to-end suite (`pnpm test:e2e`) runs `next dev` against `e2e/support/mock-medusa.mjs`, a **fictional** Medusa Store API (16 test products, one flat delivery option, a Paystack stand-in whose `checkout.paystack.com` redirect is intercepted). It covers the design-system galleries, the PDP, bag and checkout pages, the checkout happy path up to the confirmation, the consent prompt, the hero, tab bar, label rail and Data Saver, with axe on each. It proves the storefront against the Store API contract it expects; it does not prove a real Medusa, Paystack or courier integration. The test base URL is `localhost` because of the same-origin defect in `OPEN_ITEMS.md`.
 
 Run only checks appropriate to the change and report the exact command, environment, and result. A successful typecheck is not a successful production image build. A page returning HTTP 200 is not proof that Payload, Medusa, payment, or checkout is healthy. Staging launch evidence is required by the [Phase 7 checklist](PHASE-7-QA-CHECKLIST.md).
 

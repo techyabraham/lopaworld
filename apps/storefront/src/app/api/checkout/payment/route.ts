@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { cartCookie } from '../../../../lib/cart';
 import type { StoreCart } from '../../../../lib/cart-types';
+import { clearCompletedOrderCookie } from '../../../../lib/order-cookie';
 import { medusaFetch } from '../../../../lib/store';
 import { isSameOriginRequest } from '../../../../lib/request-security';
 
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
   const cartId = (await cookies()).get(cartCookie)?.value;
   if (!cartId) return NextResponse.json({ error: 'Your bag is empty.' }, { status: 404 });
 
+  await clearCompletedOrderCookie();
   try {
     const { shipping_options = [] } = await medusaFetch<{ shipping_options: ShippingOption[] }>(`/store/shipping-options?cart_id=${encodeURIComponent(cartId)}`);
     const option = shipping_options.find(({ id }) => id === body.shippingOptionId);

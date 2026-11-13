@@ -2,25 +2,35 @@
   "name": "lopaworld",
   "private": true,
   "packageManager": "pnpm@11.19.0",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "dotenv -e .env -- concurrently -k -n storefront,medusa -c blue,magenta \"pnpm --filter @lopaworld/storefront dev\" \"pnpm --filter @lopaworld/medusa dev\"",
     "dev:storefront": "dotenv -e .env -- pnpm --filter @lopaworld/storefront dev",
     "dev:medusa": "dotenv -e .env -- pnpm --filter @lopaworld/medusa dev",
+    "payload": "dotenv -e .env -- pnpm --filter @lopaworld/storefront payload",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
     "tokens:check": "node packages/ui/scripts/check-contrast.mjs",
     "test:e2e": "playwright test",
+    "test:e2e:stack": "playwright test -c playwright.stack.config.ts",
+    "test:lhci": "lhci autorun --config=lighthouse/lighthouserc.applied.cjs && lhci autorun --config=lighthouse/lighthouserc.simulated.cjs",
+    "audit:gate": "node scripts/audit-gate.mjs",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs -f"
+    "infra:logs": "docker compose logs -f",
+    "db:verify:up": "docker compose -f docker/compose.verify.yml up -d --wait",
+    "db:verify:down": "docker compose -f docker/compose.verify.yml down"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
+    "@lhci/cli": "0.15.1",
+    "@playwright/test": "^1.55.0",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
-    "@playwright/test": "^1.55.0",
     "typescript": "^5.9.3"
   }
 }

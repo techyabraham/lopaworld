@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { LABELS } from '@lopaworld/types';
-import { FilterChip } from '@lopaworld/ui';
 import { FilterSheet, type CatalogFilters } from './FilterSheet';
+import { SortSelect } from './SortSelect';
 import { ProductGrid } from './ProductGrid';
 import type { StoreCategory, StoreProduct } from '../../lib/store';
 import { productLabel } from '../../lib/store';
@@ -11,7 +12,8 @@ const labelOptions = LABELS.map(({ slug, name }) => ({ slug, name }));
 const pageSize = 24;
 
 export function CatalogListing({
-  title, eyebrow = 'Shop', pathname, filters, products, count, categories, error, lockedLabel, lockedCategory,
+  title, eyebrow = 'Shop', pathname, filters, products, categories, error, lockedLabel, lockedCategory,
+  hideHeading = false, toolbarExtra, lookbook, children,
 }: {
   title: string;
   eyebrow?: string;
@@ -23,6 +25,13 @@ export function CatalogListing({
   error?: string | null;
   lockedLabel?: string;
   lockedCategory?: string;
+  /** The label page renders its own hero (h1) above the listing. */
+  hideHeading?: boolean;
+  toolbarExtra?: ReactNode;
+  /** Replaces the grid when the Lookbook view is active. */
+  lookbook?: ReactNode;
+  /** Rendered before the toolbar (e.g. the label category rail). */
+  children?: ReactNode;
 }) {
   const page = Math.max(1, Number(filters.page ?? 1) || 1);
   const filtered = filterProducts(products, { ...filters, label: lockedLabel ?? filters.label, category: lockedCategory ?? filters.category }, categories);
@@ -41,22 +50,35 @@ export function CatalogListing({
     filters.available === '1' && ['available', 'Available'],
     filters.q && ['q', `Search: ${filters.q}`],
   ].filter((item): item is [string, string] => Array.isArray(item));
-  return <main className="store-page catalog-page" data-page="catalog">
+  const sortHidden = Object.fromEntries(Object.entries(filters).filter(([name, value]) => name !== 'sort' && name !== 'page' && typeof value === 'string' && value)) as Record<string, string>;
+  const Wrapper = hideHeading ? 'div' : 'main';
+  return <Wrapper className="catalog-page" data-page="catalog">
     {pathname !== '/search' && <TrackEvent name="collection_view" params={{ route: pathname }} />}
     {pathname === '/search' && filters.q && <TrackEvent name={filtered.length ? 'search' : 'search_zero_results'} params={{ search_term: filters.q.slice(0, 80), result_count: filtered.length }} />}
     {activeFilters.length > 0 && <TrackEvent name="filter_apply" params={{ filter_count: activeFilters.length, route: pathname }} />}
-    <header className="catalog-heading"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{count ? `${filtered.length} pieces shown from the current catalogue results.` : 'Discover pieces published by Lopaworld.'}</p></header>
-    {pathname === '/search' && <form action="/search" method="get" className="catalog-search"><label htmlFor="catalog-search">Search products</label><input id="catalog-search" name="q" type="search" defaultValue={filters.q ?? ''} placeholder="Search the catalogue" /><button className="lw-button" type="submit">Search</button></form>}
-    <div className="catalog-controls"><p className="catalog-count" aria-live="polite">{filtered.length} {filtered.length === 1 ? 'piece' : 'pieces'}</p><FilterSheet pathname={pathname} filters={filters} labels={labelOptions} categories={categories} sizes={availableSizes} colours={availableColours} resultCount={filtered.length} showLabel={!lockedLabel} showCategory={!lockedCategory} /></div>
-    {activeFilters.length > 0 && <div className="active-filters" aria-label="Active filters">{activeFilters.map(([key, label]) => <FilterChip key={key} onRemove={() => undefined}><Link href={removeFilter(pathname, filters, key)}>{label} <span aria-hidden="true">×</span></Link></FilterChip>)}<Link href={pathname} className="text-link">Clear all</Link></div>}
+    {!hideHeading && <header className="catalog-heading"><p className="lw-eyebrow">{eyebrow}</p><h1 className="lw-display">{title}</h1></header>}
+    {pathname === '/search' && <form action="/search" method="get" className="catalog-search"><label htmlFor="catalog-search">Search products</label><div className="catalog-search-row"><input id="catalog-search" className="lw-input" name="q" type="search" defaultValue={filters.q ?? ''} /><button className="lw-button" type="submit">Search</button></div></form>}
+    {children}
+    <div className="catalog-toolbar">
+      <div className="catalog-toolbar-filters">
+        <FilterSheet pathname={pathname} filters={filters} labels={labelOptions} categories={categories} sizes={availableSizes} colours={availableColours} resultCount={filtered.length} activeCount={activeFilters.length} showLabel={!lockedLabel} showCategory={!lockedCategory} />
+        {activeFilters.map(([key, label]) => <span key={key} className="lw-filter-chip">{label}<Link href={removeFilter(pathname, filters, key)} aria-label={`Remove ${label}`}>×</Link></span>)}
+        {activeFilters.length > 0 && <Link href={filters.view ? `${pathname}?view=${encodeURIComponent(filters.view)}` : pathname} className="lw-button" data-variant="quiet">Clear all</Link>}
+      </div>
+      <div className="catalog-toolbar-view">
+        <p className="catalog-count" aria-live="polite">{filtered.length} {filtered.length === 1 ? 'piece' : 'pieces'}</p>
+        {toolbarExtra}
+        {!lookbook && <SortSelect pathname={pathname} hidden={sortHidden} value={filters.sort ?? 'newest'} />}
+      </div>
+    </div>
     {error && <p className="service-message" role="status">{error}</p>}
-    <ProductGrid products={visible} />
-    {filtered.length > pageSize && <nav className="catalog-pagination" aria-label="Product pages">
-      {currentPage > 1 && <Link href={pageHref(pathname, filters, currentPage - 1)}>Previous</Link>}
+    {lookbook ?? <ProductGrid products={visible} />}
+    {!lookbook && filtered.length > pageSize && <nav className="catalog-pagination" aria-label="Product pages">
+      {currentPage > 1 && <Link className="lw-button" data-variant="secondary" href={pageHref(pathname, filters, currentPage - 1)}>Previous</Link>}
       <span>Page {currentPage} of {pages}</span>
-      {currentPage < pages && <Link href={pageHref(pathname, filters, currentPage + 1)}>Load more pieces</Link>}
+      {currentPage < pages && <Link className="lw-button" data-variant="secondary" href={pageHref(pathname, filters, currentPage + 1)}>Next</Link>}
     </nav>}
-  </main>;
+  </Wrapper>;
 }
 
 function filterProducts(products: StoreProduct[], filters: CatalogFilters, categories: StoreCategory[]) {
